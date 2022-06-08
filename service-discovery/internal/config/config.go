@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"service-discovery/internal/rest"
 	"time"
 
 	"fmt"
@@ -30,7 +31,8 @@ func DefaultServerHTTP() ServerHTTP {
 }
 
 type Config struct {
-	Server ServerHTTP
+	Server    ServerHTTP
+	Endpoints rest.RegisterHandlerConfig
 }
 
 func New(path string) (*Config, error) {

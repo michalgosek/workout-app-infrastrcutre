@@ -23,7 +23,7 @@ type ServiceCluster struct {
 	Instances []ServiceInstance
 }
 
-type ServiceRegistry interface {
+type Repository interface {
 	Register(ss ...ServiceInstance) error
 	QueryInstances(name string) ([]ServiceInstance, error)
 	UpdateStatus(s ServiceInstance) error
@@ -44,10 +44,10 @@ type HTTPClient interface {
 }
 
 type Service struct {
-	healthz  ServiceHealthEndpoints
-	registry ServiceRegistry
-	http     HTTPClient
-	logger   Logger
+	healthz    ServiceHealthEndpoints
+	repository Repository
+	http       HTTPClient
+	logger     Logger
 }
 
 func (s *Service) verifyInstances(ss ...ServiceInstance) error {
@@ -72,7 +72,7 @@ func (s *Service) verifyInstances(ss ...ServiceInstance) error {
 }
 
 func (s *Service) QueryInstances(name string) ([]ServiceInstance, error) {
-	return s.registry.QueryInstances(name)
+	return s.repository.QueryInstances(name)
 }
 
 func (s *Service) Register(ss ...ServiceInstance) error {
@@ -80,7 +80,7 @@ func (s *Service) Register(ss ...ServiceInstance) error {
 	if err != nil {
 		return fmt.Errorf("instance verification failed: %w", err)
 	}
-	err = s.registry.Register(ss...)
+	err = s.repository.Register(ss...)
 	if err != nil {
 		return fmt.Errorf("instances registration failed: %w", ErrRepositoryFailure)
 	}
@@ -89,7 +89,7 @@ func (s *Service) Register(ss ...ServiceInstance) error {
 
 func (s *Service) HeartBeat() {
 	for service, addr := range s.healthz {
-		instances, err := s.registry.QueryInstances(service)
+		instances, err := s.repository.QueryInstances(service)
 		if err != nil {
 			s.logger.Errorf("Service-registry query instance: %v", err)
 			continue
@@ -115,7 +115,7 @@ func (s *Service) updateClusterInstancesStatus(addr string, instances ...Service
 		}
 		ins.SetHealth(healthy)
 
-		err = s.registry.UpdateStatus(ins)
+		err = s.repository.UpdateStatus(ins)
 		if err != nil {
 			s.logger.Errorf("Service-registry update: %v", err)
 			continue
@@ -134,10 +134,10 @@ func WithHTTPClient(cli HTTPClient) Option {
 	}
 }
 
-func WithRegistry(r ServiceRegistry) Option {
+func WithRepository(r Repository) Option {
 	return func(s *Service) {
 		if r != nil {
-			s.registry = r
+			s.repository = r
 		}
 	}
 }
@@ -160,8 +160,8 @@ func WithLogger(l Logger) Option {
 
 func New(opts ...Option) *Service {
 	s := Service{
-		registry: NewCacheServiceRegistry(),
-		logger:   logrus.StandardLogger(),
+		repository: NewCacheServiceRegistry(),
+		logger:     logrus.StandardLogger(),
 		healthz: ServiceHealthEndpoints{
 			"users-service":     "http://localhost:8030/api/v1/health",
 			"trainer-service":   "http://localhost:8040/api/v1/health",

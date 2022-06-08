@@ -9,30 +9,40 @@ import (
 	"github.com/go-chi/chi/middleware"
 )
 
-type ServiceRegisteryRequest struct {
-	Name string
-	IP   string
-	Port string
-}
-
 const (
 	HealthEndpoint  = "/v1/health"
 	VersionEndponit = "/v1/version"
 )
 
+type Config struct {
+	MiddlewareTimeout time.Duration
+}
+
 type API struct {
-	r *chi.Mux
+	router          chi.Router
+	registerHandler *RegisterHandler
 }
 
 func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.r.ServeHTTP(w, r)
+	a.router.ServeHTTP(w, r)
 }
 
-func New() *API {
-	r := newRouter()
-	r.Get(HealthEndpoint, healthHandler)
+func (a *API) SetEndpoints() {
+	a.router.Get(HealthEndpoint, healthHandler)
+	a.router.Get(a.registerHandler.ClientRegistryEndpoint(), a.registerHandler.QueryInstances)
+	a.router.Post(a.registerHandler.ServiceRegiststryEndpoint(), a.registerHandler.ServiceRegistry)
+}
+
+func NewAPI(h *RegisterHandler) *API {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
 	a := API{
-		r: r,
+		router:          r,
+		registerHandler: h,
 	}
 	return &a
 }
@@ -40,16 +50,6 @@ func New() *API {
 type JSONResponse struct {
 	Message string
 	Code    int
-}
-
-func newRouter() *chi.Mux {
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(60 * time.Second))
-	return r
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {

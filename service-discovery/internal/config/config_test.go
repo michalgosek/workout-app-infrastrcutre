@@ -33,6 +33,10 @@ func TestShouldReadConfigFileWithoutError(t *testing.T) {
 			Addr:         "localhost:8090",
 			ShutdownTime: 10 * time.Second,
 		},
+		// Endpoints: map[string]string{
+		// 	"client-registry":  "/v1/api/query",
+		// 	"service-registry": "/v1/api/registry",
+		// },
 	}
 
 	// when:
