@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestServiceRegisterHandlerShouldReturnHTTPStatusBadRequestForEmptyPayload(t *testing.T) {
+func TestShouldReturnHTTPStatusBadRequestForEmptyPayload(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -43,7 +43,110 @@ func TestServiceRegisterHandlerShouldReturnHTTPStatusBadRequestForEmptyPayload(t
 	assert.Nil(err)
 	assert.Equal(actualResponse, expectedResponse)
 	registryService.AssertExpectations(t)
+}
 
+func TestShouldReturnHTTPStatusBadRequestForEmptyNameValue(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	requestBody := rest.ServiceRegistryRequest{
+		Port: "9090",
+		IP:   "localhost",
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.ErrMissingHostName.Error(),
+		Code:    http.StatusBadRequest,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+
+	registryService.AssertNotCalled(t, "Register", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestShouldReturnHTTPStatusBadRequestForEmptyIPValue(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	requestBody := rest.ServiceRegistryRequest{
+		Name: "dummy",
+		Port: "9090",
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.ErrMissingHostIPValue.Error(),
+		Code:    http.StatusBadRequest,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+
+	registryService.AssertNotCalled(t, "Register", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestShouldReturnHTTPStatusBadRequestForPortValue(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	requestBody := rest.ServiceRegistryRequest{
+		IP:   "localhost",
+		Name: "dummy",
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.ErrMissingHostPortValue.Error(),
+		Code:    http.StatusBadRequest,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+
+	registryService.AssertNotCalled(t, "Register", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
 }
 
 func createHTTPrequestWithoutBody(method string) *http.Request {
