@@ -1,6 +1,10 @@
 package rest
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"service-discovery/internal/registry"
 
@@ -35,7 +39,62 @@ type RegisterHandler struct {
 	service RegistryService
 }
 
+type ServiceRegistryRequest struct {
+	Name string
+	IP   string
+	Port string
+}
+
+func (s *ServiceRegistryRequest) Decode(body io.ReadCloser) error {
+	dec := json.NewDecoder(body)
+	err := dec.Decode(&s)
+	if err != nil {
+		return fmt.Errorf("decode failed: %v", err)
+	}
+	return nil
+}
+
+type RequestFieldValueErr struct {
+	err   error
+	value string
+}
+
+func (s *ServiceRegistryRequest) Verify() error {
+	var empty ServiceRegistryRequest
+	if *s == empty {
+		return ErrMissingRequestBody
+	}
+
+	m := map[string]RequestFieldValueErr{
+		"IP":   {value: s.IP, err: ErrMissingHostIPValue},
+		"name": {value: s.Name, err: ErrMissingHostName},
+		"port": {value: s.Port, err: ErrMissingHostPortValue},
+	}
+	for _, v := range m {
+		if v.value == "" {
+			return v.err
+		}
+	}
+	return nil
+}
+
+var (
+	ErrMissingRequestBody   = errors.New("missing request body")
+	ErrMissingHostIPValue   = errors.New("missing service instance IP value in the request body")
+	ErrMissingHostName      = errors.New("missing service instance Name in the request body")
+	ErrMissingHostPortValue = errors.New("missing service instance Port value in the request body")
+)
+
 func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request) {
+	var payload ServiceRegistryRequest
+	err := payload.Decode(r.Body)
+	if err != nil {
+		response(w, JSONResponse{Message: "Internal Failure", Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+	}
+	err = payload.Verify()
+	if err != nil {
+		response(w, JSONResponse{Message: err.Error(), Code: http.StatusBadRequest}, http.StatusBadRequest)
+	}
 
 	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
 }
@@ -94,10 +153,4 @@ func NewRegisterHandler(opts ...RegisterHandlerOption) *RegisterHandler {
 		o(&h)
 	}
 	return &h
-}
-
-type ServicerRegisterPayload struct {
-	Name string
-	IP   string
-	Port string
 }

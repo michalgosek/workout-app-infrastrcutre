@@ -1,37 +1,61 @@
 package rest_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"service-discovery/internal/rest"
+	"service-discovery/mocks"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 )
 
 func TestServiceRegisterHandlerShouldReturnHTTPStatusBadRequestForEmptyPayload(t *testing.T) {
-	// assert := assert.New(t)
+	assert := assert.New(t)
 
-	// // given:
-	// recoder := httptest.NewRecorder()
-	// dummyEndpoint := "http://localhost:9090/"
-	// request := httptest.NewRequest(http.MethodGet, dummyEndpoint, nil)
-	// registryService := mocks.ServiceRegistry{}
-	// opts := []rest.RegisterHandlerOption{
-	// 	rest.WithRegisterHandlerRegistryService(&registryService),
-	// }
+	// given:
+	requestBody := rest.ServiceRegistryRequest{}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.ErrMissingRequestBody.Error(),
+		Code:    http.StatusBadRequest,
+	}
 
-	// registerHandler := rest.NewRegisterHandler(opts...)
+	registryService := mocks.ServiceRegistry{}
 
-	// SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
 
-	// expectedResponse := rest.JSONResponse{
-	// 	Message: "specifeid empty payload",
-	// 	Code:    http.StatusOK,
-	// }
+	registryService.AssertNotCalled(t, "Register", mock.Anything)
 
-	// // when:
-	// SUT.ServeHTTP(recoder, request)
+	// when:
+	SUT.ServeHTTP(recoder, request)
 
-	// // then:
-	// actualResponse, err := convertToJSONResponse(recoder.Body)
-	// assert.Nil(err)
-	// assert.Equal(actualResponse, expectedResponse)
-	// mock.AssertExpectationsForObjects(t, registryService)
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
 
+}
+
+func createHTTPrequestWithoutBody(method string) *http.Request {
+	return httptest.NewRequest(method, "http://localhost:9090/", nil)
+}
+
+func createHTTPrequestWithBody(method string, v rest.ServiceRegistryRequest) *http.Request {
+	bb, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	body := bytes.NewReader(bb)
+	request := httptest.NewRequest(method, "http://localhost:9090/", body)
+	return request
 }
