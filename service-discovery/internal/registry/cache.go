@@ -16,11 +16,11 @@ func NewServiceInstance(name, ip string, port uint) ServiceInstance {
 
 type ServiceClusters map[string]*ServiceCluster
 
-type CacheServiceRegistry struct {
+type CacheRepository struct {
 	clusters ServiceClusters
 }
 
-func (c *CacheServiceRegistry) UpdateStatus(s ServiceInstance) error {
+func (c *CacheRepository) UpdateStatus(s ServiceInstance) error {
 	cluster, ok := c.clusters[s.name]
 	if !ok {
 		return nil
@@ -35,7 +35,7 @@ func (c *CacheServiceRegistry) UpdateStatus(s ServiceInstance) error {
 	return nil
 }
 
-func (c *CacheServiceRegistry) Register(ss ...ServiceInstance) error {
+func (c *CacheRepository) Register(ss ...ServiceInstance) error {
 	for _, s := range ss {
 		v, ok := c.clusters[s.name]
 		if !ok {
@@ -47,7 +47,7 @@ func (c *CacheServiceRegistry) Register(ss ...ServiceInstance) error {
 	return nil
 }
 
-func (c *CacheServiceRegistry) QueryInstances(name string) ([]ServiceInstance, error) {
+func (c *CacheRepository) QueryInstances(name string) ([]ServiceInstance, error) {
 	v, ok := c.clusters[name]
 	if !ok {
 		return []ServiceInstance{}, nil
@@ -55,8 +55,8 @@ func (c *CacheServiceRegistry) QueryInstances(name string) ([]ServiceInstance, e
 	return v.Instances, nil
 }
 
-func NewCacheServiceRegistry() *CacheServiceRegistry {
-	c := CacheServiceRegistry{
+func NewCacheRepository() *CacheRepository {
+	c := CacheRepository{
 		clusters: make(ServiceClusters),
 	}
 	return &c

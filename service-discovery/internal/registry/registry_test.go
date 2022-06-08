@@ -15,8 +15,8 @@ func TestShouldNotReturnErrorWhenRepoistoryRegisterSuccessUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	repo := registry.NewCacheServiceRegistry()
-	SUT := registry.New(registry.WithRepository(repo))
+	repo := registry.NewCacheRepository()
+	SUT := registry.NewService(registry.WithRepository(repo))
 	serviceName := "dummy"
 	exepctedInstances := []registry.ServiceInstance{
 		registry.NewServiceInstance(serviceName, "localhost", 1),
@@ -38,7 +38,7 @@ func TestShouldReturnErrorWhenRepoistoryRegisterFailureUnit(t *testing.T) {
 
 	// given:
 	repo := &mocks.ServiceRegistry{}
-	SUT := registry.New(registry.WithRepository(repo))
+	SUT := registry.NewService(registry.WithRepository(repo))
 	serviceName := "dummy"
 	exepctedInstances := []registry.ServiceInstance{
 		registry.NewServiceInstance(serviceName, "localhost", 1),
@@ -57,8 +57,8 @@ func TestShouldNotReturnErrorForServiceInstanceWhenRegisterUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
-	SUT := registry.New(registry.WithRepository(cache))
+	cache := registry.NewCacheRepository()
+	SUT := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("dummy", "localhost", 1),
 	}
@@ -74,8 +74,8 @@ func TestShouldReturnErrorForEmptyInstancesWhenRegisterUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
-	SUT := registry.New(registry.WithRepository(cache))
+	cache := registry.NewCacheRepository()
+	SUT := registry.NewService(registry.WithRepository(cache))
 	var instances []registry.ServiceInstance
 
 	// when:
@@ -89,8 +89,8 @@ func TestShouldReturnErrorForMalformedInstanceIPAddrWhenRegisterUnit(t *testing.
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
-	SUT := registry.New(registry.WithRepository(cache))
+	cache := registry.NewCacheRepository()
+	SUT := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("dummy", "12345", 9090),
 	}
@@ -106,8 +106,8 @@ func TestShouldReturnErrorForMalformedInstanceNameWhenRegisterUnit(t *testing.T)
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
-	SUT := registry.New(registry.WithRepository(cache))
+	cache := registry.NewCacheRepository()
+	SUT := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("", "12345", 9090),
 	}
@@ -123,8 +123,8 @@ func TestShouldReturnErrorForGreaterInstancePortThan65536WhenRegisterUnit(t *tes
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
-	service := registry.New(registry.WithRepository(cache))
+	cache := registry.NewCacheRepository()
+	service := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("dummy", "localhost", 65536),
 	}
@@ -140,8 +140,8 @@ func TestShouldReturnErrorForInstancePortEqualToZeroWhenRegisterUnit(t *testing.
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
-	service := registry.New(registry.WithRepository(cache))
+	cache := registry.NewCacheRepository()
+	service := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("dummy", "localhost", 0),
 	}
@@ -157,10 +157,10 @@ func TestShouldMarkServiceInstanceAsHealthyUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
+	cache := registry.NewCacheRepository()
 	httpCli := &mocks.HTTPClient{}
 	serviceName := "dummy"
-	service := registry.New(
+	service := registry.NewService(
 		registry.WithRepository(cache),
 		registry.WithHTTPClient(httpCli),
 		registry.WithHealthz(registry.ServiceHealthEndpoints{
@@ -194,10 +194,10 @@ func TestShouldMarkSingleServiceInstanceAsNotHealthyUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
+	cache := registry.NewCacheRepository()
 	httpCli := &mocks.HTTPClient{}
 	serviceName := "dummy"
-	service := registry.New(
+	service := registry.NewService(
 		registry.WithRepository(cache),
 		registry.WithHTTPClient(httpCli),
 		registry.WithHealthz(registry.ServiceHealthEndpoints{
@@ -239,7 +239,7 @@ func TestShouldLogErrorWhenServiceInstanceUpdateStatusFailure(t *testing.T) {
 	httpCli := &mocks.HTTPClient{}
 	logger := &mocks.Logger{}
 	serviceName := "dummy"
-	service := registry.New(
+	service := registry.NewService(
 		registry.WithRepository(registryRepository),
 		registry.WithHTTPClient(httpCli),
 		registry.WithLogger(logger),

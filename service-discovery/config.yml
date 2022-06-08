@@ -4,5 +4,5 @@ server:
 
 register-handler:
   endpoints:
-    client-registry:  /v1/api/registry/client
-    service-registry: /v1/api/registry/services
+    client-registry:  /v1/api/registry/query
+    service-registry: /v1/api/registry/register

@@ -124,9 +124,9 @@ func (s *Service) updateClusterInstancesStatus(addr string, instances ...Service
 	return nil
 }
 
-type Option func(s *Service)
+type RegistryServiceOption func(s *Service)
 
-func WithHTTPClient(cli HTTPClient) Option {
+func WithHTTPClient(cli HTTPClient) RegistryServiceOption {
 	return func(s *Service) {
 		if cli != nil {
 			s.http = cli
@@ -134,7 +134,7 @@ func WithHTTPClient(cli HTTPClient) Option {
 	}
 }
 
-func WithRepository(r Repository) Option {
+func WithRepository(r Repository) RegistryServiceOption {
 	return func(s *Service) {
 		if r != nil {
 			s.repository = r
@@ -142,7 +142,7 @@ func WithRepository(r Repository) Option {
 	}
 }
 
-func WithHealthz(h ServiceHealthEndpoints) Option {
+func WithHealthz(h ServiceHealthEndpoints) RegistryServiceOption {
 	return func(s *Service) {
 		if h != nil {
 			s.healthz = h
@@ -150,7 +150,7 @@ func WithHealthz(h ServiceHealthEndpoints) Option {
 	}
 }
 
-func WithLogger(l Logger) Option {
+func WithLogger(l Logger) RegistryServiceOption {
 	return func(s *Service) {
 		if l != nil {
 			s.logger = l
@@ -158,9 +158,9 @@ func WithLogger(l Logger) Option {
 	}
 }
 
-func New(opts ...Option) *Service {
+func NewService(opts ...RegistryServiceOption) *Service {
 	s := Service{
-		repository: NewCacheServiceRegistry(),
+		repository: NewCacheRepository(),
 		logger:     logrus.StandardLogger(),
 		healthz: ServiceHealthEndpoints{
 			"users-service":     "http://localhost:8030/api/v1/health",

@@ -11,7 +11,7 @@ func TestShouldUpdateServiceInstanceStatusToTrueUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	SUT := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheRepository()
 	name := "dummy"
 	instance := registry.NewServiceInstance(name, "localhost", 8080)
 	instances := []registry.ServiceInstance{instance}
@@ -37,7 +37,7 @@ func TestShouldUpdateServiceSingleInstanceStatusToTrueUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	SUT := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheRepository()
 	name := "dummy"
 	first := registry.NewServiceInstance(name, "localhost", 8090)
 	second := registry.NewServiceInstance(name, "localhost", 8080)
@@ -64,7 +64,7 @@ func TestShouldReturnEmptyServiceInstancesAfterQueryForNonExistingServiceUnit(t 
 	assert := assert.New(t)
 
 	// given:
-	SUT := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheRepository()
 
 	// when:
 	actualInstances, err := SUT.QueryInstances("dummy")
@@ -82,7 +82,7 @@ func TestShouldRegisterOneServiceInstanceUnit(t *testing.T) {
 	expectedInstance := registry.NewServiceInstance(serviceName, "localhost", 8080)
 	expectedInstances := []registry.ServiceInstance{expectedInstance}
 
-	SUT := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheRepository()
 
 	// when:
 	err := SUT.Register(expectedInstance)
@@ -103,7 +103,7 @@ func TestShouldRegisterServiceIsntancesUnit(t *testing.T) {
 	first := registry.NewServiceInstance(serviceName, "localhost", 8080)
 	second := registry.NewServiceInstance(serviceName, "localhost", 8090)
 	expectedInstances := []registry.ServiceInstance{first, second}
-	SUT := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheRepository()
 
 	// when:
 	err := SUT.Register(first, second)

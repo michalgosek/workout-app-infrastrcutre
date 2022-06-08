@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"service-discovery/internal/config"
+	"service-discovery/internal/registry"
 	"service-discovery/internal/rest"
 
 	"github.com/sirupsen/logrus"
@@ -32,9 +33,17 @@ func execute() error {
 	serverCfg := createHTTPServerCfg(cfg.Server)
 	logger := logrus.New()
 
+	repository := registry.NewCacheRepository()
+	registryServiceOpts := []registry.RegistryServiceOption{
+		registry.WithRepository(repository),
+		registry.WithLogger(logger),
+	}
+	registryService := registry.NewService(registryServiceOpts...)
+
 	registerHandlerOpts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerConfig(cfg.RegisterHandler),
 		rest.WithRegisterHandlerLogger(logger),
+		rest.WithRegisterHandlerRegistryService(registryService),
 	}
 	registerHandler := rest.NewRegisterHandler(registerHandlerOpts...)
 

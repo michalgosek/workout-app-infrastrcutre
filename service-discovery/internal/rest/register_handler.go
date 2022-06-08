@@ -35,6 +35,15 @@ type RegisterHandler struct {
 	service RegistryService
 }
 
+func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request) {
+
+	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
+}
+
+func (h *RegisterHandler) QueryInstances(w http.ResponseWriter, r *http.Request) {
+	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
+}
+
 func (r *RegisterHandler) ServiceRegiststryEndpoint() string {
 	return r.cfg.Endpoints[serviceRegistry]
 }
@@ -70,6 +79,7 @@ func WithRegisterHandlerLogger(l Logger) RegisterHandlerOption {
 }
 
 func NewRegisterHandler(opts ...RegisterHandlerOption) *RegisterHandler {
+
 	h := RegisterHandler{
 		logger: logrus.New(),
 		cfg: RegisterHandlerConfig{
@@ -90,12 +100,4 @@ type ServicerRegisterPayload struct {
 	Name string
 	IP   string
 	Port string
-}
-
-func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request) {
-	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
-}
-
-func (h *RegisterHandler) QueryInstances(w http.ResponseWriter, r *http.Request) {
-	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
 }
