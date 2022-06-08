@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	"service-discovery/internal/http"
+	"time"
 
 	"fmt"
 	"io/fs"
@@ -10,8 +10,27 @@ import (
 	"github.com/spf13/viper"
 )
 
+type ServerHTTP struct {
+	Addr           string
+	ShutdownTime   time.Duration
+	ReadTimeout    time.Duration
+	WriteTimeout   time.Duration
+	MaxHeaderBytes int
+}
+
+func DefaultServerHTTP() ServerHTTP {
+	c := ServerHTTP{
+		Addr:           "localhost:8080",
+		ShutdownTime:   5 * time.Second,
+		ReadTimeout:    5 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	return c
+}
+
 type Config struct {
-	Server http.Config
+	Server ServerHTTP
 }
 
 func New(path string) (*Config, error) {

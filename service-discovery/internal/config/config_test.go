@@ -2,7 +2,7 @@ package config_test
 
 import (
 	"service-discovery/internal/config"
-	"service-discovery/internal/http"
+
 	"testing"
 	"time"
 
@@ -29,7 +29,7 @@ func TestShouldReadConfigFileWithoutError(t *testing.T) {
 	// given:
 	const path = "./example_cfg.yml"
 	expectedConfig := &config.Config{
-		Server: http.Config{
+		Server: config.ServerHTTP{
 			Addr:         "localhost:8090",
 			ShutdownTime: 10 * time.Second,
 		},

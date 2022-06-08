@@ -3,8 +3,10 @@ package rest
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 )
 
 type ServiceRegisteryRequest struct {
@@ -19,7 +21,7 @@ const (
 )
 
 type API struct {
-	r *httprouter.Router
+	r *chi.Mux
 }
 
 func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -28,6 +30,7 @@ func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func New() *API {
 	r := newRouter()
+	r.Get(HealthEndpoint, healthHandler)
 	a := API{
 		r: r,
 	}
@@ -39,23 +42,18 @@ type JSONResponse struct {
 	Code    int
 }
 
-func newRouter() *httprouter.Router {
-	r := httprouter.New()
-	r.PanicHandler = recovery()
-	r.GET(HealthEndpoint, health())
+func newRouter() *chi.Mux {
+	r := chi.NewRouter()
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+	r.Use(middleware.Timeout(60 * time.Second))
 	return r
 }
 
-func health() httprouter.Handle {
-	return func(rw http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		response(rw, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
-	}
-}
-
-func recovery() func(rw http.ResponseWriter, r *http.Request, err interface{}) {
-	return func(rw http.ResponseWriter, r *http.Request, err interface{}) {
-		response(rw, JSONResponse{Message: "InternalServerError", Code: http.StatusInternalServerError}, http.StatusInternalServerError)
-	}
+func healthHandler(w http.ResponseWriter, r *http.Request) {
+	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
 }
 
 func response(w http.ResponseWriter, data interface{}, code int) {

@@ -6,7 +6,7 @@ GOLIST := $(shell go list -m)
 BINARY := service-discovery 
 
 binary:
-	@go build -ldflags "-X ${GOLIST}/internal/version.version=$(VERSION)" -o ${BINARY} ${CURRENT_DIR}/cmd/srv
+	@go build -o ${BINARY} ${CURRENT_DIR}/cmd/srv
 
 test:
 	@go test ./... -cover -count=1 
