@@ -1,7 +1,7 @@
 .PHONY: install test binary race cover 
 
 CURRENT_DIR := $(shell pwd)
-VERSION := $(shell git describe --always) ""
+VERSION := $(shell git describe --always) 
 GOLIST := $(shell go list -m)
 BINARY := service-discovery 
 
