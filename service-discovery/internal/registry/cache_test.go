@@ -11,7 +11,7 @@ func TestShouldUpdateServiceInstanceStatusToTrueUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheServiceRegistry()
 	name := "dummy"
 	instance := registry.NewServiceInstance(name, "localhost", 8080)
 	instances := []registry.ServiceInstance{instance}
@@ -19,16 +19,16 @@ func TestShouldUpdateServiceInstanceStatusToTrueUnit(t *testing.T) {
 	expectedInstance.SetHealth(true)
 	expectedInstances := []registry.ServiceInstance{expectedInstance}
 
-	cache.Register(instances...)
+	SUT.Register(instances...)
 	instance.SetHealth(true)
 
 	// when:
-	err := cache.UpdateStatus(instance)
+	err := SUT.UpdateStatus(instance)
 
 	// then:
 	assert.Nil(err)
 
-	actualInstances, err := cache.QueryInstances(name)
+	actualInstances, err := SUT.QueryInstances(name)
 	assert.Nil(err)
 	assert.Equal(expectedInstances, actualInstances)
 }
@@ -37,25 +37,25 @@ func TestShouldUpdateServiceSingleInstanceStatusToTrueUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheServiceRegistry()
 	name := "dummy"
 	first := registry.NewServiceInstance(name, "localhost", 8090)
 	second := registry.NewServiceInstance(name, "localhost", 8080)
 	third := registry.NewServiceInstance(name, "localhost", 8030)
 	instances := []registry.ServiceInstance{first, second, third}
 
-	cache.Register(instances...)
+	SUT.Register(instances...)
 	second.SetHealth(true)
 
 	expectedInstances := []registry.ServiceInstance{first, second, third}
 
 	// when:
-	err := cache.UpdateStatus(second)
+	err := SUT.UpdateStatus(second)
 
 	// then:
 	assert.Nil(err)
 
-	actualInstances, err := cache.QueryInstances(name)
+	actualInstances, err := SUT.QueryInstances(name)
 	assert.Nil(err)
 	assert.Equal(expectedInstances, actualInstances)
 }
@@ -64,10 +64,10 @@ func TestShouldReturnEmptyServiceInstancesAfterQueryForNonExistingServiceUnit(t 
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheServiceRegistry()
 
 	// when:
-	actualInstances, err := cache.QueryInstances("dummy")
+	actualInstances, err := SUT.QueryInstances("dummy")
 
 	// then:
 	assert.Nil(err)
@@ -82,15 +82,15 @@ func TestShouldRegisterOneServiceInstanceUnit(t *testing.T) {
 	expectedInstance := registry.NewServiceInstance(serviceName, "localhost", 8080)
 	expectedInstances := []registry.ServiceInstance{expectedInstance}
 
-	cache := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheServiceRegistry()
 
 	// when:
-	err := cache.Register(expectedInstance)
+	err := SUT.Register(expectedInstance)
 
 	// then:
 	assert.Nil(err)
 
-	actualInstances, err := cache.QueryInstances(serviceName)
+	actualInstances, err := SUT.QueryInstances(serviceName)
 	assert.Nil(err)
 	assert.Equal(expectedInstances, actualInstances)
 }
@@ -103,15 +103,15 @@ func TestShouldRegisterServiceIsntancesUnit(t *testing.T) {
 	first := registry.NewServiceInstance(serviceName, "localhost", 8080)
 	second := registry.NewServiceInstance(serviceName, "localhost", 8090)
 	expectedInstances := []registry.ServiceInstance{first, second}
-	cache := registry.NewCacheServiceRegistry()
+	SUT := registry.NewCacheServiceRegistry()
 
 	// when:
-	err := cache.Register(first, second)
+	err := SUT.Register(first, second)
 
 	// then:
 	assert.Nil(err)
 
-	actualInstances, err := cache.QueryInstances(serviceName)
+	actualInstances, err := SUT.QueryInstances(serviceName)
 	assert.Nil(err)
 	assert.Equal(expectedInstances, actualInstances)
 }

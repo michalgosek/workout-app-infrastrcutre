@@ -1,6 +1,6 @@
 make --dry-run --always-make --keep-going --print-directory
-make: Entering directory `/Users/migo/Desktop/PERSONAL/dyplom/workout-app-infrastructure/service-discovery'
-go build -ldflags "-X service-discovery/internal/version.version=e7a894f" -o service-discovery  /Users/migo/Desktop/PERSONAL/dyplom/workout-app-infrastructure/service-discovery/cmd/srv
+make: Entering directory `/Users/migo/Desktop/PERSONAL/projects/workout-app-infrastrcutre/service-discovery'
+go build -ldflags "-X service-discovery/internal/version.version=d56757f" -o service-discovery  /Users/migo/Desktop/PERSONAL/projects/workout-app-infrastrcutre/service-discovery/cmd/srv
  
-make: Leaving directory `/Users/migo/Desktop/PERSONAL/dyplom/workout-app-infrastructure/service-discovery'
+make: Leaving directory `/Users/migo/Desktop/PERSONAL/projects/workout-app-infrastrcutre/service-discovery'
  

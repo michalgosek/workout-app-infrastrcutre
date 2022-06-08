@@ -32,6 +32,7 @@ type ServiceRegistry interface {
 type Logger interface {
 	Debugf(format string, args ...interface{})
 	Infof(format string, args ...interface{})
+	Info(args ...interface{})
 	Warnf(format string, args ...interface{})
 	Warningf(format string, args ...interface{})
 	Errorf(format string, args ...interface{})
@@ -93,25 +94,34 @@ func (s *Service) HeartBeat() {
 			s.logger.Errorf("Service-registry query instance: %v", err)
 			continue
 		}
-		for _, ins := range instances {
-			resp, err := s.http.Get(addr)
-			if err != nil {
-				s.logger.Errorf("HTTP-CLI: %v", err)
-				continue
-			}
-			healthy := true
-			if resp.StatusCode != http.StatusOK {
-				healthy = false
-			}
-			ins.SetHealth(healthy)
-
-			err = s.registry.UpdateStatus(ins)
-			if err != nil {
-				s.logger.Errorf("Service-registry update: %v", err)
-				continue
-			}
+		err = s.updateClusterInstancesStatus(addr, instances...)
+		if err != nil {
+			s.logger.Errorf("Service-registry update: %v", err)
+			continue
 		}
 	}
+}
+
+func (s *Service) updateClusterInstancesStatus(addr string, instances ...ServiceInstance) error {
+	for _, ins := range instances {
+		resp, err := s.http.Get(addr)
+		if err != nil {
+			s.logger.Errorf("HTTP-CLI: %v", err)
+			continue
+		}
+		healthy := true
+		if resp.StatusCode != http.StatusOK {
+			healthy = false
+		}
+		ins.SetHealth(healthy)
+
+		err = s.registry.UpdateStatus(ins)
+		if err != nil {
+			s.logger.Errorf("Service-registry update: %v", err)
+			continue
+		}
+	}
+	return nil
 }
 
 type Option func(s *Service)

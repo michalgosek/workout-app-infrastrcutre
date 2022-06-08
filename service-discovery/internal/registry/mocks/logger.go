@@ -134,6 +134,43 @@ func (_c *Logger_Fatalf_Call) Return() *Logger_Fatalf_Call {
 	return _c
 }
 
+// Info provides a mock function with given fields: args
+func (_m *Logger) Info(args ...interface{}) {
+	var _ca []interface{}
+	_ca = append(_ca, args...)
+	_m.Called(_ca...)
+}
+
+// Logger_Info_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Info'
+type Logger_Info_Call struct {
+	*mock.Call
+}
+
+// Info is a helper method to define mock.On call
+//  - args ...interface{}
+func (_e *Logger_Expecter) Info(args ...interface{}) *Logger_Info_Call {
+	return &Logger_Info_Call{Call: _e.mock.On("Info",
+		append([]interface{}{}, args...)...)}
+}
+
+func (_c *Logger_Info_Call) Run(run func(args ...interface{})) *Logger_Info_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]interface{}, len(args)-0)
+		for i, a := range args[0:] {
+			if a != nil {
+				variadicArgs[i] = a.(interface{})
+			}
+		}
+		run(variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *Logger_Info_Call) Return() *Logger_Info_Call {
+	_c.Call.Return()
+	return _c
+}
+
 // Infof provides a mock function with given fields: format, args
 func (_m *Logger) Infof(format string, args ...interface{}) {
 	var _ca []interface{}

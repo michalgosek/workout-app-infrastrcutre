@@ -16,19 +16,19 @@ func TestShouldNotReturnErrorWhenRepoistoryRegisterSuccessUnit(t *testing.T) {
 
 	// given:
 	repo := registry.NewCacheServiceRegistry()
-	service := registry.New(registry.WithRegistry(repo))
+	SUT := registry.New(registry.WithRegistry(repo))
 	serviceName := "dummy"
 	exepctedInstances := []registry.ServiceInstance{
 		registry.NewServiceInstance(serviceName, "localhost", 1),
 	}
 
 	// when:
-	err := service.Register(exepctedInstances...)
+	err := SUT.Register(exepctedInstances...)
 
 	// then:
 	assert.Nil(err)
 
-	actualInstances, err := service.QueryInstances(serviceName)
+	actualInstances, err := SUT.QueryInstances(serviceName)
 	assert.Nil(err)
 	assert.Equal(exepctedInstances, actualInstances)
 }
@@ -38,7 +38,7 @@ func TestShouldReturnErrorWhenRepoistoryRegisterFailureUnit(t *testing.T) {
 
 	// given:
 	repo := &mocks.ServiceRegistry{}
-	service := registry.New(registry.WithRegistry(repo))
+	SUT := registry.New(registry.WithRegistry(repo))
 	serviceName := "dummy"
 	exepctedInstances := []registry.ServiceInstance{
 		registry.NewServiceInstance(serviceName, "localhost", 1),
@@ -46,7 +46,7 @@ func TestShouldReturnErrorWhenRepoistoryRegisterFailureUnit(t *testing.T) {
 	repo.EXPECT().Register(mock.Anything).Return(errors.New("repository is down"))
 
 	// when:
-	err := service.Register(exepctedInstances...)
+	err := SUT.Register(exepctedInstances...)
 
 	// then:
 	assert.ErrorIs(err, registry.ErrRepositoryFailure)
@@ -58,13 +58,13 @@ func TestShouldNotReturnErrorForServiceInstanceWhenRegisterUnit(t *testing.T) {
 
 	// given:
 	cache := registry.NewCacheServiceRegistry()
-	service := registry.New(registry.WithRegistry(cache))
+	SUT := registry.New(registry.WithRegistry(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("dummy", "localhost", 1),
 	}
 
 	// when:
-	err := service.Register(instances...)
+	err := SUT.Register(instances...)
 
 	// then:
 	assert.Nil(err)
@@ -75,11 +75,11 @@ func TestShouldReturnErrorForEmptyInstancesWhenRegisterUnit(t *testing.T) {
 
 	// given:
 	cache := registry.NewCacheServiceRegistry()
-	service := registry.New(registry.WithRegistry(cache))
+	SUT := registry.New(registry.WithRegistry(cache))
 	var instances []registry.ServiceInstance
 
 	// when:
-	err := service.Register(instances...)
+	err := SUT.Register(instances...)
 
 	// then:
 	assert.ErrorIs(err, registry.ErrEmptyServiceInstances)
@@ -90,13 +90,13 @@ func TestShouldReturnErrorForMalformedInstanceIPAddrWhenRegisterUnit(t *testing.
 
 	// given:
 	cache := registry.NewCacheServiceRegistry()
-	service := registry.New(registry.WithRegistry(cache))
+	SUT := registry.New(registry.WithRegistry(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("dummy", "12345", 9090),
 	}
 
 	// when:
-	err := service.Register(instances...)
+	err := SUT.Register(instances...)
 
 	// then:
 	assert.ErrorIs(err, registry.ErrMalformedData)
@@ -107,13 +107,13 @@ func TestShouldReturnErrorForMalformedInstanceNameWhenRegisterUnit(t *testing.T)
 
 	// given:
 	cache := registry.NewCacheServiceRegistry()
-	service := registry.New(registry.WithRegistry(cache))
+	SUT := registry.New(registry.WithRegistry(cache))
 	instances := []registry.ServiceInstance{
 		registry.NewServiceInstance("", "12345", 9090),
 	}
 
 	// when:
-	err := service.Register(instances...)
+	err := SUT.Register(instances...)
 
 	// then:
 	assert.ErrorIs(err, registry.ErrMalformedData)

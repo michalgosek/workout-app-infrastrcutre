@@ -10,7 +10,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 make: *** No rule to make target `all'.  Stop.
 
 
-# Make data base, printed on Wed Jun  8 13:04:26 2022
+# Make data base, printed on Wed Jun  8 16:14:14 2022
 
 # Variables
 
@@ -18,6 +18,7 @@ make: *** No rule to make target `all'.  Stop.
 <D = $(patsubst %/,%,$(dir $<))
 # automatic
 ?F = $(notdir $?)
+ 
 # environment
 VSCODE_LOG_NATIVE = false
 # environment
@@ -29,8 +30,7 @@ NVM_INC = /Users/migo/.nvm/versions/node/v14.17.6/include/node
 # automatic
 @F = $(notdir $@)
 # makefile
- 
-CURDIR := /Users/migo/Desktop/PERSONAL/dyplom/workout-app-infrastructure/service-discovery
+CURDIR := /Users/migo/Desktop/PERSONAL/projects/workout-app-infrastrcutre/service-discovery
 # makefile
 SHELL = /bin/sh
 # environment
@@ -42,7 +42,7 @@ MAKEFILE_LIST :=  Makefile
 # environment
 VSCODE_AMD_ENTRYPOINT = vs/workbench/api/node/extensionHostProcess
 # makefile (from `Makefile', line 4)
-VERSION := e7a894f
+VERSION := d56757f
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
@@ -50,7 +50,7 @@ __CFBundleIdentifier = com.microsoft.VSCode
 # environment
 INFOPATH = /opt/homebrew/share/info:
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/44/_8pn0lcx2dg7j1m46tpbjxj80000gp/T/vscode-ipc-499f645d-002b-4493-ac5b-469f882d5f18.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/44/_8pn0lcx2dg7j1m46tpbjxj80000gp/T/vscode-ipc-1c36dc63-da23-49c3-8cd0-f024a02ebe5e.sock
 # environment
 VSCODE_CWD = /
 # environment
@@ -70,13 +70,13 @@ ELECTRON_RUN_AS_NODE = 1
 # environment
 SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.9JkIZnD6b0/Listeners
 # makefile (from `Makefile', line 3)
-CURRENT_DIR := /Users/migo/Desktop/PERSONAL/dyplom/workout-app-infrastructure/service-discovery
+CURRENT_DIR := /Users/migo/Desktop/PERSONAL/projects/workout-app-infrastrcutre/service-discovery
 # automatic
 %F = $(notdir $%)
 # environment
 VSCODE_PIPE_LOGGING = true
 # environment
-PWD = /Users/migo/Desktop/PERSONAL/dyplom/workout-app-infrastructure/service-discovery
+PWD = /Users/migo/Desktop/PERSONAL/projects/workout-app-infrastrcutre/service-discovery
 # environment
 HOMEBREW_CELLAR = /opt/homebrew/Cellar
 # environment
@@ -96,7 +96,7 @@ VSCODE_CODE_CACHE_PATH = /Users/migo/Library/Application Support/Code/CachedData
 # environment
 LOGNAME = migo
 # environment
-APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = 1
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
 # environment
 NVM_CD_FLAGS = -q
 # environment
@@ -168,7 +168,7 @@ GOLIST := service-discovery
 # environment
 LANG = C
 # environment
-VSCODE_PID = 32006
+VSCODE_PID = 46756
 # variable set hash-table stats:
 # Load=77/1024=8%, Rehash=0, Collisions=2/106=2%
 
@@ -178,7 +178,7 @@ VSCODE_PID = 32006
 
 # Directories
 
-# . (device 16777231, inode 13844501): 10 files, no impossibilities.
+# . (device 16777231, inode 13854871): 10 files, no impossibilities.
 
 # 10 files, no impossibilities in 1 directories.
 
@@ -223,7 +223,7 @@ race:
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-06-08 13:04:11
+#  Last modified 2022-06-08 13:08:39
 #  File has been updated.
 #  Successfully updated.
 # variable set hash-table stats:
@@ -288,6 +288,6 @@ install:
 # strcache size: total = 4096 / max = 4096 / min = 4096 / avg = 4096
 # strcache free: total = 4087 / max = 4087 / min = 4087 / avg = 4087
 
-# Finished Make data base on Wed Jun  8 13:04:26 2022
+# Finished Make data base on Wed Jun  8 16:14:14 2022
 
  
