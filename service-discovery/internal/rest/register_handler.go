@@ -85,18 +85,32 @@ var (
 	ErrMissingHostPortValue = errors.New("missing service instance Port value in the request body")
 )
 
+const (
+	ErrInternalServiceErrMsg = "Internal Service Error"
+)
+
 func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request) {
 	var payload ServiceRegistryRequest
 	err := payload.Decode(r.Body)
 	if err != nil {
 		response(w, JSONResponse{Message: "Internal Failure", Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		return
 	}
 	err = payload.Verify()
 	if err != nil {
 		response(w, JSONResponse{Message: err.Error(), Code: http.StatusBadRequest}, http.StatusBadRequest)
+		return
 	}
 
-	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
+	instance := registry.NewServiceInstance(payload.Name, payload.IP, payload.Port)
+	err = h.service.Register(instance)
+	if err != nil {
+		response(w, JSONResponse{Message: ErrInternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		return
+	}
+
+	msg := fmt.Sprintf("Instance of service %s registered successfully", payload.Name)
+	response(w, JSONResponse{Message: msg, Code: http.StatusOK}, http.StatusOK)
 }
 
 func (h *RegisterHandler) QueryInstances(w http.ResponseWriter, r *http.Request) {

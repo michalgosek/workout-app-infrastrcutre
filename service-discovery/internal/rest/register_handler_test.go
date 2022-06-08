@@ -3,6 +3,7 @@ package rest_test
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"service-discovery/internal/rest"
@@ -138,6 +139,72 @@ func TestShouldReturnHTTPStatusBadRequestForPortValue(t *testing.T) {
 	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
 
 	registryService.AssertNotCalled(t, "Register", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestShouldReturnHTTPStatusOKForSucessfulServiceInstanceRegistry(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	requestBody := rest.ServiceRegistryRequest{
+		IP:   "localhost",
+		Name: "dummy",
+		Port: "8080",
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+
+	registryService.EXPECT().Register(mock.Anything).Return(nil)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse.Code, http.StatusOK)
+	registryService.AssertExpectations(t)
+}
+
+func TestShouldReturnInternalServiceErrorStatusWhenServiceInstanceRegistryFailure(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	requestBody := rest.ServiceRegistryRequest{
+		IP:   "localhost",
+		Name: "dummy",
+		Port: "8080",
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.ErrInternalServiceErrMsg,
+		Code:    http.StatusInternalServerError,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+
+	registryService.EXPECT().Register(mock.Anything).Return(errors.New("service is down"))
 
 	// when:
 	SUT.ServeHTTP(recoder, request)
