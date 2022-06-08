@@ -45,7 +45,7 @@ func (r *RegisterHandler) ClientRegistryEndpoint() string {
 
 type RegisterHandlerOption func(r *RegisterHandler)
 
-func WithRegisterHandleConfig(c RegisterHandlerConfig) RegisterHandlerOption {
+func WithRegisterHandlerConfig(c RegisterHandlerConfig) RegisterHandlerOption {
 	return func(r *RegisterHandler) {
 		if c.Endpoints != nil {
 			r.cfg.Endpoints = c.Endpoints
@@ -53,7 +53,7 @@ func WithRegisterHandleConfig(c RegisterHandlerConfig) RegisterHandlerOption {
 	}
 }
 
-func WithRegisterHandleRegistryService(s RegistryService) RegisterHandlerOption {
+func WithRegisterHandlerRegistryService(s RegistryService) RegisterHandlerOption {
 	return func(r *RegisterHandler) {
 		if s != nil {
 			r.service = s
@@ -61,7 +61,7 @@ func WithRegisterHandleRegistryService(s RegistryService) RegisterHandlerOption 
 	}
 }
 
-func WithRegisterHandleLogger(l Logger) RegisterHandlerOption {
+func WithRegisterHandlerLogger(l Logger) RegisterHandlerOption {
 	return func(r *RegisterHandler) {
 		if l != nil {
 			r.logger = l

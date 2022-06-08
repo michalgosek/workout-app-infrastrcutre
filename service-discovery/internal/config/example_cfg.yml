@@ -2,6 +2,7 @@ server:
   addr: localhost:8090
   shutdownTime: 10s 
 
-endpoints:
-  client-registry:  /v1/api/query
-  service-registry: /v1/api/registry 
+register-handler:
+  endpoints:
+    client-registry:  /v1/api/query
+    service-registry: /v1/api/registry 

@@ -19,7 +19,7 @@ func TestHealthCheckShouldReturnHTTPStatusOKUnit(t *testing.T) {
 	// given:
 	recoder := httptest.NewRecorder()
 	cfg := rest.RegisterHandlerConfig{}
-	handlerOpt := rest.WithRegisterHandleConfig(cfg)
+	handlerOpt := rest.WithRegisterHandlerConfig(cfg)
 	handler := rest.NewRegisterHandler(handlerOpt)
 	SUT := rest.NewAPI(handler)
 	SUT.SetEndpoints()

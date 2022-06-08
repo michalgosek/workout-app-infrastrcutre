@@ -31,8 +31,8 @@ func DefaultServerHTTP() ServerHTTP {
 }
 
 type Config struct {
-	Server    ServerHTTP
-	Endpoints rest.RegisterHandlerConfig
+	Server          ServerHTTP
+	RegisterHandler rest.RegisterHandlerConfig `mapstructure:"register-handler"`
 }
 
 func New(path string) (*Config, error) {

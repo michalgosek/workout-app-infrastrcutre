@@ -31,7 +31,13 @@ func execute() error {
 	}
 	serverCfg := createHTTPServerCfg(cfg.Server)
 	logger := logrus.New()
-	registerHandler := rest.NewRegisterHandler()
+
+	registerHandlerOpts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerConfig(cfg.RegisterHandler),
+		rest.WithRegisterHandlerLogger(logger),
+	}
+	registerHandler := rest.NewRegisterHandler(registerHandlerOpts...)
+
 	restAPI := rest.NewAPI(registerHandler)
 	restAPI.SetEndpoints()
 
