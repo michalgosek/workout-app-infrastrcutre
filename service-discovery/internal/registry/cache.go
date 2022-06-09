@@ -1,15 +1,14 @@
 package registry
 
-func (s *ServiceInstance) SetHealth(v bool) {
-	s.healthy = v
-}
+import "sort"
 
-func NewServiceInstance(name, ip string, port uint) ServiceInstance {
+func NewServiceInstance(Component, Name, IP string, Port string) ServiceInstance {
 	s := ServiceInstance{
-		name:    name,
-		ip:      ip,
-		port:    port,
-		healthy: false,
+		Component: Component,
+		Name:      Name,
+		IP:        IP,
+		Port:      Port,
+		healthy:   false,
 	}
 	return s
 }
@@ -21,38 +20,52 @@ type CacheRepository struct {
 }
 
 func (c *CacheRepository) UpdateStatus(s ServiceInstance) error {
-	cluster, ok := c.clusters[s.name]
+	cluster, ok := c.clusters[s.Component]
 	if !ok {
 		return nil
 	}
-	instances := cluster.Instances
-	for i, ins := range instances {
-		if ins.ip == s.ip && ins.port == s.port {
-			instances[i] = s
-		}
+	_, ok = cluster.Instances[s.Name]
+	if !ok {
+		return nil
 	}
-	c.clusters[s.name].Instances = instances
+	c.clusters[s.Component].Instances[s.Name] = s
 	return nil
 }
 
 func (c *CacheRepository) Register(ss ...ServiceInstance) error {
 	for _, s := range ss {
-		v, ok := c.clusters[s.name]
+		v, ok := c.clusters[s.Component]
 		if !ok {
-			c.clusters[s.name] = &ServiceCluster{Name: s.name, Instances: []ServiceInstance{s}}
+			c.clusters[s.Component] = &ServiceCluster{
+				Name: s.Component,
+				Instances: map[string]ServiceInstance{
+					s.Name: s,
+				},
+			}
 			continue
 		}
-		v.Instances = append(v.Instances, s)
+		v.Instances[s.Name] = s
 	}
 	return nil
 }
 
-func (c *CacheRepository) QueryInstances(name string) ([]ServiceInstance, error) {
-	v, ok := c.clusters[name]
+func (c *CacheRepository) QueryInstances(componentName string) ([]ServiceInstance, error) {
+	cluster, ok := c.clusters[componentName]
 	if !ok {
 		return []ServiceInstance{}, nil
 	}
-	return v.Instances, nil
+
+	var keys []string
+	for k := range cluster.Instances {
+		keys = append(keys, k)
+	}
+	sort.SliceStable(keys, func(i, j int) bool { return keys[i] < keys[j] })
+
+	var instances []ServiceInstance
+	for _, k := range keys {
+		instances = append(instances, cluster.Instances[k])
+	}
+	return instances, nil
 }
 
 func NewCacheRepository() *CacheRepository {

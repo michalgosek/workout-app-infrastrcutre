@@ -31,6 +31,7 @@ type RegisterHandlerConfig struct {
 
 type RegistryService interface {
 	Register(ss ...registry.ServiceInstance) error
+	QueryInstances(name string) ([]registry.ServiceInstance, error)
 }
 
 type RegisterHandler struct {
@@ -93,7 +94,7 @@ func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request
 	var payload ServiceRegistryRequest
 	err := payload.Decode(r.Body)
 	if err != nil {
-		response(w, JSONResponse{Message: "Internal Failure", Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		response(w, JSONResponse{Message: ErrInternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
 		return
 	}
 	err = payload.Verify()
@@ -102,19 +103,42 @@ func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	instance := registry.NewServiceInstance(payload.Name, payload.IP, payload.Port)
-	err = h.service.Register(instance)
-	if err != nil {
-		response(w, JSONResponse{Message: ErrInternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
-		return
-	}
+	// instance := registry.NewServiceInstance(payload.Name, payload.IP, payload.Port)
+	// err = h.service.Register(instance)
+	// if err != nil {
+	// 	response(w, JSONResponse{Message: ErrInternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+	// 	return
+	// }
 
 	msg := fmt.Sprintf("Instance of service %s registered successfully", payload.Name)
 	response(w, JSONResponse{Message: msg, Code: http.StatusOK}, http.StatusOK)
 }
 
+type QueryInstancesRequest struct {
+	Name string
+}
+
+type QueryInstanceRespone struct {
+	Code      int
+	Name      string
+	Instances []registry.ServiceInstance
+}
+
+func (q *QueryInstancesRequest) Decode(body io.ReadCloser) error {
+	dec := json.NewDecoder(body)
+	err := dec.Decode(&q)
+	if err != nil {
+		return fmt.Errorf("decode failed: %v", err)
+	}
+	return nil
+}
+
 func (h *RegisterHandler) QueryInstances(w http.ResponseWriter, r *http.Request) {
-	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
+
+	var payload QueryInstancesRequest
+	payload.Decode(r.Body)
+
+	response(w, QueryInstanceRespone{Name: payload.Name, Code: http.StatusOK, Instances: []registry.ServiceInstance{{IP: "AA"}}}, http.StatusOK)
 }
 
 func (r *RegisterHandler) ServiceRegiststryEndpoint() string {

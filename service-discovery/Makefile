@@ -1,9 +1,12 @@
-.PHONY: install test binary race cover 
+.PHONY: install test binary race cover run
 
 CURRENT_DIR := $(shell pwd)
 VERSION := $(shell git describe --always) 
 GOLIST := $(shell go list -m)
 BINARY := service-discovery 
+
+run:
+	./${BINARY}
 
 binary:
 	@go build -o ${BINARY} ${CURRENT_DIR}/cmd/srv

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 )
@@ -12,15 +13,20 @@ import (
 type ServiceHealthEndpoints map[string]string
 
 type ServiceInstance struct {
-	name    string
-	ip      string
-	port    uint
-	healthy bool
+	Component string
+	Name      string
+	IP        string
+	Port      string
+	healthy   bool
+}
+
+func (s *ServiceInstance) SetHealth(v bool) {
+	s.healthy = v
 }
 
 type ServiceCluster struct {
 	Name      string
-	Instances []ServiceInstance
+	Instances map[string]ServiceInstance
 }
 
 type Repository interface {
@@ -55,17 +61,25 @@ func (s *Service) verifyInstances(ss ...ServiceInstance) error {
 		return ErrEmptyServiceInstances
 	}
 	for _, si := range ss {
-		if si.name == "" {
-			return fmt.Errorf("specified empty service name: %w", ErrMalformedData)
+		if si.Component == "" {
+			return fmt.Errorf("specified empty component name: %w", ErrMissingData)
 		}
-		if si.ip != "localhost" {
-			ip := net.ParseIP(si.ip)
+		if si.Name == "" {
+			return fmt.Errorf("specified empty service name: %w", ErrMissingData)
+		}
+		if si.IP != "localhost" {
+			ip := net.ParseIP(si.IP)
 			if ip == nil {
-				return fmt.Errorf("parsing IP addres failure for %s: %w", si.name, ErrMalformedData)
+				return fmt.Errorf("parsing IP addres failure for %s: %w", si.Name, ErrMissingData)
 			}
 		}
-		if si.port == 0 || si.port > 65535 {
-			return fmt.Errorf("port number range must be in (1-65535) for %s: %w", si.name, ErrMalformedData)
+		port, err := strconv.ParseUint(si.Port, 10, 32)
+		if err != nil {
+			return fmt.Errorf("parse uint for port %s str failed: %v", si.Port, err)
+		}
+		isValidPort := port < 1 || port > 65535
+		if isValidPort {
+			return fmt.Errorf("port number range must be in (1-65535) for %s: %w", si.Name, ErrMissingData)
 		}
 	}
 	return nil
@@ -175,5 +189,5 @@ func NewService(opts ...RegistryServiceOption) *Service {
 }
 
 var ErrEmptyServiceInstances = errors.New("empty service instances")
-var ErrMalformedData = errors.New("malformed data")
+var ErrMissingData = errors.New("provided data not required")
 var ErrRepositoryFailure = errors.New("service registry repository failure")

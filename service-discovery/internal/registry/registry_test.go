@@ -11,37 +11,15 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestShouldNotReturnErrorWhenRepoistoryRegisterSuccessUnit(t *testing.T) {
-	assert := assert.New(t)
-
-	// given:
-	repo := registry.NewCacheRepository()
-	SUT := registry.NewService(registry.WithRepository(repo))
-	serviceName := "dummy"
-	exepctedInstances := []registry.ServiceInstance{
-		registry.NewServiceInstance(serviceName, "localhost", 1),
-	}
-
-	// when:
-	err := SUT.Register(exepctedInstances...)
-
-	// then:
-	assert.Nil(err)
-
-	actualInstances, err := SUT.QueryInstances(serviceName)
-	assert.Nil(err)
-	assert.Equal(exepctedInstances, actualInstances)
-}
-
-func TestShouldReturnErrorWhenRepoistoryRegisterFailureUnit(t *testing.T) {
+func TestShouldReturnErrorWhenRepoistoryFailureUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
 	repo := &mocks.ServiceRegistry{}
 	SUT := registry.NewService(registry.WithRepository(repo))
-	serviceName := "dummy"
+	component := "service1"
 	exepctedInstances := []registry.ServiceInstance{
-		registry.NewServiceInstance(serviceName, "localhost", 1),
+		registry.NewServiceInstance(component, "node1", "localhost", "1"),
 	}
 	repo.EXPECT().Register(mock.Anything).Return(errors.New("repository is down"))
 
@@ -53,24 +31,29 @@ func TestShouldReturnErrorWhenRepoistoryRegisterFailureUnit(t *testing.T) {
 	repo.AssertExpectations(t)
 }
 
-func TestShouldNotReturnErrorForServiceInstanceWhenRegisterUnit(t *testing.T) {
+func TestShouldRegisterSeviceInstanceWithSuccessUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	cache := registry.NewCacheRepository()
-	SUT := registry.NewService(registry.WithRepository(cache))
-	instances := []registry.ServiceInstance{
-		registry.NewServiceInstance("dummy", "localhost", 1),
+	repo := registry.NewCacheRepository()
+	SUT := registry.NewService(registry.WithRepository(repo))
+	component := "dummy"
+	exepctedInstances := []registry.ServiceInstance{
+		registry.NewServiceInstance(component, "node1", "localhost", "1"),
 	}
 
 	// when:
-	err := SUT.Register(instances...)
+	err := SUT.Register(exepctedInstances...)
 
 	// then:
 	assert.Nil(err)
+
+	actualInstances, err := SUT.QueryInstances(component)
+	assert.Nil(err)
+	assert.Equal(exepctedInstances, actualInstances)
 }
 
-func TestShouldReturnErrorForEmptyInstancesWhenRegisterUnit(t *testing.T) {
+func TestShouldReturnErrorForEmptyInstanceUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -85,21 +68,38 @@ func TestShouldReturnErrorForEmptyInstancesWhenRegisterUnit(t *testing.T) {
 	assert.ErrorIs(err, registry.ErrEmptyServiceInstances)
 }
 
-func TestShouldReturnErrorForMalformedInstanceIPAddrWhenRegisterUnit(t *testing.T) {
+func TestShouldReturnErrorWhenIPAddrIsMalformedUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
 	cache := registry.NewCacheRepository()
 	SUT := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
-		registry.NewServiceInstance("dummy", "12345", 9090),
+		registry.NewServiceInstance("service", "node1", "12345", "9090"),
 	}
 
 	// when:
 	err := SUT.Register(instances...)
 
 	// then:
-	assert.ErrorIs(err, registry.ErrMalformedData)
+	assert.ErrorIs(err, registry.ErrMissingData)
+}
+
+func TestShouldReturnErrorWhencomponentNameIsEmptyUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	cache := registry.NewCacheRepository()
+	SUT := registry.NewService(registry.WithRepository(cache))
+	instances := []registry.ServiceInstance{
+		registry.NewServiceInstance("", "node1", "127.0.0.1", "9090"),
+	}
+
+	// when:
+	err := SUT.Register(instances...)
+
+	// then:
+	assert.ErrorIs(err, registry.ErrMissingData)
 }
 
 func TestShouldReturnErrorForMalformedInstanceNameWhenRegisterUnit(t *testing.T) {
@@ -109,14 +109,14 @@ func TestShouldReturnErrorForMalformedInstanceNameWhenRegisterUnit(t *testing.T)
 	cache := registry.NewCacheRepository()
 	SUT := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
-		registry.NewServiceInstance("", "12345", 9090),
+		registry.NewServiceInstance("component", "", "12345", "9090"),
 	}
 
 	// when:
 	err := SUT.Register(instances...)
 
 	// then:
-	assert.ErrorIs(err, registry.ErrMalformedData)
+	assert.ErrorIs(err, registry.ErrMissingData)
 }
 
 func TestShouldReturnErrorForGreaterInstancePortThan65536WhenRegisterUnit(t *testing.T) {
@@ -126,14 +126,14 @@ func TestShouldReturnErrorForGreaterInstancePortThan65536WhenRegisterUnit(t *tes
 	cache := registry.NewCacheRepository()
 	service := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
-		registry.NewServiceInstance("dummy", "localhost", 65536),
+		registry.NewServiceInstance("component", "node1", "localhost", "65536"),
 	}
 
 	// when:
 	err := service.Register(instances...)
 
 	// then:
-	assert.ErrorIs(err, registry.ErrMalformedData)
+	assert.ErrorIs(err, registry.ErrMissingData)
 }
 
 func TestShouldReturnErrorForInstancePortEqualToZeroWhenRegisterUnit(t *testing.T) {
@@ -143,14 +143,14 @@ func TestShouldReturnErrorForInstancePortEqualToZeroWhenRegisterUnit(t *testing.
 	cache := registry.NewCacheRepository()
 	service := registry.NewService(registry.WithRepository(cache))
 	instances := []registry.ServiceInstance{
-		registry.NewServiceInstance("dummy", "localhost", 0),
+		registry.NewServiceInstance("component", "node1", "localhost", "0"),
 	}
 
 	// when:
 	err := service.Register(instances...)
 
 	// then:
-	assert.ErrorIs(err, registry.ErrMalformedData)
+	assert.ErrorIs(err, registry.ErrMissingData)
 }
 
 func TestShouldMarkServiceInstanceAsHealthyUnit(t *testing.T) {
@@ -159,15 +159,15 @@ func TestShouldMarkServiceInstanceAsHealthyUnit(t *testing.T) {
 	// given:
 	cache := registry.NewCacheRepository()
 	httpCli := &mocks.HTTPClient{}
-	serviceName := "dummy"
+	component := "dummy"
 	service := registry.NewService(
 		registry.WithRepository(cache),
 		registry.WithHTTPClient(httpCli),
 		registry.WithHealthz(registry.ServiceHealthEndpoints{
-			serviceName: "/v1/test",
+			component: "/v1/test",
 		}),
 	)
-	instance := registry.NewServiceInstance(serviceName, "localhost", 8080)
+	instance := registry.NewServiceInstance(component, "node1", "localhost", "8080")
 
 	expectedInstance := instance
 	expectedInstance.SetHealth(true)
@@ -182,7 +182,7 @@ func TestShouldMarkServiceInstanceAsHealthyUnit(t *testing.T) {
 	service.HeartBeat()
 
 	// then:
-	actualInstances, err := service.QueryInstances(serviceName)
+	actualInstances, err := service.QueryInstances(component)
 	assert.Nil(err)
 
 	assert.Equal(expectedInstances, actualInstances)
@@ -196,23 +196,22 @@ func TestShouldMarkSingleServiceInstanceAsNotHealthyUnit(t *testing.T) {
 	// given:
 	cache := registry.NewCacheRepository()
 	httpCli := &mocks.HTTPClient{}
-	serviceName := "dummy"
+	component := "dummy"
 	service := registry.NewService(
 		registry.WithRepository(cache),
 		registry.WithHTTPClient(httpCli),
 		registry.WithHealthz(registry.ServiceHealthEndpoints{
-			serviceName: "/v1/test",
+			component: "/v1/test",
 		}),
 	)
 
-	first := registry.NewServiceInstance(serviceName, "localhost", 8080)
-	first.SetHealth(true)
-	second := registry.NewServiceInstance(serviceName, "localhost", 8090)
+	first := registry.NewServiceInstance(component, "node1", "localhost", "8080")
+	second := registry.NewServiceInstance(component, "node2", "localhost", "8090")
 	second.SetHealth(true)
+	first.SetHealth(true)
 
 	expectedInstance := second
 	expectedInstance.SetHealth(false)
-
 	expectedInstances := []registry.ServiceInstance{first, expectedInstance}
 
 	service.Register(first, second)
@@ -226,7 +225,7 @@ func TestShouldMarkSingleServiceInstanceAsNotHealthyUnit(t *testing.T) {
 	service.HeartBeat()
 
 	// then:
-	actualInstances, err := service.QueryInstances(serviceName)
+	actualInstances, err := service.QueryInstances(component)
 	assert.Nil(err)
 
 	assert.Equal(expectedInstances, actualInstances)
@@ -238,16 +237,16 @@ func TestShouldLogErrorWhenServiceInstanceUpdateStatusFailure(t *testing.T) {
 	registryRepository := &mocks.ServiceRegistry{}
 	httpCli := &mocks.HTTPClient{}
 	logger := &mocks.Logger{}
-	serviceName := "dummy"
+	component := "dummy"
 	service := registry.NewService(
 		registry.WithRepository(registryRepository),
 		registry.WithHTTPClient(httpCli),
 		registry.WithLogger(logger),
 		registry.WithHealthz(registry.ServiceHealthEndpoints{
-			serviceName: "/v1/test",
+			component: "/v1/test",
 		}),
 	)
-	instance := registry.NewServiceInstance(serviceName, "localhost", 8080)
+	instance := registry.NewServiceInstance(component, "node1", "localhost", "8080")
 	registryRepository.EXPECT().QueryInstances(mock.Anything).Return([]registry.ServiceInstance{instance}, nil)
 	registryRepository.EXPECT().UpdateStatus(mock.Anything).Return(errors.New("repository is down"))
 	httpCli.EXPECT().Get(mock.Anything).Return(&http.Response{StatusCode: http.StatusOK}, nil)
