@@ -139,8 +139,8 @@ func (s *Service) ProcessClusters(clusters ...ServiceCluster) {
 		for _, v := range c.Instances {
 			addr := fmt.Sprintf("http://%s:%s/%s", v.IP, v.Port, v.Endpoint)
 			resp, err := s.http.Get(addr)
-			if err != nil {
-				s.logger.Errorf("HTTP-CLI err: %v", err)
+			if err != nil || resp.StatusCode != http.StatusOK {
+				s.logger.Errorf("[HealthCheckError][Cluster: %s, Node: %s]: %v", c.Name, v.Name, err)
 				continue
 			}
 			healthy := true

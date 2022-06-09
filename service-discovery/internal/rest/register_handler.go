@@ -49,8 +49,8 @@ func (s *ServiceRegistryRequest) Decode(body io.ReadCloser) error {
 }
 
 const (
-	clientRegistry  = "/v1/api/services/query"
-	serviceRegistry = "/v1/api/services/register"
+	clientRegistry  = "clientRegistry"
+	serviceRegistry = "serviceRegistry"
 )
 
 const (
@@ -173,8 +173,8 @@ func NewRegisterHandler(opts ...RegisterHandlerOption) *RegisterHandler {
 	h := RegisterHandler{
 		logger: logrus.New(),
 		endpoints: map[string]string{
-			serviceRegistry: "/v1/api/services/register",
-			clientRegistry:  "/v1/api/services/query",
+			serviceRegistry: "/api/v1/services/register",
+			clientRegistry:  "/api/v1/services/query",
 		},
 	}
 

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	client "github.com/michalgosek/workout-app-infrastrcutre/service-discovery-cli"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,9 +22,9 @@ func TestHealthCheckShouldReturnHTTPStatusOKUnit(t *testing.T) {
 	SUT := rest.NewAPI(handler)
 	SUT.SetEndpoints()
 
-	expectedResponse := rest.JSONResponse{
+	expectedResponse := client.ServiceRegistryResponse{
 		Message: "OK",
-		Code:    http.StatusOK,
+		Code:    "OK",
 	}
 
 	req := httptest.NewRequest(http.MethodGet, rest.HealthEndpoint, nil)
