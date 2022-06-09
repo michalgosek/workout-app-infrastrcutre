@@ -2,7 +2,6 @@ package config_test
 
 import (
 	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/config"
-	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
 
 	"testing"
 	"time"
@@ -33,12 +32,6 @@ func TestShouldReadConfigFileWithoutError(t *testing.T) {
 		Server: config.ServerHTTP{
 			Addr:         "localhost:8090",
 			ShutdownTime: 10 * time.Second,
-		},
-		RegisterHandler: rest.RegisterHandlerConfig{
-			Endpoints: map[string]string{
-				"client-registry":  "/v1/api/query",
-				"service-registry": "/v1/api/registry",
-			},
 		},
 	}
 

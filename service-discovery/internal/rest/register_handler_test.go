@@ -45,38 +45,6 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatus500WhenDecodingRequestBodyF
 	registryService.AssertExpectations(t)
 }
 
-func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyPayloadUnit(t *testing.T) {
-	assert := assert.New(t)
-
-	// given:
-	requestBody := rest.ServiceRegistryRequest{}
-	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
-	recoder := httptest.NewRecorder()
-	expectedResponse := rest.JSONResponse{
-		Message: rest.MissingRequestBodyMsg,
-		Code:    http.StatusBadRequest,
-	}
-
-	registryService := mocks.RegistryService{}
-
-	opts := []rest.RegisterHandlerOption{
-		rest.WithRegisterHandlerRegistryService(&registryService),
-	}
-	registerHandler := rest.NewRegisterHandler(opts...)
-	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
-
-	registryService.AssertNotCalled(t, "Register", mock.Anything)
-
-	// when:
-	SUT.ServeHTTP(recoder, request)
-
-	// then:
-	actualResponse, err := convertToJSONResponse(recoder.Body)
-	assert.Nil(err)
-	assert.Equal(actualResponse, expectedResponse)
-	registryService.AssertExpectations(t)
-}
-
 func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyInstanceNameUnit(t *testing.T) {
 	assert := assert.New(t)
 
@@ -288,16 +256,12 @@ func TestServiceRegistryHandlerShouldReturnInternalServiceErrorStatusWhenRegistr
 	registryService.AssertExpectations(t)
 }
 
-func TestQueryInstancesHandlerShouldReturnHTTPStatus500WhenDecodingRequestBodyFailureUnit(t *testing.T) {
+func TestQueryInstancesHandlerShouldReturnHTTPStatusBadRequestForMissingComponentQueryParam(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	request := createHTTPrequestWithoutBody(http.MethodPost)
+	request := createHTTPrequestWithoutBody(http.MethodGet)
 	recoder := httptest.NewRecorder()
-	expectedResponse := rest.JSONResponse{
-		Message: rest.InternalServiceErrMsg,
-		Code:    http.StatusInternalServerError,
-	}
 
 	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
@@ -306,39 +270,12 @@ func TestQueryInstancesHandlerShouldReturnHTTPStatus500WhenDecodingRequestBodyFa
 	registerHandler := rest.NewRegisterHandler(opts...)
 	SUT := http.HandlerFunc(registerHandler.QueryInstances)
 
-	registryService.AssertNotCalled(t, "QueryInstances", mock.Anything)
-
-	// when:
-	SUT.ServeHTTP(recoder, request)
-
-	// then:
-	actualResponse, err := convertToJSONResponse(recoder.Body)
-	assert.Nil(err)
-	assert.Equal(actualResponse, expectedResponse)
-	registryService.AssertExpectations(t)
-}
-
-func TestQueryInstancesHandlerShouldReturnHTTPStatusBadRequestForEmptyPayloadUnit(t *testing.T) {
-	assert := assert.New(t)
-
-	// given:
-	requestBody := rest.ServiceRegistryRequest{}
-	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
-	recoder := httptest.NewRecorder()
 	expectedResponse := rest.JSONResponse{
-		Message: rest.MissingRequestBodyMsg,
 		Code:    http.StatusBadRequest,
+		Message: rest.MissingComponentQueryParam,
 	}
 
-	registryService := mocks.RegistryService{}
-
-	opts := []rest.RegisterHandlerOption{
-		rest.WithRegisterHandlerRegistryService(&registryService),
-	}
-	registerHandler := rest.NewRegisterHandler(opts...)
-	SUT := http.HandlerFunc(registerHandler.QueryInstances)
-
-	registryService.AssertNotCalled(t, "QueryInstances", mock.Anything)
+	registryService.AssertNotCalled(t, "QueryInstances")
 
 	// when:
 	SUT.ServeHTTP(recoder, request)
@@ -349,16 +286,16 @@ func TestQueryInstancesHandlerShouldReturnHTTPStatusBadRequestForEmptyPayloadUni
 	assert.Equal(expectedResponse, actualResponse)
 	registryService.AssertExpectations(t)
 }
-
 func TestQueryInstancesHandlerShouldReturnHTTPStatusOKForSucessfulQueryUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	component := "component"
-	requestBody := rest.QueryInstancesRequest{
-		Component: component,
-	}
-	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	component := "service1"
+	request := createHTTPrequestWithoutBody(http.MethodGet)
+	params := request.URL.Query()
+	params.Add(rest.ComponentQueryParam, component)
+	request.URL.RawQuery = params.Encode()
+
 	recoder := httptest.NewRecorder()
 
 	registryService := mocks.RegistryService{}
@@ -403,10 +340,10 @@ func TestQueryInstancesHandlerShouldReturnInternalServiceErrorStatusWhenQueryFai
 
 	// given:
 	component := "service1"
-	requestBody := rest.QueryInstancesRequest{
-		Component: component,
-	}
-	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	request := createHTTPrequestWithoutBody(http.MethodGet)
+	params := request.URL.Query()
+	params.Add(rest.ComponentQueryParam, component)
+	request.URL.RawQuery = params.Encode()
 	recoder := httptest.NewRecorder()
 	expectedResponse := rest.JSONResponse{
 		Message: rest.InternalServiceErrMsg,

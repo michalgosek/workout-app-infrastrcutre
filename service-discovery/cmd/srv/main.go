@@ -23,11 +23,10 @@ func main() {
 }
 
 func execute() error {
-	var path string
-	flag.StringVar(&path, "c", "./config.yml", "service config file path")
+	var Path string
+	flag.StringVar(&Path, "c", "./config.yml", "service config file path")
 	flag.Parse()
-
-	cfg, err := config.New(path)
+	cfg, err := config.New(Path)
 	if err != nil {
 		return fmt.Errorf("config file read failed %v", err)
 	}
@@ -42,7 +41,6 @@ func execute() error {
 	registryService := registry.NewService(registryServiceOpts...)
 
 	registerHandlerOpts := []rest.RegisterHandlerOption{
-		rest.WithRegisterHandlerConfig(cfg.RegisterHandler),
 		rest.WithRegisterHandlerLogger(logger),
 		rest.WithRegisterHandlerRegistryService(registryService),
 	}

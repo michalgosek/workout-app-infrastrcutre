@@ -1,4 +1,4 @@
-module api-gateway
+module github.com/michalgosek/workout-app-infrastrcutre/api-gateway
 
 go 1.17
 

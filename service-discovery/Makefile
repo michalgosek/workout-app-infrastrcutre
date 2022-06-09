@@ -9,7 +9,7 @@ run:
 	./${BINARY}
 
 binary:
-	@go build -o ${BINARY} ${CURRENT_DIR}/cmd/srv
+	@go build -o ${BINARY} ${CURRENT_DIR}/cmd/srv 
 
 test:
 	@go test ./... -cover -count=1 

@@ -4,8 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
-
 	"fmt"
 	"io/fs"
 
@@ -32,8 +30,7 @@ func DefaultServerHTTP() ServerHTTP {
 }
 
 type Config struct {
-	Server          ServerHTTP
-	RegisterHandler rest.RegisterHandlerConfig `mapstructure:"register-handler"`
+	Server ServerHTTP
 }
 
 func New(path string) (*Config, error) {

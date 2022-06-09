@@ -20,24 +20,15 @@ type Logger interface {
 	Errorf(format string, args ...interface{})
 }
 
-const (
-	serviceRegistry = "service-registry"
-	clientRegistry  = "client-registry"
-)
-
-type RegisterHandlerConfig struct {
-	Endpoints map[string]string
-}
-
 type RegistryService interface {
 	Register(ss ...registry.ServiceInstance) error
 	QueryInstances(name string) ([]registry.ServiceInstance, error)
 }
 
 type RegisterHandler struct {
-	cfg     RegisterHandlerConfig
-	logger  Logger
-	service RegistryService
+	logger    Logger
+	service   RegistryService
+	endpoints map[string]string
 }
 
 type ServiceRegistryRequest struct {
@@ -57,12 +48,18 @@ func (s *ServiceRegistryRequest) Decode(body io.ReadCloser) error {
 }
 
 const (
-	InternalServiceErrMsg = "Internal Service Error"
-	MissingRequestBodyMsg = "Missing request body."
-	MissingComponentMsg   = "Missing component name value in the request body."
-	MissingHostIPMsg      = "Missing service instance IP value in the request body."
-	MissingHostNameMsg    = "Missing service instance Name in the request body."
-	MissingHostPortMsg    = "Missing service instance Port value in the request body."
+	clientRegistry  = "/v1/api/services/query"
+	serviceRegistry = "/v1/api/services/register"
+)
+
+const (
+	InternalServiceErrMsg      = "Internal Service Error"
+	MissingRequestBodyMsg      = "Missing request body."
+	MissingComponentMsg        = "Missing component name value in the request body."
+	MissingHostIPMsg           = "Missing service instance IP value in the request body."
+	MissingHostNameMsg         = "Missing service instance Name in the request body."
+	MissingHostPortMsg         = "Missing service instance Port value in the request body."
+	MissingComponentQueryParam = "Missing component param in the request query."
 )
 
 type RequestFieldErrorMsg struct {
@@ -118,81 +115,38 @@ func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request
 	response(w, JSONResponse{Message: msg, Code: http.StatusOK}, http.StatusOK)
 }
 
-type QueryInstancesRequest struct {
-	Component string
-}
-
 type QueryInstancesRespone struct {
 	Code      int
 	Name      string
 	Instances []registry.ServiceInstance
 }
 
-func (q *QueryInstancesRequest) Decode(body io.ReadCloser) error {
-	dec := json.NewDecoder(body)
-	err := dec.Decode(&q)
-	if err != nil {
-		return fmt.Errorf("decode failed: %v", err)
-	}
-	return nil
-}
-
-func (q *QueryInstancesRequest) Verify() string {
-	recv := QueryInstancesRequest{
-		Component: strings.TrimSpace(q.Component),
-	}
-	var empty QueryInstancesRequest
-	if recv == empty {
-		return MissingRequestBodyMsg
-	}
-	m := map[string]RequestFieldErrorMsg{
-		"component": {errMsg: MissingComponentMsg, field: strings.TrimSpace(q.Component)},
-	}
-	for _, v := range m {
-		if v.field == "" {
-			return v.errMsg
-		}
-	}
-	return ""
-}
+const ComponentQueryParam = "component"
 
 func (h *RegisterHandler) QueryInstances(w http.ResponseWriter, r *http.Request) {
-	var payload QueryInstancesRequest
-	err := payload.Decode(r.Body)
+	query := r.URL.Query()
+	componentName := query.Get(ComponentQueryParam)
+	if componentName == "" {
+		response(w, JSONResponse{Message: MissingComponentQueryParam, Code: http.StatusBadRequest}, http.StatusBadRequest)
+		return
+	}
+	instances, err := h.service.QueryInstances(componentName)
 	if err != nil {
 		response(w, JSONResponse{Message: InternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
 		return
 	}
-	errMsg := payload.Verify()
-	if errMsg != "" {
-		response(w, JSONResponse{Message: errMsg, Code: http.StatusBadRequest}, http.StatusBadRequest)
-		return
-	}
-	instances, err := h.service.QueryInstances(payload.Component)
-	if err != nil {
-		response(w, JSONResponse{Message: InternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
-		return
-	}
-	response(w, QueryInstancesRespone{Code: http.StatusOK, Name: payload.Component, Instances: instances}, http.StatusOK)
+	response(w, QueryInstancesRespone{Code: http.StatusOK, Name: componentName, Instances: instances}, http.StatusOK)
 }
 
 func (r *RegisterHandler) ServiceRegiststryEndpoint() string {
-	return r.cfg.Endpoints[serviceRegistry]
+	return r.endpoints[serviceRegistry]
 }
 
 func (r *RegisterHandler) ClientRegistryEndpoint() string {
-	return r.cfg.Endpoints[clientRegistry]
+	return r.endpoints[clientRegistry]
 }
 
 type RegisterHandlerOption func(r *RegisterHandler)
-
-func WithRegisterHandlerConfig(c RegisterHandlerConfig) RegisterHandlerOption {
-	return func(r *RegisterHandler) {
-		if c.Endpoints != nil {
-			r.cfg.Endpoints = c.Endpoints
-		}
-	}
-}
 
 func WithRegisterHandlerRegistryService(s RegistryService) RegisterHandlerOption {
 	return func(r *RegisterHandler) {
@@ -211,14 +165,11 @@ func WithRegisterHandlerLogger(l Logger) RegisterHandlerOption {
 }
 
 func NewRegisterHandler(opts ...RegisterHandlerOption) *RegisterHandler {
-
 	h := RegisterHandler{
 		logger: logrus.New(),
-		cfg: RegisterHandlerConfig{
-			Endpoints: map[string]string{
-				serviceRegistry: "/v1/api/services/register",
-				clientRegistry:  "/v1/api/services/query",
-			},
+		endpoints: map[string]string{
+			serviceRegistry: "/v1/api/services/register",
+			clientRegistry:  "/v1/api/services/query",
 		},
 	}
 
