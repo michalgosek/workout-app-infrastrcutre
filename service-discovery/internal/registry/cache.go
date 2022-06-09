@@ -2,12 +2,13 @@ package registry
 
 import "sort"
 
-func NewServiceInstance(Component, Name, IP string, Port string) ServiceInstance {
+func NewServiceInstance(component, name, ip, port, endpoint string) ServiceInstance {
 	s := ServiceInstance{
-		Component: Component,
-		Name:      Name,
-		IP:        IP,
-		Port:      Port,
+		Component: component,
+		Name:      name,
+		IP:        ip,
+		Port:      port,
+		Endpoint:  endpoint,
 		healthy:   false,
 	}
 	return s
@@ -47,6 +48,18 @@ func (c *CacheRepository) Register(ss ...ServiceInstance) error {
 		v.Instances[s.Name] = s
 	}
 	return nil
+}
+
+func (c *CacheRepository) ListClusters() []ServiceCluster {
+	var clusters []ServiceCluster
+	for k, v := range c.clusters {
+		cluster := ServiceCluster{
+			Name:      k,
+			Instances: v.Instances,
+		}
+		clusters = append(clusters, cluster)
+	}
+	return clusters
 }
 
 func (c *CacheRepository) QueryInstances(componentName string) ([]ServiceInstance, error) {

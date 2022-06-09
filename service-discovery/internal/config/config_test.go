@@ -2,6 +2,7 @@ package config_test
 
 import (
 	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/config"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
 
 	"testing"
 	"time"
@@ -32,6 +33,9 @@ func TestShouldReadConfigFileWithoutError(t *testing.T) {
 		Server: config.ServerHTTP{
 			Addr:         "localhost:8090",
 			ShutdownTime: 10 * time.Second,
+		},
+		Registry: registry.Config{
+			HeartBeat: 10 * time.Second,
 		},
 	}
 

@@ -1,3 +1,6 @@
 server:
   addr: localhost:8090
   shutdownTime: 10s 
+
+registry:
+  heartBeat: 10s

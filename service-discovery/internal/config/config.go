@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
 	"github.com/spf13/viper"
 )
 
@@ -30,7 +31,8 @@ func DefaultServerHTTP() ServerHTTP {
 }
 
 type Config struct {
-	Server ServerHTTP
+	Server   ServerHTTP
+	Registry registry.Config
 }
 
 func New(path string) (*Config, error) {

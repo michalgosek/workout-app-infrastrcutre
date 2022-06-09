@@ -20,6 +20,44 @@ func (_m *Repository) EXPECT() *Repository_Expecter {
 	return &Repository_Expecter{mock: &_m.Mock}
 }
 
+// ListClusters provides a mock function with given fields:
+func (_m *Repository) ListClusters() []registry.ServiceCluster {
+	ret := _m.Called()
+
+	var r0 []registry.ServiceCluster
+	if rf, ok := ret.Get(0).(func() []registry.ServiceCluster); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]registry.ServiceCluster)
+		}
+	}
+
+	return r0
+}
+
+// Repository_ListClusters_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ListClusters'
+type Repository_ListClusters_Call struct {
+	*mock.Call
+}
+
+// ListClusters is a helper method to define mock.On call
+func (_e *Repository_Expecter) ListClusters() *Repository_ListClusters_Call {
+	return &Repository_ListClusters_Call{Call: _e.mock.On("ListClusters")}
+}
+
+func (_c *Repository_ListClusters_Call) Run(run func()) *Repository_ListClusters_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *Repository_ListClusters_Call) Return(_a0 []registry.ServiceCluster) *Repository_ListClusters_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // QueryInstances provides a mock function with given fields: name
 func (_m *Repository) QueryInstances(name string) ([]registry.ServiceInstance, error) {
 	ret := _m.Called(name)

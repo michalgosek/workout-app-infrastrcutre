@@ -12,7 +12,6 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/config"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -32,9 +31,13 @@ func execute() error {
 	}
 	serverCfg := createHTTPServerCfg(cfg.Server)
 	logger := logrus.New()
+	logger.SetOutput(os.Stdout)
+	logger.SetLevel(logrus.InfoLevel)
+	logger.SetFormatter(&logrus.JSONFormatter{})
 
 	repository := registry.NewCacheRepository()
 	registryServiceOpts := []registry.RegistryServiceOption{
+		registry.WithConfig(cfg.Registry),
 		registry.WithRepository(repository),
 		registry.WithLogger(logger),
 	}
@@ -59,10 +62,14 @@ func execute() error {
 
 	idleConnsClosed := make(chan struct{})
 	go func() {
+		registryService.HeartBeat()
+	}()
+	go func() {
 		sigint := make(chan os.Signal, 1)
 		signal.Notify(sigint, os.Interrupt)
 		<-sigint
 
+		registryService.StopHeartBeat()
 		// We received an interrupt signal, shut down.
 		logger.Info("Shutting down service")
 		if err := srv.Shutdown(context.Background()); err != nil {
@@ -71,6 +78,7 @@ func execute() error {
 		}
 		close(idleConnsClosed)
 	}()
+
 	logger.Infof("Server starts listen on port addr: %s\n", serverCfg.Addr)
 	if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 		// Error starting or closing listener:

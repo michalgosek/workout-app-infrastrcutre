@@ -32,10 +32,11 @@ type RegisterHandler struct {
 }
 
 type ServiceRegistryRequest struct {
-	Component string
-	Instance  string
-	IP        string
-	Port      string
+	HealthEndpoint string
+	Component      string
+	Instance       string
+	IP             string
+	Port           string
 }
 
 func (s *ServiceRegistryRequest) Decode(body io.ReadCloser) error {
@@ -53,41 +54,39 @@ const (
 )
 
 const (
-	InternalServiceErrMsg      = "Internal Service Error"
-	MissingRequestBodyMsg      = "Missing request body."
-	MissingComponentMsg        = "Missing component name value in the request body."
-	MissingHostIPMsg           = "Missing service instance IP value in the request body."
-	MissingHostNameMsg         = "Missing service instance Name in the request body."
-	MissingHostPortMsg         = "Missing service instance Port value in the request body."
+	InternalServiceErr         = "Internal Service Error"
+	MissingRequestBody         = "Missing request body."
+	MissingComponent           = "Missing component name value in the request body."
+	MissingHostIP              = "Missing service instance IP value in the request body."
+	MissingHostName            = "Missing service instance Name in the request body."
+	MissingHostPort            = "Missing service instance Port value in the request body."
+	MissingHostHealthEndpoint  = "Missing service instance Health Endpoint value in the request body."
 	MissingComponentQueryParam = "Missing component param in the request query."
 )
-
-type RequestFieldErrorMsg struct {
-	field  string
-	errMsg string
-}
 
 func (s *ServiceRegistryRequest) Verify() string {
 	var empty ServiceRegistryRequest
 	recv := ServiceRegistryRequest{
-		Component: strings.TrimSpace(s.Component),
-		Instance:  strings.TrimSpace(s.Instance),
-		IP:        strings.TrimSpace(s.IP),
-		Port:      strings.TrimSpace(s.Port),
+		Component:      strings.TrimSpace(s.Component),
+		Instance:       strings.TrimSpace(s.Instance),
+		IP:             strings.TrimSpace(s.IP),
+		Port:           strings.TrimSpace(s.Port),
+		HealthEndpoint: strings.TrimSpace(s.HealthEndpoint),
 	}
 	if recv == empty {
-		return MissingRequestBodyMsg
+		return MissingRequestBody
 	}
-	m := map[string]RequestFieldErrorMsg{
-		"component": {errMsg: MissingComponentMsg, field: recv.Component},
-		"IP":        {errMsg: MissingHostIPMsg, field: recv.IP},
-		"instance":  {errMsg: MissingHostNameMsg, field: recv.Instance},
-		"port":      {errMsg: MissingHostPortMsg, field: recv.Port},
-	}
-	for _, v := range m {
-		if v.field == "" {
-			return v.errMsg
-		}
+	switch {
+	case recv.Component == "":
+		return MissingComponent
+	case recv.HealthEndpoint == "":
+		return MissingHostHealthEndpoint
+	case recv.IP == "":
+		return MissingHostIP
+	case recv.Port == "":
+		return MissingHostPort
+	case recv.Instance == "":
+		return MissingHostName
 	}
 	return ""
 }
@@ -96,7 +95,7 @@ func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request
 	var payload ServiceRegistryRequest
 	err := payload.Decode(r.Body)
 	if err != nil {
-		response(w, JSONResponse{Message: InternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		response(w, JSONResponse{Message: InternalServiceErr, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
 		return
 	}
 	errMsg := payload.Verify()
@@ -105,10 +104,16 @@ func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	instance := registry.NewServiceInstance(payload.Component, payload.Instance, payload.IP, payload.Port)
+	instance := registry.ServiceInstance{
+		Component: payload.Component,
+		Name:      payload.Instance,
+		IP:        payload.IP,
+		Port:      payload.Port,
+		Endpoint:  payload.HealthEndpoint,
+	}
 	err = h.service.Register(instance)
 	if err != nil {
-		response(w, JSONResponse{Message: InternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		response(w, JSONResponse{Message: InternalServiceErr, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
 		return
 	}
 	msg := fmt.Sprintf("Cluster %s - Instance of service %s registered successfully", payload.Component, payload.Instance)
@@ -132,7 +137,7 @@ func (h *RegisterHandler) QueryInstances(w http.ResponseWriter, r *http.Request)
 	}
 	instances, err := h.service.QueryInstances(componentName)
 	if err != nil {
-		response(w, JSONResponse{Message: InternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		response(w, JSONResponse{Message: InternalServiceErr, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
 		return
 	}
 	response(w, QueryInstancesRespone{Code: http.StatusOK, Name: componentName, Instances: instances}, http.StatusOK)

@@ -8,13 +8,63 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestShouldReturnAllRegisterdClustesUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	SUT := registry.NewCacheRepository()
+	component := "service1"
+	instance1 := registry.ServiceInstance{
+		Component: component,
+		Name:      "node1",
+		IP:        "localhost",
+		Port:      "8080",
+		Endpoint:  "/v1/health",
+	}
+	instance2 := registry.ServiceInstance{
+		Component: component,
+		Name:      "node2",
+		IP:        "localhost",
+		Port:      "8090",
+		Endpoint:  "/v1/health",
+	}
+	expectedInstances := []registry.ServiceInstance{
+		instance1,
+		instance2,
+	}
+	expectedClusters := []registry.ServiceCluster{
+		{
+			Name: component,
+			Instances: map[string]registry.ServiceInstance{
+				instance1.Name: instance1,
+				instance2.Name: instance2,
+			},
+		},
+	}
+
+	SUT.Register(expectedInstances...)
+
+	// when:
+	actualClusters := SUT.ListClusters()
+
+	// then:
+	assert.EqualValues(expectedClusters, actualClusters)
+}
+
 func TestShouldNotRegisterDuplicateNodeInstancesUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
 	SUT := registry.NewCacheRepository()
 	component := "service1"
-	instance := registry.NewServiceInstance(component, "dummy", "localhost", "8080")
+	instance := registry.ServiceInstance{
+		Component: component,
+		Name:      "node1",
+		IP:        "localhost",
+		Port:      "8080",
+		Endpoint:  "/v1/health",
+	}
+
 	duplicateInstances := []registry.ServiceInstance{instance, instance}
 	expectedInstance := instance
 	expectedInstances := []registry.ServiceInstance{expectedInstance}
@@ -36,7 +86,13 @@ func TestShouldNotUpdateNonExistingServiceInstanceUnit(t *testing.T) {
 	// given:
 	SUT := registry.NewCacheRepository()
 	component := "service1"
-	instance := registry.NewServiceInstance(component, "dummy", "localhost", "8080")
+	instance := registry.ServiceInstance{
+		Component: component,
+		Name:      "node1",
+		IP:        "localhost",
+		Port:      "8080",
+		Endpoint:  "/v1/health",
+	}
 
 	// when:
 	err := SUT.UpdateStatus(instance)
@@ -55,7 +111,13 @@ func TestShouldUpdateServiceInstanceStatusToTrueUnit(t *testing.T) {
 	// given:
 	SUT := registry.NewCacheRepository()
 	component := "service1"
-	instance := registry.NewServiceInstance(component, "dummy", "localhost", "8080")
+	instance := registry.ServiceInstance{
+		Component: component,
+		Name:      "node1",
+		IP:        "localhost",
+		Port:      "8080",
+		Endpoint:  "/v1/health",
+	}
 	instances := []registry.ServiceInstance{instance}
 	expectedInstance := instance
 	expectedInstance.SetHealth(true)
@@ -81,9 +143,27 @@ func TestShouldUpdateServiceSingleInstanceStatusToTrueUnit(t *testing.T) {
 	// given:
 	SUT := registry.NewCacheRepository()
 	component := "dummy"
-	first := registry.NewServiceInstance(component, "node1", "localhost", "8090")
-	second := registry.NewServiceInstance(component, "node2", "localhost", "8080")
-	third := registry.NewServiceInstance(component, "node3", "localhost", "8030")
+	first := registry.ServiceInstance{
+		Component: component,
+		Name:      "node1",
+		IP:        "localhost",
+		Port:      "8080",
+		Endpoint:  "/v1/health",
+	}
+	second := registry.ServiceInstance{
+		Component: component,
+		Name:      "node2",
+		IP:        "localhost",
+		Port:      "8090",
+		Endpoint:  "/v1/health",
+	}
+	third := registry.ServiceInstance{
+		Component: component,
+		Name:      "node3",
+		IP:        "localhost",
+		Port:      "8070",
+		Endpoint:  "/v1/health",
+	}
 	instances := []registry.ServiceInstance{first, second, third}
 
 	SUT.Register(instances...)
@@ -121,7 +201,13 @@ func TestShouldRegisterOneServiceInstanceUnit(t *testing.T) {
 
 	// given:
 	component := "service1"
-	expectedInstance := registry.NewServiceInstance(component, "dummy", "localhost", "8080")
+	expectedInstance := registry.ServiceInstance{
+		Component: component,
+		Name:      "node1",
+		IP:        "localhost",
+		Port:      "8080",
+		Endpoint:  "/v1/health",
+	}
 	expectedInstances := []registry.ServiceInstance{expectedInstance}
 
 	SUT := registry.NewCacheRepository()
@@ -142,8 +228,20 @@ func TestShouldRegisterServiceIsntancesUnit(t *testing.T) {
 
 	// given:
 	component := "dummy"
-	first := registry.NewServiceInstance(component, "node1", "localhost", "8080")
-	second := registry.NewServiceInstance(component, "node2", "localhost", "8090")
+	first := registry.ServiceInstance{
+		Component: component,
+		Name:      "node1",
+		IP:        "localhost",
+		Port:      "8080",
+		Endpoint:  "/v1/health",
+	}
+	second := registry.ServiceInstance{
+		Component: component,
+		Name:      "node2",
+		IP:        "localhost",
+		Port:      "8090",
+		Endpoint:  "/v1/health",
+	}
 	expectedInstances := []registry.ServiceInstance{first, second}
 	SUT := registry.NewCacheRepository()
 

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
 	"strconv"
+	"time"
 
 	"github.com/sirupsen/logrus"
 )
@@ -17,6 +19,7 @@ type ServiceInstance struct {
 	Name      string
 	IP        string
 	Port      string
+	Endpoint  string
 	healthy   bool
 }
 
@@ -33,6 +36,7 @@ type Repository interface {
 	Register(ss ...ServiceInstance) error
 	QueryInstances(name string) ([]ServiceInstance, error)
 	UpdateStatus(s ServiceInstance) error
+	ListClusters() []ServiceCluster
 }
 
 type Logger interface {
@@ -49,7 +53,13 @@ type HTTPClient interface {
 	Get(url string) (resp *http.Response, err error)
 }
 
+type Config struct {
+	HeartBeat time.Duration
+}
+
 type Service struct {
+	cfg        Config
+	stop       chan struct{}
 	healthz    ServiceHealthEndpoints
 	repository Repository
 	http       HTTPClient
@@ -58,7 +68,7 @@ type Service struct {
 
 func (s *Service) verifyInstances(ss ...ServiceInstance) error {
 	if len(ss) == 0 {
-		return ErrEmptyServiceInstances
+		return nil
 	}
 	for _, si := range ss {
 		if si.Component == "" {
@@ -67,10 +77,15 @@ func (s *Service) verifyInstances(ss ...ServiceInstance) error {
 		if si.Name == "" {
 			return fmt.Errorf("specified empty service name: %w", ErrMissingData)
 		}
+
+		_, err := url.ParseRequestURI(si.Endpoint)
+		if err != nil {
+			return fmt.Errorf("%v: %w", err, ErrMalformedData)
+		}
 		if si.IP != "localhost" {
 			ip := net.ParseIP(si.IP)
 			if ip == nil {
-				return fmt.Errorf("parsing IP addres failure for %s: %w", si.Name, ErrMissingData)
+				return fmt.Errorf("parsing IP addres failure for %s: %w", si.IP, ErrInvalidDataFormat)
 			}
 		}
 		port, err := strconv.ParseUint(si.Port, 10, 32)
@@ -101,41 +116,46 @@ func (s *Service) Register(ss ...ServiceInstance) error {
 	return nil
 }
 
+func (s *Service) StopHeartBeat() {
+	close(s.stop)
+}
+
 func (s *Service) HeartBeat() {
-	for service, addr := range s.healthz {
-		instances, err := s.repository.QueryInstances(service)
-		if err != nil {
-			s.logger.Errorf("Service-registry query instance: %v", err)
-			continue
-		}
-		err = s.updateClusterInstancesStatus(addr, instances...)
-		if err != nil {
-			s.logger.Errorf("Service-registry update: %v", err)
-			continue
+	defer s.logger.Infof("HeartBeat thread stopped.")
+	s.logger.Infof("HeartBeat thread started.")
+	for {
+		select {
+		case <-time.After(s.cfg.HeartBeat):
+			clusters := s.repository.ListClusters()
+			s.ProcessClusters(clusters...)
+		case <-s.stop:
+			return
 		}
 	}
 }
 
-func (s *Service) updateClusterInstancesStatus(addr string, instances ...ServiceInstance) error {
-	for _, ins := range instances {
-		resp, err := s.http.Get(addr)
-		if err != nil {
-			s.logger.Errorf("HTTP-CLI: %v", err)
-			continue
-		}
-		healthy := true
-		if resp.StatusCode != http.StatusOK {
-			healthy = false
-		}
-		ins.SetHealth(healthy)
+func (s *Service) ProcessClusters(clusters ...ServiceCluster) {
+	for _, c := range clusters {
+		for _, v := range c.Instances {
+			addr := fmt.Sprintf("http://%s:%s/%s", v.IP, v.Port, v.Endpoint)
+			resp, err := s.http.Get(addr)
+			if err != nil {
+				s.logger.Errorf("HTTP-CLI err: %v", err)
+				continue
+			}
+			healthy := true
+			if resp.StatusCode != http.StatusOK {
+				healthy = false
+			}
+			v.SetHealth(healthy)
 
-		err = s.repository.UpdateStatus(ins)
-		if err != nil {
-			s.logger.Errorf("Service-registry update: %v", err)
-			continue
+			err = s.repository.UpdateStatus(v)
+			if err != nil {
+				s.logger.Errorf("Service-registry update: %v", err)
+				continue
+			}
 		}
 	}
-	return nil
 }
 
 type RegistryServiceOption func(s *Service)
@@ -145,6 +165,12 @@ func WithHTTPClient(cli HTTPClient) RegistryServiceOption {
 		if cli != nil {
 			s.http = cli
 		}
+	}
+}
+
+func WithConfig(c Config) RegistryServiceOption {
+	return func(s *Service) {
+		s.cfg = c
 	}
 }
 
@@ -174,8 +200,13 @@ func WithLogger(l Logger) RegistryServiceOption {
 
 func NewService(opts ...RegistryServiceOption) *Service {
 	s := Service{
+		http:       http.DefaultClient,
 		repository: NewCacheRepository(),
 		logger:     logrus.StandardLogger(),
+		cfg: Config{
+			HeartBeat: 5 * time.Second,
+		},
+		stop: make(chan struct{}),
 		healthz: ServiceHealthEndpoints{
 			"users-service":     "http://localhost:8030/api/v1/health",
 			"trainer-service":   "http://localhost:8040/api/v1/health",
@@ -188,6 +219,7 @@ func NewService(opts ...RegistryServiceOption) *Service {
 	return &s
 }
 
-var ErrEmptyServiceInstances = errors.New("empty service instances")
 var ErrMissingData = errors.New("provided data not required")
 var ErrRepositoryFailure = errors.New("service registry repository failure")
+var ErrMalformedData = errors.New("malformed data")
+var ErrInvalidDataFormat = errors.New("invalid data format")
