@@ -74,9 +74,9 @@ func (s *ServiceRegistryRequest) Verify() string {
 	var empty ServiceRegistryRequest
 	recv := ServiceRegistryRequest{
 		Component: strings.TrimSpace(s.Component),
-		Instance:  strings.TrimSpace(s.Component),
-		IP:        strings.TrimSpace(s.Component),
-		Port:      strings.TrimSpace(s.Component),
+		Instance:  strings.TrimSpace(s.Instance),
+		IP:        strings.TrimSpace(s.IP),
+		Port:      strings.TrimSpace(s.Port),
 	}
 	if recv == empty {
 		return MissingRequestBodyMsg
