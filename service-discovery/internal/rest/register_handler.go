@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"service-discovery/internal/registry"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -71,15 +72,20 @@ type RequestFieldErrorMsg struct {
 
 func (s *ServiceRegistryRequest) Verify() string {
 	var empty ServiceRegistryRequest
-	if *s == empty {
+	recv := ServiceRegistryRequest{
+		Component: strings.TrimSpace(s.Component),
+		Instance:  strings.TrimSpace(s.Component),
+		IP:        strings.TrimSpace(s.Component),
+		Port:      strings.TrimSpace(s.Component),
+	}
+	if recv == empty {
 		return MissingRequestBodyMsg
 	}
-
 	m := map[string]RequestFieldErrorMsg{
-		"component": {errMsg: MissingComponentMsg, field: s.Component},
-		"IP":        {errMsg: MissingHostIPMsg, field: s.IP},
-		"instance":  {errMsg: MissingHostNameMsg, field: s.Instance},
-		"port":      {errMsg: MissingHostPortMsg, field: s.Port},
+		"component": {errMsg: MissingComponentMsg, field: recv.Component},
+		"IP":        {errMsg: MissingHostIPMsg, field: recv.IP},
+		"instance":  {errMsg: MissingHostNameMsg, field: recv.Instance},
+		"port":      {errMsg: MissingHostPortMsg, field: recv.Port},
 	}
 	for _, v := range m {
 		if v.field == "" {
@@ -113,10 +119,10 @@ func (h *RegisterHandler) ServiceRegistry(w http.ResponseWriter, r *http.Request
 }
 
 type QueryInstancesRequest struct {
-	Name string
+	Component string
 }
 
-type QueryInstanceRespone struct {
+type QueryInstancesRespone struct {
 	Code      int
 	Name      string
 	Instances []registry.ServiceInstance
@@ -131,12 +137,43 @@ func (q *QueryInstancesRequest) Decode(body io.ReadCloser) error {
 	return nil
 }
 
+func (q *QueryInstancesRequest) Verify() string {
+	recv := QueryInstancesRequest{
+		Component: strings.TrimSpace(q.Component),
+	}
+	var empty QueryInstancesRequest
+	if recv == empty {
+		return MissingRequestBodyMsg
+	}
+	m := map[string]RequestFieldErrorMsg{
+		"component": {errMsg: MissingComponentMsg, field: strings.TrimSpace(q.Component)},
+	}
+	for _, v := range m {
+		if v.field == "" {
+			return v.errMsg
+		}
+	}
+	return ""
+}
+
 func (h *RegisterHandler) QueryInstances(w http.ResponseWriter, r *http.Request) {
-
 	var payload QueryInstancesRequest
-	payload.Decode(r.Body)
-
-	response(w, QueryInstanceRespone{Name: payload.Name, Code: http.StatusOK, Instances: []registry.ServiceInstance{{IP: "AA"}}}, http.StatusOK)
+	err := payload.Decode(r.Body)
+	if err != nil {
+		response(w, JSONResponse{Message: InternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		return
+	}
+	errMsg := payload.Verify()
+	if errMsg != "" {
+		response(w, JSONResponse{Message: errMsg, Code: http.StatusBadRequest}, http.StatusBadRequest)
+		return
+	}
+	instances, err := h.service.QueryInstances(payload.Component)
+	if err != nil {
+		response(w, JSONResponse{Message: InternalServiceErrMsg, Code: http.StatusInternalServerError}, http.StatusInternalServerError)
+		return
+	}
+	response(w, QueryInstancesRespone{Code: http.StatusOK, Name: payload.Component, Instances: instances}, http.StatusOK)
 }
 
 func (r *RegisterHandler) ServiceRegiststryEndpoint() string {

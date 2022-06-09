@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"service-discovery/internal/registry"
 	"service-discovery/internal/rest"
 	"service-discovery/mocks"
 	"testing"
@@ -14,7 +15,37 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyPayloadUnit(t *testing.T) {
+func TestServiceRegistryHandlerShouldReturnHTTPStatus500WhenDecodingRequestBodyFailure(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	request := createHTTPrequestWithoutBody(http.MethodPost)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.InternalServiceErrMsg,
+		Code:    http.StatusInternalServerError,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+
+	registryService.AssertNotCalled(t, "ServiceRegistry", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyPayloadUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -46,7 +77,7 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyPayloadUnit(t *testing.T) {
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyInstanceNameUnit(t *testing.T) {
+func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyInstanceNameUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -82,7 +113,7 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyInstanceNameUnit(t *testing.T) 
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyIPUnit(t *testing.T) {
+func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyIPUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -118,7 +149,7 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyIPUnit(t *testing.T) {
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyComponentUnit(t *testing.T) {
+func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyComponentUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -154,7 +185,7 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyComponentUnit(t *testing.T) {
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyPortUnit(t *testing.T) {
+func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyPortUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -189,7 +220,7 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyPortUnit(t *testing.T) {
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusOKForSucessfulServiceInstanceRegistry(t *testing.T) {
+func TestServiceRegistryHandlerShouldReturnHTTPStatusOKForSucessfulRegistrationUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -221,7 +252,7 @@ func TestShouldReturnHTTPStatusOKForSucessfulServiceInstanceRegistry(t *testing.
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnInternalServiceErrorStatusWhenServiceInstanceRegistryFailure(t *testing.T) {
+func TestServiceRegistryHandlerShouldReturnInternalServiceErrorStatusWhenRegistrationFailureUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -257,11 +288,155 @@ func TestShouldReturnInternalServiceErrorStatusWhenServiceInstanceRegistryFailur
 	registryService.AssertExpectations(t)
 }
 
+func TestQueryInstancesHandlerShouldReturnHTTPStatus500WhenDecodingRequestBodyFailureUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	request := createHTTPrequestWithoutBody(http.MethodPost)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.InternalServiceErrMsg,
+		Code:    http.StatusInternalServerError,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.QueryInstances)
+
+	registryService.AssertNotCalled(t, "QueryInstances", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestQueryInstancesHandlerShouldReturnHTTPStatusBadRequestForEmptyPayloadUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	requestBody := rest.ServiceRegistryRequest{}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.MissingRequestBodyMsg,
+		Code:    http.StatusBadRequest,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.QueryInstances)
+
+	registryService.AssertNotCalled(t, "QueryInstances", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(expectedResponse, actualResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestQueryInstancesHandlerShouldReturnHTTPStatusOKForSucessfulQueryUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	component := "component"
+	requestBody := rest.QueryInstancesRequest{
+		Component: component,
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.QueryInstances)
+
+	instances := []registry.ServiceInstance{
+		{
+			Name: "node1",
+			IP:   "localhost",
+			Port: "8080",
+		},
+		{
+			Name: "node2",
+			IP:   "localhost",
+			Port: "8090",
+		},
+	}
+	expectedResponse := rest.QueryInstancesRespone{
+		Code:      http.StatusOK,
+		Name:      component,
+		Instances: instances,
+	}
+
+	registryService.EXPECT().QueryInstances(mock.Anything).Return(instances, nil)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJQueryInstanceResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(expectedResponse, actualResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestQueryInstancesHandlerShouldReturnInternalServiceErrorStatusWhenQueryFailureUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	component := "service1"
+	requestBody := rest.QueryInstancesRequest{
+		Component: component,
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.InternalServiceErrMsg,
+		Code:    http.StatusInternalServerError,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.QueryInstances)
+
+	registryService.EXPECT().QueryInstances(mock.Anything).Return(nil, errors.New("service is down"))
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
+}
+
 func createHTTPrequestWithoutBody(method string) *http.Request {
 	return httptest.NewRequest(method, "http://localhost:9090/", nil)
 }
 
-func createHTTPrequestWithBody(method string, v rest.ServiceRegistryRequest) *http.Request {
+func createHTTPrequestWithBody(method string, v interface{}) *http.Request {
 	bb, err := json.Marshal(v)
 	if err != nil {
 		panic(err)

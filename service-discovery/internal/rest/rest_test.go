@@ -49,3 +49,13 @@ func convertToJSONResponse(body *bytes.Buffer) (rest.JSONResponse, error) {
 	}
 	return res, nil
 }
+
+func convertToJQueryInstanceResponse(body *bytes.Buffer) (rest.QueryInstancesRespone, error) {
+	var res rest.QueryInstancesRespone
+	dec := json.NewDecoder(body)
+	err := dec.Decode(&res)
+	if err != nil {
+		return rest.QueryInstancesRespone{}, fmt.Errorf("decode failed: %v", err)
+	}
+	return res, nil
+}
