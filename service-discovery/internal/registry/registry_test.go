@@ -3,9 +3,10 @@ package registry_test
 import (
 	"errors"
 	"net/http"
-	"service-discovery/internal/registry"
-	"service-discovery/internal/registry/mocks"
 	"testing"
+
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry/mocks"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -15,7 +16,7 @@ func TestShouldReturnErrorWhenRepoistoryFailureUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	repo := &mocks.ServiceRegistry{}
+	repo := &mocks.Repository{}
 	SUT := registry.NewService(registry.WithRepository(repo))
 	component := "service1"
 	exepctedInstances := []registry.ServiceInstance{
@@ -234,7 +235,7 @@ func TestShouldMarkSingleServiceInstanceAsNotHealthyUnit(t *testing.T) {
 
 func TestShouldLogErrorWhenServiceInstanceUpdateStatusFailure(t *testing.T) {
 	// given:
-	registryRepository := &mocks.ServiceRegistry{}
+	registryRepository := &mocks.Repository{}
 	httpCli := &mocks.HTTPClient{}
 	logger := &mocks.Logger{}
 	component := "dummy"

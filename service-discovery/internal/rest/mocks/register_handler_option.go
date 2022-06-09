@@ -3,8 +3,7 @@
 package mocks
 
 import (
-	rest "service-discovery/internal/rest"
-
+	rest "github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
 	mock "github.com/stretchr/testify/mock"
 )
 

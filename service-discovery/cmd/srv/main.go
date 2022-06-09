@@ -8,9 +8,10 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"service-discovery/internal/config"
-	"service-discovery/internal/registry"
-	"service-discovery/internal/rest"
+
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/config"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
 
 	"github.com/sirupsen/logrus"
 )

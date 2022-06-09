@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"service-discovery/internal/registry"
 	"strings"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
 	"github.com/sirupsen/logrus"
 )
 

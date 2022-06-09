@@ -1,8 +1,9 @@
 package registry_test
 
 import (
-	"service-discovery/internal/registry"
 	"testing"
+
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
 
 	"github.com/stretchr/testify/assert"
 )

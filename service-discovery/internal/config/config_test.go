@@ -1,8 +1,8 @@
 package config_test
 
 import (
-	"service-discovery/internal/config"
-	"service-discovery/internal/rest"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/config"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
 
 	"testing"
 	"time"

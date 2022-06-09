@@ -6,11 +6,11 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
-	"service-discovery/internal/registry"
-	"service-discovery/internal/rest"
-	"service-discovery/mocks"
 	"testing"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -26,7 +26,7 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatus500WhenDecodingRequestBodyF
 		Code:    http.StatusInternalServerError,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}
@@ -57,7 +57,7 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyPayloadUn
 		Code:    http.StatusBadRequest,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
@@ -93,7 +93,7 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyInstanceN
 		Code:    http.StatusBadRequest,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
@@ -129,7 +129,7 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyIPUnit(t 
 		Code:    http.StatusBadRequest,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
@@ -166,7 +166,7 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyComponent
 		Code:    http.StatusBadRequest,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}
@@ -201,7 +201,7 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatusBadRequestForEmptyPortUnit(
 		Code:    http.StatusBadRequest,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}
@@ -233,7 +233,7 @@ func TestServiceRegistryHandlerShouldReturnHTTPStatusOKForSucessfulRegistrationU
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}
@@ -269,7 +269,7 @@ func TestServiceRegistryHandlerShouldReturnInternalServiceErrorStatusWhenRegistr
 		Code:    http.StatusInternalServerError,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}
@@ -299,7 +299,7 @@ func TestQueryInstancesHandlerShouldReturnHTTPStatus500WhenDecodingRequestBodyFa
 		Code:    http.StatusInternalServerError,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}
@@ -330,7 +330,7 @@ func TestQueryInstancesHandlerShouldReturnHTTPStatusBadRequestForEmptyPayloadUni
 		Code:    http.StatusBadRequest,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
@@ -361,7 +361,7 @@ func TestQueryInstancesHandlerShouldReturnHTTPStatusOKForSucessfulQueryUnit(t *t
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}
@@ -413,7 +413,7 @@ func TestQueryInstancesHandlerShouldReturnInternalServiceErrorStatusWhenQueryFai
 		Code:    http.StatusInternalServerError,
 	}
 
-	registryService := mocks.ServiceRegistry{}
+	registryService := mocks.RegistryService{}
 	opts := []rest.RegisterHandlerOption{
 		rest.WithRegisterHandlerRegistryService(&registryService),
 	}

@@ -4,12 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"service-discovery/internal/rest"
-
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
 	"github.com/stretchr/testify/assert"
 )
 

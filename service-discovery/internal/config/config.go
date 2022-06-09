@@ -2,8 +2,9 @@ package config
 
 import (
 	"errors"
-	"service-discovery/internal/rest"
 	"time"
+
+	"github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/rest"
 
 	"fmt"
 	"io/fs"

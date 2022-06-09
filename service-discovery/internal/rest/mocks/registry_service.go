@@ -3,8 +3,7 @@
 package mocks
 
 import (
-	registry "service-discovery/internal/registry"
-
+	registry "github.com/michalgosek/workout-app-infrastrcutre/service-discovery/internal/registry"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -19,6 +18,52 @@ type RegistryService_Expecter struct {
 
 func (_m *RegistryService) EXPECT() *RegistryService_Expecter {
 	return &RegistryService_Expecter{mock: &_m.Mock}
+}
+
+// QueryInstances provides a mock function with given fields: name
+func (_m *RegistryService) QueryInstances(name string) ([]registry.ServiceInstance, error) {
+	ret := _m.Called(name)
+
+	var r0 []registry.ServiceInstance
+	if rf, ok := ret.Get(0).(func(string) []registry.ServiceInstance); ok {
+		r0 = rf(name)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]registry.ServiceInstance)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(name)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// RegistryService_QueryInstances_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryInstances'
+type RegistryService_QueryInstances_Call struct {
+	*mock.Call
+}
+
+// QueryInstances is a helper method to define mock.On call
+//  - name string
+func (_e *RegistryService_Expecter) QueryInstances(name interface{}) *RegistryService_QueryInstances_Call {
+	return &RegistryService_QueryInstances_Call{Call: _e.mock.On("QueryInstances", name)}
+}
+
+func (_c *RegistryService_QueryInstances_Call) Run(run func(name string)) *RegistryService_QueryInstances_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(string))
+	})
+	return _c
+}
+
+func (_c *RegistryService_QueryInstances_Call) Return(_a0 []registry.ServiceInstance, _a1 error) *RegistryService_QueryInstances_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
 }
 
 // Register provides a mock function with given fields: ss
