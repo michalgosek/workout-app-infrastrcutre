@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyPayload(t *testing.T) {
+func TestShouldReturnHTTPStatusBadRequestForEmptyPayloadUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -22,7 +22,7 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyPayload(t *testing.T) {
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
 	expectedResponse := rest.JSONResponse{
-		Message: rest.ErrMissingRequestBody.Error(),
+		Message: rest.MissingRequestBodyMsg,
 		Code:    http.StatusBadRequest,
 	}
 
@@ -46,18 +46,19 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyPayload(t *testing.T) {
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyNameValue(t *testing.T) {
+func TestShouldReturnHTTPStatusBadRequestForEmptyInstanceNameUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
 	requestBody := rest.ServiceRegistryRequest{
-		Port: "9090",
-		IP:   "localhost",
+		Component: "service1",
+		Port:      "9090",
+		IP:        "localhost",
 	}
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
 	expectedResponse := rest.JSONResponse{
-		Message: rest.ErrMissingHostName.Error(),
+		Message: rest.MissingHostNameMsg,
 		Code:    http.StatusBadRequest,
 	}
 
@@ -81,18 +82,19 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyNameValue(t *testing.T) {
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusBadRequestForEmptyIPValue(t *testing.T) {
+func TestShouldReturnHTTPStatusBadRequestForEmptyIPUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
 	requestBody := rest.ServiceRegistryRequest{
-		Name: "dummy",
-		Port: "9090",
+		Component: "service",
+		Instance:  "node1",
+		Port:      "9090",
 	}
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
 	expectedResponse := rest.JSONResponse{
-		Message: rest.ErrMissingHostIPValue.Error(),
+		Message: rest.MissingHostIPMsg,
 		Code:    http.StatusBadRequest,
 	}
 
@@ -116,18 +118,55 @@ func TestShouldReturnHTTPStatusBadRequestForEmptyIPValue(t *testing.T) {
 	registryService.AssertExpectations(t)
 }
 
-func TestShouldReturnHTTPStatusBadRequestForPortValue(t *testing.T) {
+func TestShouldReturnHTTPStatusBadRequestForEmptyComponentUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
 	requestBody := rest.ServiceRegistryRequest{
-		IP:   "localhost",
-		Name: "dummy",
+		Component: "",
+		IP:        "localhost",
+		Port:      "8080",
+		Instance:  "node1",
 	}
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
 	expectedResponse := rest.JSONResponse{
-		Message: rest.ErrMissingHostPortValue.Error(),
+		Message: rest.MissingComponentMsg,
+		Code:    http.StatusBadRequest,
+	}
+
+	registryService := mocks.ServiceRegistry{}
+	opts := []rest.RegisterHandlerOption{
+		rest.WithRegisterHandlerRegistryService(&registryService),
+	}
+	registerHandler := rest.NewRegisterHandler(opts...)
+	SUT := http.HandlerFunc(registerHandler.ServiceRegistry)
+
+	registryService.AssertNotCalled(t, "Register", mock.Anything)
+
+	// when:
+	SUT.ServeHTTP(recoder, request)
+
+	// then:
+	actualResponse, err := convertToJSONResponse(recoder.Body)
+	assert.Nil(err)
+	assert.Equal(actualResponse, expectedResponse)
+	registryService.AssertExpectations(t)
+}
+
+func TestShouldReturnHTTPStatusBadRequestForEmptyPortUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	requestBody := rest.ServiceRegistryRequest{
+		Component: "service1",
+		IP:        "localhost",
+		Instance:  "node1",
+	}
+	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
+	recoder := httptest.NewRecorder()
+	expectedResponse := rest.JSONResponse{
+		Message: rest.MissingHostPortMsg,
 		Code:    http.StatusBadRequest,
 	}
 
@@ -155,9 +194,10 @@ func TestShouldReturnHTTPStatusOKForSucessfulServiceInstanceRegistry(t *testing.
 
 	// given:
 	requestBody := rest.ServiceRegistryRequest{
-		IP:   "localhost",
-		Name: "dummy",
-		Port: "8080",
+		IP:        "localhost",
+		Instance:  "node1",
+		Component: "service",
+		Port:      "8080",
 	}
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
@@ -186,14 +226,15 @@ func TestShouldReturnInternalServiceErrorStatusWhenServiceInstanceRegistryFailur
 
 	// given:
 	requestBody := rest.ServiceRegistryRequest{
-		IP:   "localhost",
-		Name: "dummy",
-		Port: "8080",
+		IP:        "localhost",
+		Component: "service1",
+		Instance:  "node1",
+		Port:      "8080",
 	}
 	request := createHTTPrequestWithBody(http.MethodPost, requestBody)
 	recoder := httptest.NewRecorder()
 	expectedResponse := rest.JSONResponse{
-		Message: rest.ErrInternalServiceErrMsg,
+		Message: rest.InternalServiceErrMsg,
 		Code:    http.StatusInternalServerError,
 	}
 
