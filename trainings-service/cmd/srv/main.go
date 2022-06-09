@@ -3,23 +3,24 @@ package main
 import (
 	"log"
 
-	cli "github.com/michalgosek/workout-app-infrastrcutre/service-discovery-cli"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 )
 
 func main() {
-	instance := cli.ServiceInstance{
-		Component:      "service1",
-		Instance:       "dd",
-		IP:             "localhost",
-		Port:           "9060",
-		HealthEndpoint: "/v1/api/health/",
-	}
-
-	cli := cli.NewServiceRegistry()
-
-	err := cli.Register(instance)
-	if err != nil {
+	if err := execute(); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("OK")
+}
+
+func execute() error {
+	API := rest.NewAPI()
+	API.SetEndpoints()
+
+	cfg := server.DefaultHTTPConfig()
+	cfg.Addr = "localhost:8090"
+
+	srv := server.NewHTTP(API, cfg)
+	srv.ListenAndServe()
+	return nil
 }

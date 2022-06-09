@@ -137,7 +137,7 @@ func (s *Service) HeartBeat() {
 func (s *Service) ProcessClusters(clusters ...ServiceCluster) {
 	for _, c := range clusters {
 		for _, v := range c.Instances {
-			addr := fmt.Sprintf("http://%s:%s/%s", v.IP, v.Port, v.Endpoint)
+			addr := fmt.Sprintf("http://%s:%s%s", v.IP, v.Port, v.Endpoint)
 			resp, err := s.http.Get(addr)
 			if err != nil || resp.StatusCode != http.StatusOK {
 				s.logger.Errorf("[HealthCheckError][Cluster: %s, Node: %s]: %v", c.Name, v.Name, err)
@@ -154,6 +154,7 @@ func (s *Service) ProcessClusters(clusters ...ServiceCluster) {
 				s.logger.Errorf("Service-registry update: %v", err)
 				continue
 			}
+			s.logger.Infof("[HealthCheck][Cluster: %s, Node: %s]: %s - status update to: %v", c.Name, v.Name, healthy)
 		}
 	}
 }

@@ -33,7 +33,6 @@ func execute() error {
 	logger := logrus.New()
 	logger.SetOutput(os.Stdout)
 	logger.SetLevel(logrus.InfoLevel)
-	logger.SetFormatter(&logrus.JSONFormatter{})
 
 	repository := registry.NewCacheRepository()
 	registryServiceOpts := []registry.RegistryServiceOption{
