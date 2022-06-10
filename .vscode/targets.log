@@ -10,7 +10,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 make: *** No rule to make target `all'.  Stop.
 
 
-# Make data base, printed on Thu Jun  9 22:12:36 2022
+# Make data base, printed on Fri Jun 10 22:52:39 2022
 
 # Variables
 
@@ -47,7 +47,7 @@ __CFBundleIdentifier = com.microsoft.VSCode
 # environment
 INFOPATH = /opt/homebrew/share/info:
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/44/_8pn0lcx2dg7j1m46tpbjxj80000gp/T/vscode-ipc-98a8981d-f400-4af6-a125-508451563119.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/44/_8pn0lcx2dg7j1m46tpbjxj80000gp/T/vscode-ipc-3f37ac2a-0af7-4cd1-b733-9aa938cbcc5e.sock
 # environment
 VSCODE_CWD = /
 # environment
@@ -65,7 +65,7 @@ ELECTRON_RUN_AS_NODE = 1
 # default
 .FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
 # environment
-SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.c3LuVki9sP/Listeners
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.7LVXQoosQl/Listeners
 # automatic
 %F = $(notdir $%)
 # environment
@@ -85,7 +85,7 @@ HOME = /Users/migo
 # default
 MAKEFILEPATH = $(shell /usr/bin/xcode-select -print-path 2>/dev/null || echo /Developer)/Makefiles
 # environment
-VSCODE_CODE_CACHE_PATH = /Users/migo/Library/Application Support/Code/CachedData/c3511e6c69bb39013c4a4b7b9566ec1ca73fc4d5
+VSCODE_CODE_CACHE_PATH = /Users/migo/Library/Application Support/Code/CachedData/4af164ea3a06f701fe3e89a2bcbb421d2026b68f
 # environment
 LOGNAME = migo
 # environment
@@ -121,7 +121,7 @@ TMPDIR = /var/folders/44/_8pn0lcx2dg7j1m46tpbjxj80000gp/T/
 # automatic
 *F = $(notdir $*)
 # environment
-VSCODE_IPC_HOOK = /Users/migo/Library/Application Support/Code/1.67.2-main.sock
+VSCODE_IPC_HOOK = /Users/migo/Library/Application Support/Code/1.68.0-main.sock
 # makefile
 MAKEFLAGS = Rrqp
 # environment
@@ -131,7 +131,7 @@ MFLAGS = -Rrqp
 # environment
 NVM_DIR = /Users/migo/.nvm
 # environment
-XPC_SERVICE_NAME = application.com.microsoft.VSCode.12057892.12057898
+XPC_SERVICE_NAME = application.com.microsoft.VSCode.14148476.14148483
 # environment
 HOMEBREW_PREFIX = /opt/homebrew
 # automatic
@@ -159,7 +159,7 @@ MAKELEVEL := 0
 # environment
 LANG = C
 # environment
-VSCODE_PID = 37364
+VSCODE_PID = 40603
 # variable set hash-table stats:
 # Load=73/1024=7%, Rehash=0, Collisions=2/93=2%
 
@@ -169,7 +169,7 @@ VSCODE_PID = 37364
 
 # Directories
 
-# . (device 16777234, inode 13853915): 10 files, no impossibilities.
+# . (device 16777229, inode 13853915): 10 files, no impossibilities.
 
 # 10 files, no impossibilities in 1 directories.
 
@@ -243,6 +243,6 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Thu Jun  9 22:12:36 2022
+# Finished Make data base on Fri Jun 10 22:52:39 2022
 
  

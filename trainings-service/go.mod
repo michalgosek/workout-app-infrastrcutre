@@ -10,7 +10,4 @@ require (
 	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
 )
 
-replace (
-	github.com/michalgosek/workout-app-infrastrcutre/service-discovery-cli => ../service-discovery-cli
-	github.com/michalgosek/workout-app-infrastrcutre/service-utility => ../service-utility
-)
+replace github.com/michalgosek/workout-app-infrastrcutre/service-utility => ../service-utility

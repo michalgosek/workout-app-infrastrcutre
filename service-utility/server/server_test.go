@@ -1,7 +1,6 @@
 package server_test
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -12,23 +11,18 @@ import (
 
 func TestShouldShutdownGracefullyShutdownIntegration(t *testing.T) {
 	assert := assert.New(t)
-
-	interruptSigFunc := func(quit chan<- os.Signal) {
-		time.Sleep(1 * time.Second)
-		quit <- os.Interrupt
-	}
+	// given:
 	API := rest.NewAPI()
-	s := server.NewHTTP(API, server.DefaultHTTPConfig())
-	quit := make(chan os.Signal)
-	done := make(chan struct{})
-	errc := make(chan error)
+	cfg := server.DefaultHTTPConfig("localhost:8080", "test-server")
+	srv := server.NewHTTP(API, cfg)
 
-	go s.GracefulShutdown(quit, done, errc)
-	go interruptSigFunc(quit)
+	time.AfterFunc(2*time.Second, func() {
+		srv.Terminate()
+	})
 
-	err := s.ListenAndServe()
-	assert.Nil(err)
-	assert.Empty(errc)
-	assert.Empty(quit)
-	assert.Empty(done)
+	// when:
+	srv.StartHTTPServer()
+
+	// then:
+	assert.True(srv.ConnsClosed())
 }

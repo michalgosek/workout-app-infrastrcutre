@@ -17,7 +17,7 @@ func execute() error {
 	API := rest.NewAPI()
 	API.SetEndpoints()
 
-	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
+	serverCfg := server.DefaultHTTPConfig("localhost:8080", "api-gateway")
 	srv := server.NewHTTP(API, serverCfg)
 	srv.StartHTTPServer()
 

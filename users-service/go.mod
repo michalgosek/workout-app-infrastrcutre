@@ -1,6 +1,4 @@
-module github.com/michalgosek/workout-app-infrastrcutre/api-gateway
-
-go 1.17
+module github.com/michalgosek/workout-app-infrastrcutre/users-service
 
 require github.com/michalgosek/workout-app-infrastrcutre/service-utility v0.0.0
 
@@ -11,3 +9,5 @@ require (
 )
 
 replace github.com/michalgosek/workout-app-infrastrcutre/service-utility => ../service-utility
+
+go 1.17

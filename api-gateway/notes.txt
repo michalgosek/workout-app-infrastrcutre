@@ -1,0 +1,13 @@
+Trainings service:
+	- List all trainings 
+	- Find user trainings
+	- Delete user trainigns
+    - Delete training
+	- Insert training
+
+    
+Będzie zaciągał dane i porównywał np.
+- czy dany trening moze zostac dodany do jakiegos uzytkownika
+- czy dany uzytkownik sistnieje etc. 
+
+Routing map! 

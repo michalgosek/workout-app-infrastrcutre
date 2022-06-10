@@ -1,0 +1,6 @@
+	User:
+	- Can sing up for trainings
+	- Can cancel his trainings
+	- Can see all trainings
+
+

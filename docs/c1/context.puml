@@ -1,0 +1,11 @@
+@startuml "System context - C1"
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+  
+SHOW_PERSON_OUTLINE()
+
+Person(customer, "Gym Member", "Person that can be personal trainer or regular customer.")
+System(gymSystem, "Gym Management System", "Allows members to participate in workouts, cancel workouts, view list of workouts.")
+Rel(customer, gymSystem, "Manages the list of scheduled workouts.")
+
+SHOW_LEGEND()
+@enduml
