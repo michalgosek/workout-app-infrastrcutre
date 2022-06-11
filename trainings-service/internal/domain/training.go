@@ -2,23 +2,27 @@ package domain
 
 import "time"
 
-type Training struct {
-	uuid     string
-	userUUID string
-	userName string
-	data     time.Duration
-	canceled bool
+// Bussiness logic
+// User:
+// User have 5 workouts to use
+
+// Trainer:
+// Trainer cannot have more than 10 people during session and not less than 1
+// Training date must be not earlier than 3 hours from current date
+
+type UserWorkoutSession struct {
+	UserUUID        string
+	Limit           int
+	WorkoutSessions []string
 }
 
-func NewTraining(uuid string, userUUID string, data time.Duration) (*Training, error) {
-	// verification logci
-
-	t := Training{
-		uuid:     uuid,
-		userUUID: userUUID,
-		userName: "",
-		data:     data,
-		canceled: false,
-	}
-	return &t, nil
+type TrainerWorkoutSession struct {
+	UUID        string
+	TrainerUUID string
+	Name        string
+	Desc        string
+	Places      int
+	Canceled    bool
+	Users       []string
+	Date        time.Time
 }
