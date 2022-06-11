@@ -1,10 +1,8 @@
 package application
 
-type TrainingRepository interface {
+type WorkoutSessionsRepoistory interface {
 }
 
-type TrainerService interface {
-}
-
-type TraningService struct {
+type TraningsService struct {
+	repository WorkoutSessionsRepoistory
 }

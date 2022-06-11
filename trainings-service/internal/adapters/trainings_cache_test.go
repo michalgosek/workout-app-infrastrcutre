@@ -2,6 +2,7 @@ package adapters_test
 
 import (
 	"context"
+	"sort"
 	"testing"
 	"time"
 
@@ -11,28 +12,73 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// Trener moze dodac sesje
-// Trener moze dodac dwie sesje
-// Powinno zwrocic pusta odpowiedz i bez bledu gdy sesji nie ma
-// Trener moze zaktualizowac sesje
-// Trener moze zaktualizoawc dwie sesje
-// Trener moze usunac sesje
-// Trener moze usunac wiele sesji
-// Powinno zwrocic pusta odpowiedz i bez bledu gdy sesji nie ma w trakcie usuwania
+// Uzytkownik powinien sie zapisac na trening X
+
+// Uzytkownik nie powinien sie zapisac na nie istniejacy trening
+
+// Uzytkownik powinien sie wypisac z treiningu
+// Powinno zwrocic nil error, gdy wypisujemy sie z nie istniejacego treningu
+
+func TestShouldInsertCustomerWorkoutSessionWithSuccessUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	customerUUID := "eabfc05c-5a32-42bf-b942-65885a673151"
+	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+	expectedSession := customerSession
+
+	SUT := adapters.NewWorkoutsCacheRepoistory()
+
+	// when:
+	err := SUT.UpsertCustomerWorkoutSession(ctx, customerSession)
+
+	// then:
+	assert.Nil(err)
+
+	actualSession, err := SUT.QueryCustomerWorkoutSession(ctx, customerUUID)
+	assert.Nil(err)
+	assert.Equal(expectedSession, actualSession)
+}
+
+func TestCustomerShouldBeAssignedToTrainerWorkoutSessionWithSucccessUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	customerUUID := "e5bf08ee-e287-40b6-8ef7-d43ec18fd17a"
+	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
+	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+
+	expectedSession := customerSession
+	expectedSession.AssignWorkout(trainerSession.UUID())
+
+	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
+	SUT.UpsertCustomerWorkoutSession(ctx, customerSession)
+
+	// when:
+	err := SUT.AssignCustomerToWorkoutSession(ctx, customerUUID, trainerSession.UUID())
+
+	// then:
+	assert.Nil(err)
+
+	actualSession, err := SUT.QueryCustomerWorkoutSession(context.Background(), customerUUID)
+	assert.Nil(err)
+	assert.Equal(expectedSession, actualSession)
+}
 
 func TestDeleteWorkoutSessionShouldReturnEmptyResultWhenSessionNotExistUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
 	ctx := context.Background()
-	workouts := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6", 1)
-	expectedSession := workouts
-
+	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
+	expectedSession := trainerSession
 	nonExistingWorkoutSessionUUID := "10b8151c-a686-4fd4-925e-f0a93a41ba50"
-	trainerUUID := workouts[0].TrainerUUID
 
 	SUT := adapters.NewWorkoutsCacheRepoistory()
-	SUT.UpsertTrainerWorkoutSessions(ctx, workouts...)
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 
 	// when:
 	deletedSession, err := SUT.DeleteTrainerWorkoutSession(ctx, nonExistingWorkoutSessionUUID)
@@ -41,9 +87,37 @@ func TestDeleteWorkoutSessionShouldReturnEmptyResultWhenSessionNotExistUnit(t *t
 	assert.Nil(err)
 	assert.Empty(deletedSession)
 
-	actualSession, err := SUT.QueryTrainerWorkoutSessions(context.Background(), trainerUUID)
+	actualSession, err := SUT.QueryTrainerWorkoutSession(context.Background(), trainerSession.UUID())
 	assert.Nil(err)
 	assert.Equal(expectedSession, actualSession)
+}
+
+func TestShouldRemoveCustomerFromTrainerWorkoutSessionUnit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	customerUUID := "b68f3b7e-af79-45d8-ab61-336f5aaff5c8"
+	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
+	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+
+	trainerSession.AssignCustomer(customerUUID)
+	customerSession.AssignWorkout(trainerSession.UUID())
+
+	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
+	SUT.UpsertCustomerWorkoutSession(ctx, customerSession)
+
+	// when:
+	err := SUT.RemoveCustomerFromTrainerWorkoutSession(ctx, trainerSession.UUID(), customerUUID)
+
+	// then:
+	assert.Nil(err)
+
+	actualSession, err := SUT.QueryTrainerWorkoutSession(context.Background(), trainerSession.UUID())
+	assert.Nil(err)
+	assert.NotEmpty(actualSession)
+	assert.Equal(actualSession.Customers(), 0)
 }
 
 func TestTrainerShouldDeleteWorkoutSessionWithSuccessUnit(t *testing.T) {
@@ -51,14 +125,12 @@ func TestTrainerShouldDeleteWorkoutSessionWithSuccessUnit(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	workouts := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6", 1)
-
-	expectedSession := workouts[0]
-	workoutSessionUUID := workouts[0].UUID
-	trainerUUID := workouts[0].TrainerUUID
-
+	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
+	expectedSession := trainerSession
+	workoutSessionUUID := trainerSession.UUID()
+	trainerUUID := trainerSession.TrainerUUID()
 	SUT := adapters.NewWorkoutsCacheRepoistory()
-	SUT.UpsertTrainerWorkoutSessions(ctx, workouts...)
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 
 	// when:
 	deletedSession, err := SUT.DeleteTrainerWorkoutSession(ctx, workoutSessionUUID)
@@ -78,20 +150,20 @@ func TestTrainerShouldDeleteWorkoutSessionsWithSuccessUnit(t *testing.T) {
 	// given:
 	ctx := context.Background()
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
-	workouts := GenerateTestTrainerWorkoutSession(trainerUUID, 2)
-
-	expectedSession := workouts
-	workoutSessionsUUIDs := []string{workouts[0].UUID, workouts[1].UUID}
-
+	trainerSessions := GenerateTestTrainerWorkoutSessions(trainerUUID, 2)
+	expectedSessions := trainerSessions
+	workoutSessionsUUIDs := []string{trainerSessions[0].UUID(), trainerSessions[1].UUID()}
 	SUT := adapters.NewWorkoutsCacheRepoistory()
-	SUT.UpsertTrainerWorkoutSessions(ctx, workouts...)
+
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSessions[0])
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSessions[1])
 
 	// when:
 	deletedSession, err := SUT.DeleteTrainerWorkoutSessions(ctx, workoutSessionsUUIDs...)
 
 	// then:
 	assert.Nil(err)
-	assert.Equal(expectedSession, deletedSession)
+	assert.Equal(expectedSessions, deletedSession)
 
 	actualSession, err := SUT.QueryTrainerWorkoutSession(context.Background(), trainerUUID)
 	assert.Nil(err)
@@ -103,19 +175,18 @@ func TestTrainerShouldInsertWorkoutSessionWithSuccessUnit(t *testing.T) {
 
 	// given:
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
-	expectedSession := GenerateTestTrainerWorkoutSession(trainerUUID, 1)
-
+	expectedSession := GenerateTestTrainerWorkoutSession(trainerUUID)
 	SUT := adapters.NewWorkoutsCacheRepoistory()
 
 	// when:
-	err := SUT.UpsertTrainerWorkoutSessions(context.Background(), expectedSession...)
+	err := SUT.UpsertTrainerWorkoutSession(context.Background(), expectedSession)
 
 	// then:
 	assert.Nil(err)
 
-	actualSession, err := SUT.QueryTrainerWorkoutSession(context.Background(), expectedSession[0].UUID)
+	actualSession, err := SUT.QueryTrainerWorkoutSession(context.Background(), expectedSession.UUID())
 	assert.Nil(err)
-	assert.Equal(expectedSession[0], actualSession)
+	assert.Equal(expectedSession, actualSession)
 }
 
 func TestTrainerShouldInsertTwoWorkoutSessionWithSuccessUnit(t *testing.T) {
@@ -123,15 +194,16 @@ func TestTrainerShouldInsertTwoWorkoutSessionWithSuccessUnit(t *testing.T) {
 
 	// given:
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
-	expectedSessions := GenerateTestTrainerWorkoutSession(trainerUUID, 2)
-
+	expectedSessions := GenerateTestTrainerWorkoutSessions(trainerUUID, 2)
 	SUT := adapters.NewWorkoutsCacheRepoistory()
 
 	// when:
-	err := SUT.UpsertTrainerWorkoutSessions(context.Background(), expectedSessions...)
+	err1 := SUT.UpsertTrainerWorkoutSession(context.Background(), expectedSessions[0])
+	err2 := SUT.UpsertTrainerWorkoutSession(context.Background(), expectedSessions[1])
 
 	// then:
-	assert.Nil(err)
+	assert.Nil(err1)
+	assert.Nil(err2)
 
 	actualSessions, err := SUT.QueryTrainerWorkoutSessions(context.Background(), trainerUUID)
 	assert.Nil(err)
@@ -159,22 +231,21 @@ func TestTrainerShouldUpdateWorkoutSessionWithSuccessUnit(t *testing.T) {
 
 	// given:
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
-	workoutSessions := GenerateTestTrainerWorkoutSession(trainerUUID, 1)
+	trainerSession := GenerateTestTrainerWorkoutSession(trainerUUID)
 	ctx := context.Background()
 	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 
-	SUT.UpsertTrainerWorkoutSessions(ctx, workoutSessions...)
-
-	workoutSessions[0].Canceled = true
-	expectedWorkoutSessions := workoutSessions
+	trainerSession.SetName("dummy")
+	expectedWorkoutSessions := trainerSession
 
 	// when:
-	err := SUT.UpsertTrainerWorkoutSessions(ctx, workoutSessions...)
+	err := SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 
 	// then:
 	assert.Nil(err)
 
-	actualSessions, err := SUT.QueryTrainerWorkoutSessions(context.Background(), trainerUUID)
+	actualSessions, err := SUT.QueryTrainerWorkoutSession(context.Background(), trainerSession.UUID())
 	assert.Nil(err)
 	assert.Equal(expectedWorkoutSessions, actualSessions)
 }
@@ -184,39 +255,59 @@ func TestTrainerShouldUpdateWorkoutSessionsWithSuccessUnit(t *testing.T) {
 
 	// given:
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
-	workoutSession := GenerateTestTrainerWorkoutSession(trainerUUID, 2)
+	trainerSessions := GenerateTestTrainerWorkoutSessions(trainerUUID, 2)
 	ctx := context.Background()
 	SUT := adapters.NewWorkoutsCacheRepoistory()
-	SUT.UpsertTrainerWorkoutSessions(ctx, workoutSession...)
 
-	workoutSession[0].Canceled = true
-	workoutSession[1].Name = "dummy"
-	expectedWorkoutSessions := workoutSession
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSessions[0])
+	SUT.UpsertTrainerWorkoutSession(ctx, trainerSessions[1])
+
+	trainerSessions[0].SetName("dummy")
+	trainerSessions[1].SetDesc("dummy")
+	expectedWorkoutSessions := trainerSessions
 
 	// when:
-	err := SUT.UpsertTrainerWorkoutSessions(ctx, expectedWorkoutSessions...)
+	err1 := SUT.UpsertTrainerWorkoutSession(ctx, trainerSessions[0])
+	err2 := SUT.UpsertTrainerWorkoutSession(ctx, trainerSessions[1])
 
 	// then:
-	assert.Nil(err)
+	assert.Nil(err1)
+	assert.Nil(err2)
 
 	actualSessions, err := SUT.QueryTrainerWorkoutSessions(context.Background(), trainerUUID)
 	assert.Nil(err)
 	assert.Equal(expectedWorkoutSessions, actualSessions)
 }
 
-func GenerateTestTrainerWorkoutSession(trainerUUID string, n int) []domain.TrainerWorkoutSession {
+func GenerateTestTrainerWorkoutSession(trainerUUID string) domain.TrainerWorkoutSession {
+	return GenerateTestTrainerWorkoutSessions(trainerUUID, 1)[0]
+}
+
+func GenerateTestTrainerWorkoutSessions(trainerUUID string, n int) []domain.TrainerWorkoutSession {
+	ts := time.Now()
+	ts.Add(3 * time.Hour)
+
 	var sessions []domain.TrainerWorkoutSession
 	for i := 0; i < n; i++ {
-		sessions = append(sessions, domain.TrainerWorkoutSession{
-			UUID:        uuid.NewString(),
-			TrainerUUID: trainerUUID,
-			Name:        uuid.NewString(),
-			Desc:        uuid.NewString(),
-			Places:      10,
-			Canceled:    false,
-			Users:       []string{uuid.NewString(), uuid.NewString()},
-			Date:        time.Time{},
-		})
+		name := uuid.NewString()
+		desc := uuid.NewString()
+		workout, err := domain.NewTrainerWorkoutSession(trainerUUID, name, desc, ts)
+		if err != nil {
+			panic(err)
+		}
+		sessions = append(sessions, *workout)
 	}
+
+	sort.SliceStable(sessions, func(i, j int) bool {
+		return sessions[i].UUID() < sessions[j].UUID()
+	})
 	return sessions
+}
+
+func CreatCustomerWorkoutSessions(customerUUID string) domain.CustomerWorkoutSession {
+	session, err := domain.NewCustomerWorkoutSessions(customerUUID)
+	if err != nil {
+		panic(err)
+	}
+	return *session
 }
