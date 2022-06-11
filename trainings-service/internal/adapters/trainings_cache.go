@@ -108,7 +108,7 @@ func (w *WorkoutsCacheRepoistory) QueryTrainerWorkoutSession(ctx context.Context
 	return v, nil
 }
 
-func (w *WorkoutsCacheRepoistory) DeleteTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
+func (w *WorkoutsCacheRepoistory) CancelTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
 	session, ok := w.trainerSessions.Load(sessionUUID)
 	if !ok {
 		return domain.TrainerWorkoutSession{}, nil
@@ -121,10 +121,10 @@ func (w *WorkoutsCacheRepoistory) DeleteTrainerWorkoutSession(ctx context.Contex
 	return v, nil
 }
 
-func (w *WorkoutsCacheRepoistory) DeleteTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerWorkoutSession, error) {
+func (w *WorkoutsCacheRepoistory) CancelTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerWorkoutSession, error) {
 	var sessions []domain.TrainerWorkoutSession
 	for _, s := range sessionUUIDs {
-		v, err := w.DeleteTrainerWorkoutSession(ctx, s)
+		v, err := w.CancelTrainerWorkoutSession(ctx, s)
 		if err != nil {
 			return nil, fmt.Errorf("delete trainer workout session failed: %w", err)
 		}

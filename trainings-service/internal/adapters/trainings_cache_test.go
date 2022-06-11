@@ -43,7 +43,7 @@ func TestCustomerShouldNotRegisterToNonExistingTrainerWorkoutSessionUnit(t *test
 	customerUUID := "e5bf08ee-e287-40b6-8ef7-d43ec18fd17a"
 	fakeSessionUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
 	trainerSession := GenerateTestTrainerWorkoutSession("97916cbc-f69b-4602-ac9d-b163b791e73b")
-	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 	expectedSession := customerSession
 
 	SUT := adapters.NewWorkoutsCacheRepoistory()
@@ -70,7 +70,7 @@ func TestCustomerShouldBeAssignedToDifferentWorkoutSessionsWithSucccessUnit(t *t
 	firstTrainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
 	secondTrainerSession := GenerateTestTrainerWorkoutSession("ba958504-e56d-438a-8d23-683da191c2f5")
 
-	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 
 	expectedSession := customerSession
 	expectedSession.AssignWorkout(firstTrainerSession.UUID())
@@ -101,7 +101,7 @@ func TestShouldInsertCustomerWorkoutSessionWithSuccessUnit(t *testing.T) {
 	// given:
 	ctx := context.Background()
 	customerUUID := "eabfc05c-5a32-42bf-b942-65885a673151"
-	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 	expectedSession := customerSession
 
 	SUT := adapters.NewWorkoutsCacheRepoistory()
@@ -124,7 +124,7 @@ func TestCustomerShouldBeAssignedToTrainerWorkoutSessionWithSucccessUnit(t *test
 	ctx := context.Background()
 	customerUUID := "e5bf08ee-e287-40b6-8ef7-d43ec18fd17a"
 	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
-	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 
 	expectedSession := customerSession
 	expectedSession.AssignWorkout(trainerSession.UUID())
@@ -144,7 +144,7 @@ func TestCustomerShouldBeAssignedToTrainerWorkoutSessionWithSucccessUnit(t *test
 	assert.Equal(expectedSession, actualSession)
 }
 
-func TestDeleteWorkoutSessionShouldReturnEmptyResultWhenSessionNotExistUnit(t *testing.T) {
+func TestCancelWorkoutSessionShouldReturnEmptyResultWhenSessionNotExistUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -157,7 +157,7 @@ func TestDeleteWorkoutSessionShouldReturnEmptyResultWhenSessionNotExistUnit(t *t
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 
 	// when:
-	deletedSession, err := SUT.DeleteTrainerWorkoutSession(ctx, nonExistingWorkoutSessionUUID)
+	deletedSession, err := SUT.CancelTrainerWorkoutSession(ctx, nonExistingWorkoutSessionUUID)
 
 	// then:
 	assert.Nil(err)
@@ -175,7 +175,7 @@ func TestShouldRemoveCustomerFromTrainerWorkoutSessionUnit(t *testing.T) {
 	ctx := context.Background()
 	customerUUID := "b68f3b7e-af79-45d8-ab61-336f5aaff5c8"
 	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
-	customerSession := CreatCustomerWorkoutSessions(customerUUID)
+	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 
 	SUT := adapters.NewWorkoutsCacheRepoistory()
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
@@ -194,7 +194,7 @@ func TestShouldRemoveCustomerFromTrainerWorkoutSessionUnit(t *testing.T) {
 	assert.Equal(actualSession.Customers(), 0)
 }
 
-func TestTrainerShouldDeleteWorkoutSessionWithSuccessUnit(t *testing.T) {
+func TestTrainerShouldCancelWorkoutSessionWithSuccessUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -207,7 +207,7 @@ func TestTrainerShouldDeleteWorkoutSessionWithSuccessUnit(t *testing.T) {
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 
 	// when:
-	deletedSession, err := SUT.DeleteTrainerWorkoutSession(ctx, workoutSessionUUID)
+	deletedSession, err := SUT.CancelTrainerWorkoutSession(ctx, workoutSessionUUID)
 
 	// then:
 	assert.Nil(err)
@@ -218,7 +218,7 @@ func TestTrainerShouldDeleteWorkoutSessionWithSuccessUnit(t *testing.T) {
 	assert.Empty(actualSession)
 }
 
-func TestTrainerShouldDeleteWorkoutSessionsWithSuccessUnit(t *testing.T) {
+func TestTrainerShouldCancelAllWorkoutSessionsWithSuccessUnit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -233,7 +233,7 @@ func TestTrainerShouldDeleteWorkoutSessionsWithSuccessUnit(t *testing.T) {
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSessions[1])
 
 	// when:
-	deletedSession, err := SUT.DeleteTrainerWorkoutSessions(ctx, workoutSessionsUUIDs...)
+	deletedSession, err := SUT.CancelTrainerWorkoutSessions(ctx, workoutSessionsUUIDs...)
 
 	// then:
 	assert.Nil(err)
@@ -378,7 +378,7 @@ func GenerateTestTrainerWorkoutSessions(trainerUUID string, n int) []domain.Trai
 	return sessions
 }
 
-func CreatCustomerWorkoutSessions(customerUUID string) domain.CustomerWorkoutSession {
+func GenerateTestCustomerWorkoutSession(customerUUID string) domain.CustomerWorkoutSession {
 	session, err := domain.NewCustomerWorkoutSessions(customerUUID)
 	if err != nil {
 		panic(err)
