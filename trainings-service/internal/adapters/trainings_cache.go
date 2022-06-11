@@ -57,33 +57,6 @@ func (w *WorkoutsCacheRepoistory) UpsertTrainerWorkoutSession(ctx context.Contex
 	return nil
 }
 
-func (w *WorkoutsCacheRepoistory) RemoveCustomerFromTrainerWorkoutSession(ctx context.Context, sessionUUID, customerUUID string) error {
-	v, ok := w.customerSessions.Load(customerUUID)
-	if !ok {
-		return nil
-	}
-	customerSession, ok := v.(domain.CustomerWorkoutSession)
-	if !ok {
-		return fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, customerUUID)
-	}
-
-	v, ok = w.trainerSessions.Load(sessionUUID)
-	if !ok {
-		return nil
-	}
-	trainerSession, ok := v.(domain.TrainerWorkoutSession)
-	if !ok {
-		return fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, sessionUUID)
-	}
-
-	trainerSession.UnregisterCustomer(customerUUID)
-	customerSession.UnregisterWorkout(sessionUUID)
-
-	w.UpsertCustomerWorkoutSession(ctx, customerSession)
-	w.UpsertTrainerWorkoutSession(ctx, trainerSession)
-	return nil
-}
-
 func (w *WorkoutsCacheRepoistory) QueryTrainerWorkoutSessions(ctx context.Context, trainerUUID string) ([]domain.TrainerWorkoutSession, error) {
 	var (
 		sessions []domain.TrainerWorkoutSession
@@ -171,6 +144,33 @@ func (w *WorkoutsCacheRepoistory) UpsertCustomerWorkoutSession(ctx context.Conte
 	return nil
 }
 
+func (w *WorkoutsCacheRepoistory) UnregisterCustomerWorkoutSession(ctx context.Context, sessionUUID, customerUUID string) error {
+	v, ok := w.customerSessions.Load(customerUUID)
+	if !ok {
+		return nil
+	}
+	customerSession, ok := v.(domain.CustomerWorkoutSession)
+	if !ok {
+		return fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, customerUUID)
+	}
+
+	v, ok = w.trainerSessions.Load(sessionUUID)
+	if !ok {
+		return nil
+	}
+	trainerSession, ok := v.(domain.TrainerWorkoutSession)
+	if !ok {
+		return fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, sessionUUID)
+	}
+
+	trainerSession.UnregisterCustomer(customerUUID)
+	customerSession.UnregisterWorkout(sessionUUID)
+
+	w.UpsertCustomerWorkoutSession(ctx, customerSession)
+	w.UpsertTrainerWorkoutSession(ctx, trainerSession)
+	return nil
+}
+
 func (w *WorkoutsCacheRepoistory) AssignCustomerToWorkoutSession(ctx context.Context, customerUUID, sessionUUID string) error {
 	v, err := w.QueryTrainerWorkoutSession(ctx, sessionUUID)
 	if err != nil {
@@ -179,6 +179,10 @@ func (w *WorkoutsCacheRepoistory) AssignCustomerToWorkoutSession(ctx context.Con
 	c, err := w.QueryCustomerWorkoutSession(ctx, customerUUID)
 	if err != nil {
 		return fmt.Errorf("query customer workout session failed: %w", err)
+	}
+
+	if v.UUID() == "" || c.UUID() == "" {
+		return nil
 	}
 
 	err = v.AssignCustomer(customerUUID)
@@ -197,20 +201,12 @@ func (w *WorkoutsCacheRepoistory) AssignCustomerToWorkoutSession(ctx context.Con
 	}
 	err = w.UpsertCustomerWorkoutSession(ctx, c)
 	if err != nil {
-		inner := w.RemoveCustomerFromTrainerWorkoutSession(ctx, sessionUUID, customerUUID)
+		inner := w.UnregisterCustomerWorkoutSession(ctx, sessionUUID, customerUUID)
 		if inner != nil {
 			return fmt.Errorf("rollback failed: %w", err)
 		}
 		return fmt.Errorf("upsert trainer workout session failed: %w", err)
 	}
-	return nil
-}
-
-func (w *WorkoutsCacheRepoistory) DeleteCustomerWorkoutSession(ctx context.Context, userUUID, sessionUUID string) error {
-	// reduce number of workouts in UserWorkout doc
-	// reduce number of workouts in WorkoutGroup
-	// increase number of user workotus limit
-
 	return nil
 }
 
