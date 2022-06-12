@@ -1,4 +1,4 @@
-package adapters
+package cache
 
 import (
 	"context"
@@ -9,16 +9,16 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
 )
 
-type TrainerSchedulesCache struct {
+type TrainerSchedules struct {
 	lookup sync.Map
 }
 
-func (w *TrainerSchedulesCache) UpsertSchedule(ctx context.Context, s domain.TrainerWorkoutSession) error {
-	w.lookup.Store(s.UUID(), s)
+func (t *TrainerSchedules) UpsertSchedule(ctx context.Context, s domain.TrainerWorkoutSession) error {
+	t.lookup.Store(s.UUID(), s)
 	return nil
 }
 
-func (t *TrainerSchedulesCache) QuerySchedules(_ context.Context, trainerUUID string) ([]domain.TrainerWorkoutSession, error) {
+func (t *TrainerSchedules) QuerySchedules(_ context.Context, trainerUUID string) ([]domain.TrainerWorkoutSession, error) {
 	var (
 		sessions []domain.TrainerWorkoutSession
 		keys     []string
@@ -41,7 +41,7 @@ func (t *TrainerSchedulesCache) QuerySchedules(_ context.Context, trainerUUID st
 	return sessions, nil
 }
 
-func (t *TrainerSchedulesCache) sortSchedulesByUUID(keys []string, sessions []domain.TrainerWorkoutSession) ([]domain.TrainerWorkoutSession, error) {
+func (t *TrainerSchedules) sortSchedulesByUUID(keys []string, sessions []domain.TrainerWorkoutSession) ([]domain.TrainerWorkoutSession, error) {
 	sort.SliceStable(keys, func(i, j int) bool { return keys[i] < keys[j] })
 	for _, k := range keys {
 		trainerSessionMapVal, ok := t.lookup.Load(k)
@@ -57,7 +57,7 @@ func (t *TrainerSchedulesCache) sortSchedulesByUUID(keys []string, sessions []do
 	return sessions, nil
 }
 
-func (t *TrainerSchedulesCache) QuerySchedule(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
+func (t *TrainerSchedules) QuerySchedule(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
 	trainerSessionMapVal, ok := t.lookup.Load(sessionUUID)
 	if !ok {
 		return domain.TrainerWorkoutSession{}, nil
@@ -69,7 +69,7 @@ func (t *TrainerSchedulesCache) QuerySchedule(ctx context.Context, sessionUUID s
 	return session, nil
 }
 
-func (w *TrainerSchedulesCache) CancelSchedule(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
+func (w *TrainerSchedules) CancelSchedule(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
 	trainerSessionMapVal, ok := w.lookup.Load(sessionUUID)
 	if !ok {
 		return domain.TrainerWorkoutSession{}, nil
@@ -82,7 +82,7 @@ func (w *TrainerSchedulesCache) CancelSchedule(ctx context.Context, sessionUUID 
 	return session, nil
 }
 
-func (t *TrainerSchedulesCache) CancelSchedules(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerWorkoutSession, error) {
+func (t *TrainerSchedules) CancelSchedules(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerWorkoutSession, error) {
 	var sessions []domain.TrainerWorkoutSession
 	for _, s := range sessionUUIDs {
 		session, err := t.CancelSchedule(ctx, s)
@@ -94,6 +94,6 @@ func (t *TrainerSchedulesCache) CancelSchedules(ctx context.Context, sessionUUID
 	return sessions, nil
 }
 
-func NewTrainerSchedulesCache() *TrainerSchedulesCache {
-	return &TrainerSchedulesCache{}
+func NewTrainerSchedules() *TrainerSchedules {
+	return &TrainerSchedules{}
 }

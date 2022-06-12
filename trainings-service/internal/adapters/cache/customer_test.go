@@ -1,10 +1,10 @@
-package adapters_test
+package cache_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/cache"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +17,7 @@ func TestShouldInsertCustomerWorkoutSessionWithSuccess_Unit(t *testing.T) {
 	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 	expectedSession := customerSession
 
-	SUT := adapters.NewCustomerSchedulesCache()
+	SUT := cache.NewCustomerSchedules()
 
 	// when:
 	err := SUT.UpsertSchedule(ctx, customerSession)
@@ -39,7 +39,7 @@ func TestShouldUnregisterCustomerWorkoutSession_Unit(t *testing.T) {
 	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 	expectedSession := customerSession
 
-	SUT := adapters.NewCustomerSchedulesCache()
+	SUT := cache.NewCustomerSchedules()
 	SUT.UpsertSchedule(ctx, customerSession)
 
 	// when:
@@ -61,7 +61,7 @@ func TestShouldNotReturnErrorAfterUnregisterNonExistingWorkoutSession_Unit(t *te
 	customerUUID := "eabfc05c-5a32-42bf-b942-65885a673151"
 	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 
-	SUT := adapters.NewCustomerSchedulesCache()
+	SUT := cache.NewCustomerSchedules()
 
 	// when:
 	err := SUT.CancelSchedule(ctx, customerSession.UUID(), customerUUID)

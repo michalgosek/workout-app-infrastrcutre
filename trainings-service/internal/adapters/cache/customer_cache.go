@@ -1,4 +1,4 @@
-package adapters
+package cache
 
 import (
 	"context"
@@ -8,16 +8,16 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
 )
 
-type CustomerSchedulesCache struct {
+type CustomerSchedules struct {
 	lookup sync.Map
 }
 
-func (c *CustomerSchedulesCache) UpsertSchedule(ctx context.Context, session domain.CustomerWorkoutSession) error {
+func (c *CustomerSchedules) UpsertSchedule(ctx context.Context, session domain.CustomerWorkoutSession) error {
 	c.lookup.Store(session.UserUUID(), session)
 	return nil
 }
 
-func (c *CustomerSchedulesCache) CancelSchedule(ctx context.Context, sessionUUID, customerUUID string) error {
+func (c *CustomerSchedules) CancelSchedule(ctx context.Context, sessionUUID, customerUUID string) error {
 	customerSessionMapVal, ok := c.lookup.Load(customerUUID)
 	if !ok {
 		return nil
@@ -32,7 +32,7 @@ func (c *CustomerSchedulesCache) CancelSchedule(ctx context.Context, sessionUUID
 	return nil
 }
 
-func (c *CustomerSchedulesCache) QuerySchedule(_ context.Context, customerUUID string) (domain.CustomerWorkoutSession, error) {
+func (c *CustomerSchedules) QuerySchedule(_ context.Context, customerUUID string) (domain.CustomerWorkoutSession, error) {
 	customerSessionMapVal, ok := c.lookup.Load(customerUUID)
 	if !ok {
 		return domain.CustomerWorkoutSession{}, nil
@@ -44,6 +44,6 @@ func (c *CustomerSchedulesCache) QuerySchedule(_ context.Context, customerUUID s
 	return customerSession, nil
 }
 
-func NewCustomerSchedulesCache() *CustomerSchedulesCache {
-	return &CustomerSchedulesCache{}
+func NewCustomerSchedules() *CustomerSchedules {
+	return &CustomerSchedules{}
 }

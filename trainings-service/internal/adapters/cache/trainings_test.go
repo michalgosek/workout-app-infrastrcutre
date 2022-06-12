@@ -1,4 +1,4 @@
-package adapters_test
+package cache_test
 
 import (
 	"context"
@@ -7,7 +7,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters"
+
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/cache"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
@@ -21,7 +22,7 @@ func TestShouldNotRegisterWorkoutSessionForNonExistingCustomer_Unit(t *testing.T
 	trainerSession := GenerateTestTrainerWorkoutSession("97916cbc-f69b-4602-ac9d-b163b791e73b")
 	expectedSession := trainerSession
 
-	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT := cache.NewTrainingSchedules()
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 
 	// when:
@@ -46,7 +47,7 @@ func TestCustomerShouldNotRegisterToNonExistingTrainerWorkoutSession_Unit(t *tes
 	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 	expectedSession := customerSession
 
-	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT := cache.NewTrainingSchedules()
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 	SUT.UpsertCustomerWorkoutSession(ctx, customerSession)
 
@@ -76,7 +77,7 @@ func TestCustomerShouldBeAssignedToDifferentWorkoutSessionsWithSucccess_Unit(t *
 	expectedSession.AssignWorkout(firstTrainerSession.UUID())
 	expectedSession.AssignWorkout(secondTrainerSession.UUID())
 
-	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT := cache.NewTrainingSchedules()
 	SUT.UpsertTrainerWorkoutSession(ctx, firstTrainerSession)
 	SUT.UpsertTrainerWorkoutSession(ctx, secondTrainerSession)
 	SUT.UpsertCustomerWorkoutSession(ctx, customerSession)
@@ -107,7 +108,7 @@ func TestCustomerShouldBeAssignedToTrainerWorkoutSessionWithSucccess_Unit(t *tes
 	expectedSession := customerSession
 	expectedSession.AssignWorkout(trainerSession.UUID())
 
-	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT := cache.NewTrainingSchedules()
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 	SUT.UpsertCustomerWorkoutSession(ctx, customerSession)
 
@@ -131,7 +132,7 @@ func TestShouldRemoveCustomerFromTrainerWorkoutSession_Unit(t *testing.T) {
 	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
 	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
 
-	SUT := adapters.NewWorkoutsCacheRepoistory()
+	SUT := cache.NewTrainingSchedules()
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
 	SUT.UpsertCustomerWorkoutSession(ctx, customerSession)
 	SUT.AssignCustomerToWorkoutSession(ctx, customerUUID, trainerSession.UUID())

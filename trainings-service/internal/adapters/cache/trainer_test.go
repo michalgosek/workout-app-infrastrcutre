@@ -1,11 +1,12 @@
-package adapters_test
+package cache_test
 
 import (
 	"context"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/cache"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,7 +17,7 @@ func TestTrainerShouldUpdateManyTrainerSchedulesWithSuccess_Unit(t *testing.T) {
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
 	trainerSessions := GenerateTestTrainerWorkoutSessions(trainerUUID, 2)
 	ctx := context.Background()
-	SUT := adapters.NewTrainerSchedulesCache()
+	SUT := cache.NewTrainerSchedules()
 
 	SUT.UpsertSchedule(ctx, trainerSessions[0])
 	SUT.UpsertSchedule(ctx, trainerSessions[1])
@@ -45,7 +46,7 @@ func TestTrainerShouldUpdateScheduleWithSuccess_Unit(t *testing.T) {
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
 	trainerSession := GenerateTestTrainerWorkoutSession(trainerUUID)
 	ctx := context.Background()
-	SUT := adapters.NewTrainerSchedulesCache()
+	SUT := cache.NewTrainerSchedules()
 	SUT.UpsertSchedule(ctx, trainerSession)
 
 	trainerSession.SetName("dummy")
@@ -68,7 +69,7 @@ func TestQueryNonExistingTrainerScheduleShouldReturnEmptyResult_Unit(t *testing.
 	// given:
 	ctx := context.Background()
 	sessionUUID := uuid.NewString()
-	SUT := adapters.NewTrainerSchedulesCache()
+	SUT := cache.NewTrainerSchedules()
 
 	// when:
 	actualSession, err := SUT.QuerySchedule(ctx, sessionUUID)
@@ -84,7 +85,7 @@ func TestShouldInsertTwoSchedulesForTrainerWithSuccess_Unit(t *testing.T) {
 	// given:
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
 	expectedSessions := GenerateTestTrainerWorkoutSessions(trainerUUID, 2)
-	SUT := adapters.NewTrainerSchedulesCache()
+	SUT := cache.NewTrainerSchedules()
 
 	// when:
 	err1 := SUT.UpsertSchedule(context.Background(), expectedSessions[0])
@@ -105,7 +106,7 @@ func TestShouldUpsertTrainerScheduleForTrainerWithSuccess_Unit(t *testing.T) {
 	// given:
 	trainerUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
 	expectedSession := GenerateTestTrainerWorkoutSession(trainerUUID)
-	SUT := adapters.NewTrainerSchedulesCache()
+	SUT := cache.NewTrainerSchedules()
 
 	// when:
 	err := SUT.UpsertSchedule(context.Background(), expectedSession)
@@ -127,7 +128,7 @@ func TestShouldReturnEmptyScheduleWhenTrainerAttemptsCancelNonExisting_Unit(t *t
 	expectedSession := trainerSession
 	nonExistingWorkoutSessionUUID := "10b8151c-a686-4fd4-925e-f0a93a41ba50"
 
-	SUT := adapters.NewTrainerSchedulesCache()
+	SUT := cache.NewTrainerSchedules()
 	SUT.UpsertSchedule(ctx, trainerSession)
 
 	// when:
@@ -151,7 +152,7 @@ func TestShouldCancelAllTrainerSchedulesWithSuccess_Unit(t *testing.T) {
 	trainerSessions := GenerateTestTrainerWorkoutSessions(trainerUUID, 2)
 	expectedSessions := trainerSessions
 	workoutSessionsUUIDs := []string{trainerSessions[0].UUID(), trainerSessions[1].UUID()}
-	SUT := adapters.NewTrainerSchedulesCache()
+	SUT := cache.NewTrainerSchedules()
 
 	SUT.UpsertSchedule(ctx, trainerSessions[0])
 	SUT.UpsertSchedule(ctx, trainerSessions[1])

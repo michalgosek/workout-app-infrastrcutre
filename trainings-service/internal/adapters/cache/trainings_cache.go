@@ -1,4 +1,4 @@
-package adapters
+package cache
 
 import (
 	"context"
@@ -8,41 +8,41 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
 )
 
-type WorkoutsCacheRepoistory struct {
-	trainers  TrainerSchedulesCache
-	customers CustomerSchedulesCache
+type TrainingSchedules struct {
+	trainers  TrainerSchedules
+	customers CustomerSchedules
 }
 
-func NewWorkoutsCacheRepoistory() *WorkoutsCacheRepoistory {
-	w := WorkoutsCacheRepoistory{}
+func NewTrainingSchedules() *TrainingSchedules {
+	w := TrainingSchedules{}
 	return &w
 }
 
-func (w *WorkoutsCacheRepoistory) UpsertTrainerWorkoutSession(ctx context.Context, s domain.TrainerWorkoutSession) error {
+func (w *TrainingSchedules) UpsertTrainerWorkoutSession(ctx context.Context, s domain.TrainerWorkoutSession) error {
 	return w.trainers.UpsertSchedule(ctx, s)
 }
 
-func (w *WorkoutsCacheRepoistory) QueryTrainerWorkoutSessions(ctx context.Context, trainerUUID string) ([]domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) QueryTrainerWorkoutSessions(ctx context.Context, trainerUUID string) ([]domain.TrainerWorkoutSession, error) {
 	return w.trainers.QuerySchedules(ctx, trainerUUID)
 }
 
-func (w *WorkoutsCacheRepoistory) QueryTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) QueryTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
 	return w.trainers.QuerySchedule(ctx, sessionUUID)
 }
 
-func (w *WorkoutsCacheRepoistory) CancelTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) CancelTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
 	return w.trainers.CancelSchedule(ctx, sessionUUID)
 }
 
-func (w *WorkoutsCacheRepoistory) CancelTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) CancelTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerWorkoutSession, error) {
 	return w.trainers.CancelSchedules(ctx, sessionUUIDs...)
 }
 
-func (w *WorkoutsCacheRepoistory) UpsertCustomerWorkoutSession(ctx context.Context, session domain.CustomerWorkoutSession) error {
+func (w *TrainingSchedules) UpsertCustomerWorkoutSession(ctx context.Context, session domain.CustomerWorkoutSession) error {
 	return w.customers.UpsertSchedule(ctx, session)
 }
 
-func (w *WorkoutsCacheRepoistory) UnregisterCustomerWorkoutSession(ctx context.Context, sessionUUID, customerUUID string) error {
+func (w *TrainingSchedules) UnregisterCustomerWorkoutSession(ctx context.Context, sessionUUID, customerUUID string) error {
 	customerSession, err := w.customers.QuerySchedule(ctx, customerUUID)
 	if err != nil {
 		return fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, customerUUID)
@@ -61,7 +61,7 @@ func (w *WorkoutsCacheRepoistory) UnregisterCustomerWorkoutSession(ctx context.C
 	return nil
 }
 
-func (w *WorkoutsCacheRepoistory) AssignCustomerToWorkoutSession(ctx context.Context, customerUUID, sessionUUID string) error {
+func (w *TrainingSchedules) AssignCustomerToWorkoutSession(ctx context.Context, customerUUID, sessionUUID string) error {
 	trainerWorkoutSession, err := w.QueryTrainerWorkoutSession(ctx, sessionUUID)
 	if err != nil {
 		return fmt.Errorf("query trainer workout session failed: %w", err)
@@ -98,7 +98,7 @@ func (w *WorkoutsCacheRepoistory) AssignCustomerToWorkoutSession(ctx context.Con
 	return nil
 }
 
-func (w *WorkoutsCacheRepoistory) QueryCustomerWorkoutSession(ctx context.Context, customerUUID string) (domain.CustomerWorkoutSession, error) {
+func (w *TrainingSchedules) QueryCustomerWorkoutSession(ctx context.Context, customerUUID string) (domain.CustomerWorkoutSession, error) {
 	return w.customers.QuerySchedule(ctx, customerUUID)
 }
 
