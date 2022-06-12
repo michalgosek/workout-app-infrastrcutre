@@ -83,5 +83,5 @@ func NewCustomerWorkoutSessions(userUUID string) (*CustomerWorkoutSession, error
 	return &c, nil
 }
 
-var ErrEmptyTrainerWorkoutSessionUUID = errors.New("assigning empty workoutUUID")
+var ErrEmptyTrainerWorkoutSessionUUID = errors.New("empty trainer workout UUID")
 var ErrCustomerWorkouSessionLimitExceeded = errors.New("customer session workouts number exceeded")

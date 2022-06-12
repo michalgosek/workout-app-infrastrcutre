@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCustomerWorkoutSessionShouldAssingOneWorkoutWithSuccessUnit(t *testing.T) {
+func TestShouldAssingOneWorkoutWithSuccess_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -24,7 +24,7 @@ func TestCustomerWorkoutSessionShouldAssingOneWorkoutWithSuccessUnit(t *testing.
 	assert.Equal(customerWorkoutSession.AssignedWorkouts(), 1)
 }
 
-func TestCustomerWorkoutSessionShouldNotAssingDuplicateWorkoutUUIDUnit(t *testing.T) {
+func TestShouldNotAssingDuplicateWorkoutUUID_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -44,7 +44,7 @@ func TestCustomerWorkoutSessionShouldNotAssingDuplicateWorkoutUUIDUnit(t *testin
 	assert.Equal(customerWorkoutSession.Limit(), 4)
 }
 
-func TestCustomerWorkoutSessionShouldAssignTwoWorkoutsWithSuccessUnit(t *testing.T) {
+func TestShouldAssignTwoWorkoutsWithSuccess_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -64,7 +64,7 @@ func TestCustomerWorkoutSessionShouldAssignTwoWorkoutsWithSuccessUnit(t *testing
 	assert.Equal(customerWorkoutSession.AssignedWorkouts(), 2)
 }
 
-func TestCustomerWorkoutSessionShouldNotAssingEmptyWorkoutUUIDUnit(t *testing.T) {
+func TestShouldNotAssingEmptyWorkoutUUID_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -78,7 +78,7 @@ func TestCustomerWorkoutSessionShouldNotAssingEmptyWorkoutUUIDUnit(t *testing.T)
 	assert.ErrorIs(err, domain.ErrEmptyTrainerWorkoutSessionUUID)
 }
 
-func TestCustomerWorkoutSessionShouldReturnErrorWhenWorkoutsLimitExeecedUnit(t *testing.T) {
+func TestShouldReturnErrorWhenWorkoutsLimitExeeced_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
@@ -103,7 +103,11 @@ func TestCustomerWorkoutSessionShouldReturnErrorWhenWorkoutsLimitExeecedUnit(t *
 	err6 := customerWorkoutSession.AssignWorkout(workoutUUID6)
 
 	// then:
-	assert.Nil(err1, err2, err3, err4, err5)
+	assert.Nil(err1)
+	assert.Nil(err2)
+	assert.Nil(err3)
+	assert.Nil(err4)
+	assert.Nil(err5)
 	assert.ErrorIs(domain.ErrCustomerWorkouSessionLimitExceeded, err6)
 	assert.Equal(expecterdWorkoutLimit, customerWorkoutSession.Limit())
 	assert.Equal(expectedAssginedWorkouts, customerWorkoutSession.AssignedWorkouts())
