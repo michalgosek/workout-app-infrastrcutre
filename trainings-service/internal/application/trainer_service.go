@@ -5,16 +5,15 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
-	"github.com/sirupsen/logrus"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
 
 type TrainerRepository interface {
-	UpsertSchedule(ctx context.Context, schedule domain.TrainerSchedule) error
-	QuerySchedule(ctx context.Context, scheduleUUID string) (domain.TrainerSchedule, error)
-	QuerySchedules(ctx context.Context, trainerUUID string) ([]domain.TrainerSchedule, error)
-	CancelSchedules(ctx context.Context, scheduleUUIDs ...string) ([]domain.TrainerSchedule, error)
-	CancelSchedule(ctx context.Context, scheduleUUID string) (domain.TrainerSchedule, error)
+	UpsertSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error
+	QuerySchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error)
+	QuerySchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error)
+	CancelSchedules(ctx context.Context, scheduleUUIDs ...string) ([]trainer.TrainerSchedule, error)
+	CancelSchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error)
 }
 
 type TrainerService struct {
@@ -29,28 +28,53 @@ type TrainerSchedule struct {
 }
 
 func (t *TrainerService) CreateTrainerSchedule(ctx context.Context, args TrainerSchedule) error {
-	schedule, err := domain.NewTrainerSchedule(args.TrainerUUID, args.Name, args.Desc, args.Date)
+	schedule, err := trainer.NewSchedule(args.TrainerUUID, args.Name, args.Desc, args.Date)
 	if err != nil {
 		return fmt.Errorf("creating trainer schedule failed: %v", err)
 	}
 	err = t.repository.UpsertSchedule(ctx, *schedule)
 	if err != nil {
-		return fmt.Errorf("upsert schedule failed: %w", err)
+		return fmt.Errorf("upsert schedule UUID: %s for trainer UUID: %s failed, reason: %w", schedule.UUID(), args.TrainerUUID, err)
 	}
-	logrus.WithFields(logrus.Fields{"Component": "TrainerService", "Method": "CreateTrainerSchedule"}).Info()
 	return nil
 }
 
-func (t *TrainerService) GetSchedule(ctx context.Context, trainerUUID string) (domain.TrainerSchedule, error) {
-	schedule, err := t.repository.QuerySchedule(ctx, trainerUUID)
+func (t *TrainerService) GetSchedule(ctx context.Context, scheduleUUID, trainerUUID string) (trainer.TrainerSchedule, error) {
+	schedule, err := t.repository.QuerySchedule(ctx, scheduleUUID)
 	if err != nil {
-		return domain.TrainerSchedule{}, fmt.Errorf("query schedule failed: %v", err)
+		return trainer.TrainerSchedule{}, fmt.Errorf("query schedule failed: %v", err)
+	}
+	if schedule.TrainerUUID() != trainerUUID {
+		return trainer.TrainerSchedule{}, nil
 	}
 	return schedule, nil
 }
 
-func (t *TrainerService) GetSchedules(ctx context.Context, trainerUUID string) ([]domain.TrainerSchedule, error) {
-	return nil, nil
+func (t *TrainerService) AssingCustomer(ctx context.Context, customerUUID, scheduleUUID, trainerUUID string) error {
+	schedule, err := t.repository.QuerySchedule(ctx, scheduleUUID)
+	if err != nil {
+		return err
+	}
+	if schedule.TrainerUUID() != trainerUUID {
+		return ErrScheduleNotOwner
+	}
+	err = schedule.AssignCustomer(customerUUID)
+	if err != nil {
+		return fmt.Errorf("assign customer to the schedule failed: %w", err)
+	}
+	err = t.repository.UpsertSchedule(ctx, schedule)
+	if err != nil {
+		return fmt.Errorf("upsert schedule failed: %w", ErrRepositoryFailure)
+	}
+	return nil
+}
+
+func (t *TrainerService) GetSchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
+	schedules, err := t.repository.QuerySchedules(ctx, trainerUUID)
+	if err != nil {
+		return nil, fmt.Errorf("get schedules failed: %v", err)
+	}
+	return schedules, nil
 }
 
 func (t *TrainerService) DeleteSchedule(ctx context.Context, sessionUUID, trainerUUID string) error {

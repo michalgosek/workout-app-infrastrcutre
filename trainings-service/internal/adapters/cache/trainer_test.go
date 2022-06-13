@@ -22,8 +22,8 @@ func TestTrainerShouldUpdateManyTrainerSchedulesWithSuccess_Unit(t *testing.T) {
 	SUT.UpsertSchedule(ctx, trainerSchedules[0])
 	SUT.UpsertSchedule(ctx, trainerSchedules[1])
 
-	trainerSchedules[0].SetName("dummy")
-	trainerSchedules[1].SetDesc("dummy")
+	trainerSchedules[0].UpdateName("dummy")
+	trainerSchedules[1].UpdateDesc("dummy")
 	expectedSchedules := trainerSchedules
 
 	// when:
@@ -49,7 +49,7 @@ func TestTrainerShouldUpdateScheduleWithSuccess_Unit(t *testing.T) {
 	SUT := newTrainerSchedules()
 	SUT.UpsertSchedule(ctx, trainerSchedule)
 
-	trainerSchedule.SetName("dummy")
+	trainerSchedule.UpdateName("dummy")
 	expectedSchedules := trainerSchedule
 
 	// when:

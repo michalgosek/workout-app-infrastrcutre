@@ -1,4 +1,4 @@
-package domain
+package customer
 
 import (
 	"errors"
@@ -11,36 +11,36 @@ import (
 // Bussiness logic
 // * Customer have 5 workouts to use
 
-type CustomerWorkoutSession struct {
+type CustomerSchedule struct {
 	uuid         string
 	userUUID     string
 	limit        int
 	workoutUUIDs []string
 }
 
-func (c *CustomerWorkoutSession) UUID() string {
+func (c *CustomerSchedule) UUID() string {
 	return c.uuid
 }
 
-func (c *CustomerWorkoutSession) UserUUID() string {
+func (c *CustomerSchedule) UserUUID() string {
 	return c.userUUID
 }
 
-func (c *CustomerWorkoutSession) AssignedWorkouts() int {
+func (c *CustomerSchedule) AssignedWorkouts() int {
 	return len(c.workoutUUIDs)
 }
 
-func (c *CustomerWorkoutSession) WorkoutUUIDs() []string {
+func (c *CustomerSchedule) WorkoutUUIDs() []string {
 	return c.workoutUUIDs
 }
 
-func (c *CustomerWorkoutSession) Limit() int {
+func (c *CustomerSchedule) Limit() int {
 	return c.limit
 }
 
-func (c *CustomerWorkoutSession) AssignWorkout(UUID string) error {
+func (c *CustomerSchedule) AssignWorkout(UUID string) error {
 	if UUID == "" {
-		return fmt.Errorf("%w: into customer workout session", ErrEmptyTrainerWorkoutSessionUUID)
+		return fmt.Errorf("%w: into customer workout session", ErrEmptyScheduleUUID)
 	}
 	if len(c.workoutUUIDs) == 0 {
 		c.workoutUUIDs = append(c.workoutUUIDs, UUID)
@@ -54,7 +54,7 @@ func (c *CustomerWorkoutSession) AssignWorkout(UUID string) error {
 		return nil
 	}
 	if c.limit == 0 {
-		return ErrCustomerWorkouSessionLimitExceeded
+		return ErrSchedulesLimitExceeded
 	}
 
 	c.workoutUUIDs = append(c.workoutUUIDs, UUID)
@@ -62,7 +62,7 @@ func (c *CustomerWorkoutSession) AssignWorkout(UUID string) error {
 	return nil
 }
 
-func (c *CustomerWorkoutSession) UnregisterWorkout(UUID string) {
+func (c *CustomerSchedule) UnregisterWorkout(UUID string) {
 	var filtered []string
 	for _, u := range c.workoutUUIDs {
 		if u == UUID {
@@ -73,9 +73,9 @@ func (c *CustomerWorkoutSession) UnregisterWorkout(UUID string) {
 	c.workoutUUIDs = filtered
 }
 
-func NewCustomerWorkoutSessions(userUUID string) (*CustomerWorkoutSession, error) {
+func NewSchedule(userUUID string) (*CustomerSchedule, error) {
 	// verify logic
-	c := CustomerWorkoutSession{
+	c := CustomerSchedule{
 		uuid:     uuid.NewString(),
 		userUUID: userUUID,
 		limit:    5,
@@ -83,5 +83,5 @@ func NewCustomerWorkoutSessions(userUUID string) (*CustomerWorkoutSession, error
 	return &c, nil
 }
 
-var ErrEmptyTrainerWorkoutSessionUUID = errors.New("empty trainer workout UUID")
-var ErrCustomerWorkouSessionLimitExceeded = errors.New("customer session workouts number exceeded")
+var ErrEmptyScheduleUUID = errors.New("empty trainer workout UUID")
+var ErrSchedulesLimitExceeded = errors.New("customer session workouts number exceeded")

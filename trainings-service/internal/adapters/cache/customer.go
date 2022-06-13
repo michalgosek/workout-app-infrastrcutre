@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 )
 
 type CustomerSchedules struct {
 	lookup sync.Map
 }
 
-func (c *CustomerSchedules) UpsertSchedule(ctx context.Context, schedule domain.CustomerWorkoutSession) error {
+func (c *CustomerSchedules) UpsertSchedule(ctx context.Context, schedule customer.CustomerSchedule) error {
 	c.lookup.Store(schedule.UserUUID(), schedule)
 	return nil
 }
@@ -22,7 +22,7 @@ func (c *CustomerSchedules) CancelSchedule(ctx context.Context, scheduleUUID, cu
 	if !ok {
 		return nil
 	}
-	schedule, ok := customerScheduleMapV.(domain.CustomerWorkoutSession)
+	schedule, ok := customerScheduleMapV.(customer.CustomerSchedule)
 	if !ok {
 		return fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, customerUUID)
 	}
@@ -31,14 +31,14 @@ func (c *CustomerSchedules) CancelSchedule(ctx context.Context, scheduleUUID, cu
 	return nil
 }
 
-func (c *CustomerSchedules) QuerySchedule(_ context.Context, customerUUID string) (domain.CustomerWorkoutSession, error) {
+func (c *CustomerSchedules) QuerySchedule(_ context.Context, customerUUID string) (customer.CustomerSchedule, error) {
 	customerScheduleMapV, ok := c.lookup.Load(customerUUID)
 	if !ok {
-		return domain.CustomerWorkoutSession{}, nil
+		return customer.CustomerSchedule{}, nil
 	}
-	schedule, ok := customerScheduleMapV.(domain.CustomerWorkoutSession)
+	schedule, ok := customerScheduleMapV.(customer.CustomerSchedule)
 	if !ok {
-		return domain.CustomerWorkoutSession{}, fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, customerUUID)
+		return customer.CustomerSchedule{}, fmt.Errorf("%w : key: %s", ErrUnderlyingValueType, customerUUID)
 	}
 	return schedule, nil
 }

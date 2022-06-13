@@ -1,4 +1,4 @@
-package domain
+package trainer
 
 import (
 	"errors"
@@ -51,10 +51,6 @@ type TrainerSchedule struct {
 	date          time.Time
 }
 
-func (t *TrainerSchedule) AssignedCustomers() int {
-	return len(t.customerUUIDs)
-}
-
 func (t *TrainerSchedule) UUID() string {
 	return t.uuid
 }
@@ -71,16 +67,20 @@ func (t *TrainerSchedule) Date() time.Time {
 	return t.date
 }
 
+func (t *TrainerSchedule) Desc() string {
+	return t.desc
+}
+
 func (t *TrainerSchedule) Customers() int {
 	return len(t.customerUUIDs)
 }
 
-func (t *TrainerSchedule) SetDesc(s string) error {
+func (t *TrainerSchedule) UpdateDesc(s string) error {
 	t.desc = s
 	return nil
 }
 
-func (t *TrainerSchedule) SetName(s string) error {
+func (t *TrainerSchedule) UpdateName(s string) error {
 	t.name = s
 	return nil
 }
@@ -105,7 +105,7 @@ func (t *TrainerSchedule) UnregisterCustomer(UUID string) {
 
 func (t *TrainerSchedule) AssignCustomer(UUID string) error {
 	if UUID == "" {
-		return fmt.Errorf("%w: into customer workout session", ErrEmptyCustomerScheduleUUID)
+		return fmt.Errorf("%w: into customer workout session", ErrEmptyCustomerUUID)
 	}
 	if len(t.customerUUIDs) == 0 {
 		t.customerUUIDs = append(t.customerUUIDs, UUID)
@@ -119,7 +119,7 @@ func (t *TrainerSchedule) AssignCustomer(UUID string) error {
 		return nil
 	}
 	if t.limit == 0 {
-		return ErrCustomerWorkouSessionLimitExceeded
+		return ErrCustomersScheduleLimitExceeded
 	}
 
 	t.customerUUIDs = append(t.customerUUIDs, UUID)
@@ -127,7 +127,7 @@ func (t *TrainerSchedule) AssignCustomer(UUID string) error {
 	return nil
 }
 
-func NewTrainerSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedule, error) {
+func NewSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedule, error) {
 	dataVerifier := verifiers.NewWorkoutDate(3)
 	err := dataVerifier.Check(date)
 	if err != nil {
@@ -151,6 +151,6 @@ func NewTrainerSchedule(trainerUUID, name, desc string, date time.Time) (*Traine
 }
 
 var (
-	ErrTrainerWorkouSessionLimitExceeded = errors.New("customer session workouts number exceeded")
-	ErrEmptyCustomerScheduleUUID         = errors.New("empty customer workout session UUID")
+	ErrCustomersScheduleLimitExceeded = errors.New("customers schedule limit exceeded")
+	ErrEmptyCustomerUUID              = errors.New("empty customer UUID ")
 )

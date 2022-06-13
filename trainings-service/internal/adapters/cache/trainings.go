@@ -5,7 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
 
 type TrainingSchedules struct {
@@ -18,27 +19,27 @@ func NewTrainingSchedules() *TrainingSchedules {
 	return &w
 }
 
-func (w *TrainingSchedules) UpsertTrainerWorkoutSession(ctx context.Context, s domain.TrainerSchedule) error {
+func (w *TrainingSchedules) UpsertTrainerWorkoutSession(ctx context.Context, s trainer.TrainerSchedule) error {
 	return w.trainers.UpsertSchedule(ctx, s)
 }
 
-func (w *TrainingSchedules) QueryTrainerWorkoutSessions(ctx context.Context, trainerUUID string) ([]domain.TrainerSchedule, error) {
+func (w *TrainingSchedules) QueryTrainerWorkoutSessions(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
 	return w.trainers.QuerySchedules(ctx, trainerUUID)
 }
 
-func (w *TrainingSchedules) QueryTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerSchedule, error) {
+func (w *TrainingSchedules) QueryTrainerWorkoutSession(ctx context.Context, sessionUUID string) (trainer.TrainerSchedule, error) {
 	return w.trainers.QuerySchedule(ctx, sessionUUID)
 }
 
-func (w *TrainingSchedules) CancelTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerSchedule, error) {
+func (w *TrainingSchedules) CancelTrainerWorkoutSession(ctx context.Context, sessionUUID string) (trainer.TrainerSchedule, error) {
 	return w.trainers.CancelSchedule(ctx, sessionUUID)
 }
 
-func (w *TrainingSchedules) CancelTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerSchedule, error) {
+func (w *TrainingSchedules) CancelTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]trainer.TrainerSchedule, error) {
 	return w.trainers.CancelSchedules(ctx, sessionUUIDs...)
 }
 
-func (w *TrainingSchedules) UpsertCustomerWorkoutSession(ctx context.Context, session domain.CustomerWorkoutSession) error {
+func (w *TrainingSchedules) UpsertCustomerWorkoutSession(ctx context.Context, session customer.CustomerSchedule) error {
 	return w.customers.UpsertSchedule(ctx, session)
 }
 
@@ -98,7 +99,7 @@ func (w *TrainingSchedules) AssignCustomerToWorkoutSession(ctx context.Context, 
 	return nil
 }
 
-func (w *TrainingSchedules) QueryCustomerWorkoutSession(ctx context.Context, customerUUID string) (domain.CustomerWorkoutSession, error) {
+func (w *TrainingSchedules) QueryCustomerWorkoutSession(ctx context.Context, customerUUID string) (customer.CustomerSchedule, error) {
 	return w.customers.QuerySchedule(ctx, customerUUID)
 }
 

@@ -1,9 +1,9 @@
-package domain_test
+package customer_test
 
 import (
 	"testing"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
+	domain "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -75,7 +75,7 @@ func TestShouldNotAssingEmptyWorkoutUUID_Unit(t *testing.T) {
 	err := customerWorkoutSession.AssignWorkout("")
 
 	// then:
-	assert.ErrorIs(err, domain.ErrEmptyTrainerWorkoutSessionUUID)
+	assert.ErrorIs(err, domain.ErrEmptyScheduleUUID)
 }
 
 func TestShouldReturnErrorWhenWorkoutsLimitExeeced_Unit(t *testing.T) {
@@ -108,14 +108,14 @@ func TestShouldReturnErrorWhenWorkoutsLimitExeeced_Unit(t *testing.T) {
 	assert.Nil(err3)
 	assert.Nil(err4)
 	assert.Nil(err5)
-	assert.ErrorIs(domain.ErrCustomerWorkouSessionLimitExceeded, err6)
+	assert.ErrorIs(domain.ErrSchedulesLimitExceeded, err6)
 	assert.Equal(expecterdWorkoutLimit, customerWorkoutSession.Limit())
 	assert.Equal(expectedAssginedWorkouts, customerWorkoutSession.AssignedWorkouts())
 
 }
 
-func GenerateTestCustomerWorkoutSession(customerUUID string) domain.CustomerWorkoutSession {
-	c, err := domain.NewCustomerWorkoutSessions(customerUUID)
+func GenerateTestCustomerWorkoutSession(customerUUID string) domain.CustomerSchedule {
+	c, err := domain.NewSchedule(customerUUID)
 	if err != nil {
 		panic(err)
 	}

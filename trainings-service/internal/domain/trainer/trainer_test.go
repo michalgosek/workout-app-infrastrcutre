@@ -1,10 +1,10 @@
-package domain_test
+package trainer_test
 
 import (
 	"testing"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/testutil"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,7 +63,7 @@ func TestShouldReturnErrorWhenCustomerLimitExeeced_Unit(t *testing.T) {
 	assert.Nil(err8)
 	assert.Nil(err9)
 	assert.Nil(err10)
-	assert.ErrorIs(domain.ErrCustomerWorkouSessionLimitExceeded, err11)
+	assert.ErrorIs(trainer.ErrCustomersScheduleLimitExceeded, err11)
 	assert.Equal(expecterdWorkoutLimit, SUT.Limit())
-	assert.Equal(expectedAssginedWorkouts, SUT.AssignedCustomers())
+	assert.Equal(expectedAssginedWorkouts, SUT.Customers())
 }

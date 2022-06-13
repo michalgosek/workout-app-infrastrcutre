@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	domain "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
+	trainer "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,14 +23,14 @@ func (_m *TrainerRepository) EXPECT() *TrainerRepository_Expecter {
 }
 
 // CancelSchedule provides a mock function with given fields: ctx, scheduleUUID
-func (_m *TrainerRepository) CancelSchedule(ctx context.Context, scheduleUUID string) (domain.TrainerSchedule, error) {
+func (_m *TrainerRepository) CancelSchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error) {
 	ret := _m.Called(ctx, scheduleUUID)
 
-	var r0 domain.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, string) domain.TrainerSchedule); ok {
+	var r0 trainer.TrainerSchedule
+	if rf, ok := ret.Get(0).(func(context.Context, string) trainer.TrainerSchedule); ok {
 		r0 = rf(ctx, scheduleUUID)
 	} else {
-		r0 = ret.Get(0).(domain.TrainerSchedule)
+		r0 = ret.Get(0).(trainer.TrainerSchedule)
 	}
 
 	var r1 error
@@ -62,13 +62,13 @@ func (_c *TrainerRepository_CancelSchedule_Call) Run(run func(ctx context.Contex
 	return _c
 }
 
-func (_c *TrainerRepository_CancelSchedule_Call) Return(_a0 domain.TrainerSchedule, _a1 error) *TrainerRepository_CancelSchedule_Call {
+func (_c *TrainerRepository_CancelSchedule_Call) Return(_a0 trainer.TrainerSchedule, _a1 error) *TrainerRepository_CancelSchedule_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // CancelSchedules provides a mock function with given fields: ctx, scheduleUUIDs
-func (_m *TrainerRepository) CancelSchedules(ctx context.Context, scheduleUUIDs ...string) ([]domain.TrainerSchedule, error) {
+func (_m *TrainerRepository) CancelSchedules(ctx context.Context, scheduleUUIDs ...string) ([]trainer.TrainerSchedule, error) {
 	_va := make([]interface{}, len(scheduleUUIDs))
 	for _i := range scheduleUUIDs {
 		_va[_i] = scheduleUUIDs[_i]
@@ -78,12 +78,12 @@ func (_m *TrainerRepository) CancelSchedules(ctx context.Context, scheduleUUIDs 
 	_ca = append(_ca, _va...)
 	ret := _m.Called(_ca...)
 
-	var r0 []domain.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, ...string) []domain.TrainerSchedule); ok {
+	var r0 []trainer.TrainerSchedule
+	if rf, ok := ret.Get(0).(func(context.Context, ...string) []trainer.TrainerSchedule); ok {
 		r0 = rf(ctx, scheduleUUIDs...)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.TrainerSchedule)
+			r0 = ret.Get(0).([]trainer.TrainerSchedule)
 		}
 	}
 
@@ -123,20 +123,20 @@ func (_c *TrainerRepository_CancelSchedules_Call) Run(run func(ctx context.Conte
 	return _c
 }
 
-func (_c *TrainerRepository_CancelSchedules_Call) Return(_a0 []domain.TrainerSchedule, _a1 error) *TrainerRepository_CancelSchedules_Call {
+func (_c *TrainerRepository_CancelSchedules_Call) Return(_a0 []trainer.TrainerSchedule, _a1 error) *TrainerRepository_CancelSchedules_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // QuerySchedule provides a mock function with given fields: ctx, scheduleUUID
-func (_m *TrainerRepository) QuerySchedule(ctx context.Context, scheduleUUID string) (domain.TrainerSchedule, error) {
+func (_m *TrainerRepository) QuerySchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error) {
 	ret := _m.Called(ctx, scheduleUUID)
 
-	var r0 domain.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, string) domain.TrainerSchedule); ok {
+	var r0 trainer.TrainerSchedule
+	if rf, ok := ret.Get(0).(func(context.Context, string) trainer.TrainerSchedule); ok {
 		r0 = rf(ctx, scheduleUUID)
 	} else {
-		r0 = ret.Get(0).(domain.TrainerSchedule)
+		r0 = ret.Get(0).(trainer.TrainerSchedule)
 	}
 
 	var r1 error
@@ -168,21 +168,21 @@ func (_c *TrainerRepository_QuerySchedule_Call) Run(run func(ctx context.Context
 	return _c
 }
 
-func (_c *TrainerRepository_QuerySchedule_Call) Return(_a0 domain.TrainerSchedule, _a1 error) *TrainerRepository_QuerySchedule_Call {
+func (_c *TrainerRepository_QuerySchedule_Call) Return(_a0 trainer.TrainerSchedule, _a1 error) *TrainerRepository_QuerySchedule_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // QuerySchedules provides a mock function with given fields: ctx, trainerUUID
-func (_m *TrainerRepository) QuerySchedules(ctx context.Context, trainerUUID string) ([]domain.TrainerSchedule, error) {
+func (_m *TrainerRepository) QuerySchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
 	ret := _m.Called(ctx, trainerUUID)
 
-	var r0 []domain.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, string) []domain.TrainerSchedule); ok {
+	var r0 []trainer.TrainerSchedule
+	if rf, ok := ret.Get(0).(func(context.Context, string) []trainer.TrainerSchedule); ok {
 		r0 = rf(ctx, trainerUUID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]domain.TrainerSchedule)
+			r0 = ret.Get(0).([]trainer.TrainerSchedule)
 		}
 	}
 
@@ -215,17 +215,17 @@ func (_c *TrainerRepository_QuerySchedules_Call) Run(run func(ctx context.Contex
 	return _c
 }
 
-func (_c *TrainerRepository_QuerySchedules_Call) Return(_a0 []domain.TrainerSchedule, _a1 error) *TrainerRepository_QuerySchedules_Call {
+func (_c *TrainerRepository_QuerySchedules_Call) Return(_a0 []trainer.TrainerSchedule, _a1 error) *TrainerRepository_QuerySchedules_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
 // UpsertSchedule provides a mock function with given fields: ctx, schedule
-func (_m *TrainerRepository) UpsertSchedule(ctx context.Context, schedule domain.TrainerSchedule) error {
+func (_m *TrainerRepository) UpsertSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error {
 	ret := _m.Called(ctx, schedule)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, domain.TrainerSchedule) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, trainer.TrainerSchedule) error); ok {
 		r0 = rf(ctx, schedule)
 	} else {
 		r0 = ret.Error(0)
@@ -241,14 +241,14 @@ type TrainerRepository_UpsertSchedule_Call struct {
 
 // UpsertSchedule is a helper method to define mock.On call
 //  - ctx context.Context
-//  - schedule domain.TrainerSchedule
+//  - schedule trainer.TrainerSchedule
 func (_e *TrainerRepository_Expecter) UpsertSchedule(ctx interface{}, schedule interface{}) *TrainerRepository_UpsertSchedule_Call {
 	return &TrainerRepository_UpsertSchedule_Call{Call: _e.mock.On("UpsertSchedule", ctx, schedule)}
 }
 
-func (_c *TrainerRepository_UpsertSchedule_Call) Run(run func(ctx context.Context, schedule domain.TrainerSchedule)) *TrainerRepository_UpsertSchedule_Call {
+func (_c *TrainerRepository_UpsertSchedule_Call) Run(run func(ctx context.Context, schedule trainer.TrainerSchedule)) *TrainerRepository_UpsertSchedule_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(domain.TrainerSchedule))
+		run(args[0].(context.Context), args[1].(trainer.TrainerSchedule))
 	})
 	return _c
 }
