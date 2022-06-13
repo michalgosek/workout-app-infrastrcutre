@@ -4,7 +4,6 @@ import (
 	"sort"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
@@ -12,8 +11,8 @@ import (
 func GenerateTrainerSchedule(trainerUUID string) trainer.TrainerSchedule {
 	ts := time.Now()
 	ts = ts.Add(24 * time.Hour)
-	name := uuid.NewString()
-	desc := uuid.NewString()
+	name := "dummy"
+	desc := "dummy"
 	schedule, err := trainer.NewSchedule(trainerUUID, name, desc, ts)
 	if err != nil {
 		panic(err)

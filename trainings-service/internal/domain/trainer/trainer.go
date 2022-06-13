@@ -3,43 +3,10 @@ package trainer
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/verifiers"
 )
-
-/*
-type UserSchedule struct {
-	UserUUID        string
-	Limit           int
-	Schedules []string
-}
-
-type Schedule struct {
-	UUID        string
-	TrainerUUID string
-	Name        string
-	Desc        string
-	Places      int
-	Canceled    bool
-	Users       []string
-	Date        time.Time
-}
-
-// Serwis:
-// Uzytkownik nie powiniene sie zapisac na trening, gdy przekroczono limit (serwis layer)
--  Can set trainigs limit (plcae limit) (Service layer -> UpdateScheduleLimit using under UpsertMethod if session exists)
-
-
-	Trainer:
-	- Can schedule traninings (place limit, desc)
-	- Can update training (place limit, desc, users)
-	- Can cancel trainings
-	- Can remove user from the training (user)
-
-*/
 
 type TrainerSchedule struct {
 	uuid          string
@@ -49,6 +16,10 @@ type TrainerSchedule struct {
 	name          string
 	desc          string
 	date          time.Time
+}
+
+func (t *TrainerSchedule) Name() string {
+	return t.name
 }
 
 func (t *TrainerSchedule) UUID() string {
@@ -76,18 +47,40 @@ func (t *TrainerSchedule) Customers() int {
 }
 
 func (t *TrainerSchedule) UpdateDesc(s string) error {
+	if isProposedDescriptionNotExceeded(s) {
+		return ErrScheduleDescriptionExceeded
+	}
 	t.desc = s
 	return nil
 }
 
 func (t *TrainerSchedule) UpdateName(s string) error {
+	if isProposedNameNotExceeded(s) {
+		return ErrScheduleNameExceeded
+	}
 	t.name = s
 	return nil
 }
 
-func (t *TrainerSchedule) SetDate(d time.Time) (time.Time, error) {
+func (t *TrainerSchedule) UpdateDate(d time.Time) error {
+	if isProposedTimeNotExceeded(d) {
+		return ErrScheduleDateViolation
+	}
 	t.date = d
-	return t.date, nil
+	return nil
+}
+
+func isProposedTimeNotExceeded(date time.Time) bool {
+	threshold := time.Now().Add(3 * time.Hour)
+	return date.Equal(threshold) || date.After(threshold)
+}
+
+func isProposedDescriptionNotExceeded(desc string) bool {
+	return len(desc) > 100
+}
+
+func isProposedNameNotExceeded(name string) bool {
+	return len(name) > 15
 }
 
 func (t *TrainerSchedule) UnregisterCustomer(UUID string) {
@@ -107,36 +100,36 @@ func (t *TrainerSchedule) AssignCustomer(UUID string) error {
 	if UUID == "" {
 		return fmt.Errorf("%w: into customer workout session", ErrEmptyCustomerUUID)
 	}
+	if t.limit == 0 {
+		return ErrCustomersScheduleLimitExceeded
+	}
 	if len(t.customerUUIDs) == 0 {
 		t.customerUUIDs = append(t.customerUUIDs, UUID)
 		t.limit--
 		return nil
 	}
-
-	sort.SliceStable(t.customerUUIDs, func(i, j int) bool { return t.customerUUIDs[i] < t.customerUUIDs[j] })
-	idx := sort.Search(len(t.customerUUIDs), func(i int) bool { return t.customerUUIDs[i] == UUID })
-	if idx < len(t.customerUUIDs) && t.customerUUIDs[idx] == UUID {
-		return nil
+	for _, u := range t.customerUUIDs {
+		if u == UUID {
+			return ErrDuplicateCustomerUUID
+		}
 	}
-	if t.limit == 0 {
-		return ErrCustomersScheduleLimitExceeded
-	}
-
 	t.customerUUIDs = append(t.customerUUIDs, UUID)
 	t.limit--
 	return nil
 }
 
 func NewSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedule, error) {
-	dataVerifier := verifiers.NewWorkoutDate(3)
-	err := dataVerifier.Check(date)
-	if err != nil {
-		return nil, err
+	ok := isProposedTimeNotExceeded(date)
+	if !ok {
+		return nil, ErrScheduleDateViolation
 	}
-	descVerifier := verifiers.NewWorkoutDescription(100)
-	err = descVerifier.Check(desc)
-	if err != nil {
-		return nil, err
+	ok = isProposedDescriptionNotExceeded(desc)
+	if ok {
+		return nil, ErrScheduleDescriptionExceeded
+	}
+	ok = isProposedNameNotExceeded(name)
+	if ok {
+		return nil, ErrScheduleNameExceeded
 	}
 	w := TrainerSchedule{
 		uuid:          uuid.NewString(),
@@ -152,5 +145,9 @@ func NewSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedu
 
 var (
 	ErrCustomersScheduleLimitExceeded = errors.New("customers schedule limit exceeded")
+	ErrScheduleNameExceeded           = errors.New("schedule name limit exceeded")
 	ErrEmptyCustomerUUID              = errors.New("empty customer UUID ")
+	ErrDuplicateCustomerUUID          = errors.New("customer UUID exists")
+	ErrScheduleDateViolation          = errors.New("schedule date violation")
+	ErrScheduleDescriptionExceeded    = errors.New("schedule description limit exceeded")
 )

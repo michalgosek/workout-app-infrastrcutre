@@ -3,121 +3,118 @@ package customer_test
 import (
 	"testing"
 
-	domain "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+	"github.com/google/uuid"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestShouldAssingOneWorkoutWithSuccess_Unit(t *testing.T) {
+func TestShouldAssignOneScheduleToCustomerWithSuccess_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	customerUUID := "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	workoutUUID := "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	customerWorkoutSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const workoutUUID = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const scheduleLeft = 4
+	const scheduleAssgined = 1
+
+	SUT := GenerateTestcustomerSchedule(customerUUID)
 
 	// when:
-	err := customerWorkoutSession.AssignWorkout(workoutUUID)
+	err := SUT.AssignWorkout(workoutUUID)
 
 	// then:
 	assert.Nil(err)
-	assert.Equal(customerWorkoutSession.Limit(), 4)
-	assert.Equal(customerWorkoutSession.AssignedWorkouts(), 1)
+	assert.Equal(SUT.Limit(), scheduleLeft)
+	assert.Equal(SUT.AssignedWorkouts(), scheduleAssgined)
 }
 
-func TestShouldNotAssingDuplicateWorkoutUUID_Unit(t *testing.T) {
+func TestShouldReturnErrorWhenAssignDuplicateScheduleToCustomer_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	customerUUID := "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	workoutUUID1 := "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	workoutUUID2 := "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const workoutUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const workoutUUID2 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const schedulesLeft = 4
 
-	customerWorkoutSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	SUT := GenerateTestcustomerSchedule(customerUUID)
+	SUT.AssignWorkout(workoutUUID1)
 
 	// when:
-	err1 := customerWorkoutSession.AssignWorkout(workoutUUID1)
-	err2 := customerWorkoutSession.AssignWorkout(workoutUUID2)
+	err := SUT.AssignWorkout(workoutUUID2)
 
 	// then:
-	assert.Nil(err1)
-	assert.Nil(err2)
-	assert.Equal(customerWorkoutSession.Limit(), 4)
+	assert.Equal(err, customer.ErrScheduleDuplicate)
+	assert.Equal(SUT.Limit(), schedulesLeft)
 }
 
-func TestShouldAssignTwoWorkoutsWithSuccess_Unit(t *testing.T) {
+func TestShouldAssignTwoSchedulesToCustomerWithSuccess_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	customerUUID := "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	workoutUUID1 := "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	workoutUUID2 := "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
+	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const workoutUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const workoutUUID2 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
+	const scheduleAssgined = 2
+	const scheduleLeft = 3
 
-	customerWorkoutSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	SUT := GenerateTestcustomerSchedule(customerUUID)
+	SUT.AssignWorkout(workoutUUID1)
 
 	// when:
-	err1 := customerWorkoutSession.AssignWorkout(workoutUUID1)
-	err2 := customerWorkoutSession.AssignWorkout(workoutUUID2)
+	err := SUT.AssignWorkout(workoutUUID2)
 
 	// then:
-	assert.Nil(err1, err2)
-	assert.Equal(customerWorkoutSession.Limit(), 3)
-	assert.Equal(customerWorkoutSession.AssignedWorkouts(), 2)
+	assert.Nil(err)
+	assert.Equal(SUT.Limit(), scheduleLeft)
+	assert.Equal(SUT.AssignedWorkouts(), scheduleAssgined)
 }
 
-func TestShouldNotAssingEmptyWorkoutUUID_Unit(t *testing.T) {
+func TestShouldReturnErrorWhenAssignEmptyScheduleUUIDToCustomer_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	customerUUID := "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	customerWorkoutSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	SUT := GenerateTestcustomerSchedule(customerUUID)
 
 	// when:
-	err := customerWorkoutSession.AssignWorkout("")
+	err := SUT.AssignWorkout("")
 
 	// then:
-	assert.ErrorIs(err, domain.ErrEmptyScheduleUUID)
+	assert.ErrorIs(err, customer.ErrEmptyScheduleUUID)
 }
 
-func TestShouldReturnErrorWhenWorkoutsLimitExeeced_Unit(t *testing.T) {
+func TestShouldReturnErrorWhenCustomerScheduleLimitExeeced_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
-	customerUUID := "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	workoutUUID1 := "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	workoutUUID2 := "eac9f4e9-8849-4c8c-8235-70429692d2a4"
-	workoutUUID3 := "1a4f4c39-e876-4f75-86ff-f93c4862a923"
-	workoutUUID4 := "fcd55d25-9734-4357-8a38-ae051219ff2b"
-	workoutUUID5 := "7dc57240-9373-47df-9ea7-8876976fcf96"
-	workoutUUID6 := "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
+	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const workoutUUID6 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
+	const scheduleAssgined = 5
+	const scheduleLeft = 0
 
-	customerWorkoutSession := GenerateTestCustomerWorkoutSession(customerUUID)
-	expectedAssginedWorkouts := 5
-	expecterdWorkoutLimit := 0
+	SUT := GenerateTestcustomerSchedule(customerUUID)
+	AssignScheduleUUIDsToCustomer(&SUT, 5)
 
 	// when:
-	err1 := customerWorkoutSession.AssignWorkout(workoutUUID1)
-	err2 := customerWorkoutSession.AssignWorkout(workoutUUID2)
-	err3 := customerWorkoutSession.AssignWorkout(workoutUUID3)
-	err4 := customerWorkoutSession.AssignWorkout(workoutUUID4)
-	err5 := customerWorkoutSession.AssignWorkout(workoutUUID5)
-	err6 := customerWorkoutSession.AssignWorkout(workoutUUID6)
+	err := SUT.AssignWorkout(workoutUUID6)
 
 	// then:
-	assert.Nil(err1)
-	assert.Nil(err2)
-	assert.Nil(err3)
-	assert.Nil(err4)
-	assert.Nil(err5)
-	assert.ErrorIs(domain.ErrSchedulesLimitExceeded, err6)
-	assert.Equal(expecterdWorkoutLimit, customerWorkoutSession.Limit())
-	assert.Equal(expectedAssginedWorkouts, customerWorkoutSession.AssignedWorkouts())
-
+	assert.ErrorIs(customer.ErrSchedulesLimitExceeded, err)
+	assert.Equal(scheduleLeft, SUT.Limit())
+	assert.Equal(scheduleAssgined, SUT.AssignedWorkouts())
 }
 
-func GenerateTestCustomerWorkoutSession(customerUUID string) domain.CustomerSchedule {
-	c, err := domain.NewSchedule(customerUUID)
+func GenerateTestcustomerSchedule(customerUUID string) customer.CustomerSchedule {
+	c, err := customer.NewSchedule(customerUUID)
 	if err != nil {
 		panic(err)
 	}
 	return *c
+}
+
+func AssignScheduleUUIDsToCustomer(schedule *customer.CustomerSchedule, n int) {
+	for i := 0; i < n; i++ {
+		schedule.AssignWorkout(uuid.NewString())
+	}
 }

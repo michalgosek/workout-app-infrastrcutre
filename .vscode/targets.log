@@ -7,7 +7,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 
 # This program built for i386-apple-darwin11.3.0
 
-# Make data base, printed on Mon Jun 13 09:24:11 2022
+# Make data base, printed on Mon Jun 13 17:37:07 2022
 
 # Variables
 
@@ -44,7 +44,7 @@ __CFBundleIdentifier = com.microsoft.VSCode
 # environment
 INFOPATH = /opt/homebrew/share/info:
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/44/_8pn0lcx2dg7j1m46tpbjxj80000gp/T/vscode-ipc-6e4276d8-c021-41ec-82b2-cfd15105d64f.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/44/_8pn0lcx2dg7j1m46tpbjxj80000gp/T/vscode-ipc-66ccdfea-b112-45d9-a865-27e0dff48a43.sock
 # environment
 VSCODE_CWD = /
 # environment
@@ -127,6 +127,9 @@ MFLAGS = -Rrqp
 *D = $(patsubst %/,%,$(dir $*))
 # environment
 NVM_DIR = /Users/migo/.nvm
+ 
+make: *** No rule to make target `all'.  Stop.
+
 # environment
 XPC_SERVICE_NAME = application.com.microsoft.VSCode.14148476.14148483
 # environment
@@ -156,7 +159,7 @@ MAKELEVEL := 0
 # environment
 LANG = C
 # environment
-VSCODE_PID = 6553
+VSCODE_PID = 114
 # variable set hash-table stats:
 # Load=73/1024=7%, Rehash=0, Collisions=2/93=2%
 
@@ -240,8 +243,6 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Mon Jun 13 09:24:11 2022
+# Finished Make data base on Mon Jun 13 17:37:07 2022
 
  
-make: *** No rule to make target `all'.  Stop.
-
