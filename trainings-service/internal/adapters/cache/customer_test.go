@@ -1,10 +1,10 @@
-package cache_test
+package cache
 
 import (
 	"context"
 	"testing"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/cache"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,20 +14,20 @@ func TestShouldInsertCustomerWorkoutSessionWithSuccess_Unit(t *testing.T) {
 	// given:
 	ctx := context.Background()
 	customerUUID := "eabfc05c-5a32-42bf-b942-65885a673151"
-	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
-	expectedSession := customerSession
+	customerSchedule := testutil.GenerateCustomerSchedule(customerUUID)
+	expectedSchedule := customerSchedule
 
-	SUT := cache.NewCustomerSchedules()
+	SUT := newCustomerSchedules()
 
 	// when:
-	err := SUT.UpsertSchedule(ctx, customerSession)
+	err := SUT.UpsertSchedule(ctx, customerSchedule)
 
 	// then:
 	assert.Nil(err)
 
-	actualSession, err := SUT.QuerySchedule(ctx, customerUUID)
+	actualSchedule, err := SUT.QuerySchedule(ctx, customerUUID)
 	assert.Nil(err)
-	assert.Equal(expectedSession, actualSession)
+	assert.Equal(expectedSchedule, actualSchedule)
 }
 
 func TestShouldUnregisterCustomerWorkoutSession_Unit(t *testing.T) {
@@ -36,21 +36,21 @@ func TestShouldUnregisterCustomerWorkoutSession_Unit(t *testing.T) {
 	// given:
 	ctx := context.Background()
 	customerUUID := "eabfc05c-5a32-42bf-b942-65885a673151"
-	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
-	expectedSession := customerSession
+	customerSchedule := testutil.GenerateCustomerSchedule(customerUUID)
+	expectedSchedule := customerSchedule
 
-	SUT := cache.NewCustomerSchedules()
-	SUT.UpsertSchedule(ctx, customerSession)
+	SUT := newCustomerSchedules()
+	SUT.UpsertSchedule(ctx, customerSchedule)
 
 	// when:
-	err := SUT.CancelSchedule(ctx, customerSession.UUID(), customerUUID)
+	err := SUT.CancelSchedule(ctx, customerSchedule.UUID(), customerUUID)
 
 	// then:
 	assert.Nil(err)
 
-	actualSession, err := SUT.QuerySchedule(ctx, customerUUID)
+	actualSchedule, err := SUT.QuerySchedule(ctx, customerUUID)
 	assert.Nil(err)
-	assert.Equal(expectedSession, actualSession)
+	assert.Equal(expectedSchedule, actualSchedule)
 }
 
 func TestShouldNotReturnErrorAfterUnregisterNonExistingWorkoutSession_Unit(t *testing.T) {
@@ -59,17 +59,17 @@ func TestShouldNotReturnErrorAfterUnregisterNonExistingWorkoutSession_Unit(t *te
 	// given:
 	ctx := context.Background()
 	customerUUID := "eabfc05c-5a32-42bf-b942-65885a673151"
-	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	customerSchedule := testutil.GenerateCustomerSchedule(customerUUID)
 
-	SUT := cache.NewCustomerSchedules()
+	SUT := newCustomerSchedules()
 
 	// when:
-	err := SUT.CancelSchedule(ctx, customerSession.UUID(), customerUUID)
+	err := SUT.CancelSchedule(ctx, customerSchedule.UUID(), customerUUID)
 
 	// then:
 	assert.Nil(err)
 
-	actualSession, err := SUT.QuerySchedule(ctx, customerUUID)
+	actualSchedule, err := SUT.QuerySchedule(ctx, customerUUID)
 	assert.Nil(err)
-	assert.Empty(actualSession)
+	assert.Empty(actualSchedule)
 }

@@ -7,17 +7,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/aggregates"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/verifiers"
 )
 
 /*
-type UserWorkoutSession struct {
+type UserSchedule struct {
 	UserUUID        string
 	Limit           int
-	WorkoutSessions []string
+	Schedules []string
 }
 
-type WorkoutSession struct {
+type Schedule struct {
 	UUID        string
 	TrainerUUID string
 	Name        string
@@ -30,7 +30,7 @@ type WorkoutSession struct {
 
 // Serwis:
 // Uzytkownik nie powiniene sie zapisac na trening, gdy przekroczono limit (serwis layer)
--  Can set trainigs limit (plcae limit) (Service layer -> UpdateWorkoutSessionLimit using under UpsertMethod if session exists)
+-  Can set trainigs limit (plcae limit) (Service layer -> UpdateScheduleLimit using under UpsertMethod if session exists)
 
 
 	Trainer:
@@ -41,7 +41,7 @@ type WorkoutSession struct {
 
 */
 
-type TrainerWorkoutSession struct {
+type TrainerSchedule struct {
 	uuid          string
 	trainerUUID   string
 	limit         int
@@ -51,46 +51,46 @@ type TrainerWorkoutSession struct {
 	date          time.Time
 }
 
-func (t *TrainerWorkoutSession) AssignedCustomers() int {
+func (t *TrainerSchedule) AssignedCustomers() int {
 	return len(t.customerUUIDs)
 }
 
-func (t *TrainerWorkoutSession) UUID() string {
+func (t *TrainerSchedule) UUID() string {
 	return t.uuid
 }
 
-func (t *TrainerWorkoutSession) TrainerUUID() string {
+func (t *TrainerSchedule) TrainerUUID() string {
 	return t.trainerUUID
 }
 
-func (t *TrainerWorkoutSession) Limit() int {
+func (t *TrainerSchedule) Limit() int {
 	return t.limit
 }
 
-func (t *TrainerWorkoutSession) Date() time.Time {
+func (t *TrainerSchedule) Date() time.Time {
 	return t.date
 }
 
-func (t *TrainerWorkoutSession) Customers() int {
+func (t *TrainerSchedule) Customers() int {
 	return len(t.customerUUIDs)
 }
 
-func (t *TrainerWorkoutSession) SetDesc(s string) error {
+func (t *TrainerSchedule) SetDesc(s string) error {
 	t.desc = s
 	return nil
 }
 
-func (t *TrainerWorkoutSession) SetName(s string) error {
+func (t *TrainerSchedule) SetName(s string) error {
 	t.name = s
 	return nil
 }
 
-func (t *TrainerWorkoutSession) SetDate(d time.Time) (time.Time, error) {
+func (t *TrainerSchedule) SetDate(d time.Time) (time.Time, error) {
 	t.date = d
 	return t.date, nil
 }
 
-func (t *TrainerWorkoutSession) UnregisterCustomer(UUID string) {
+func (t *TrainerSchedule) UnregisterCustomer(UUID string) {
 	var filtered []string
 	for _, u := range t.customerUUIDs {
 		if u == UUID {
@@ -103,9 +103,9 @@ func (t *TrainerWorkoutSession) UnregisterCustomer(UUID string) {
 	t.customerUUIDs = filtered
 }
 
-func (t *TrainerWorkoutSession) AssignCustomer(UUID string) error {
+func (t *TrainerSchedule) AssignCustomer(UUID string) error {
 	if UUID == "" {
-		return fmt.Errorf("%w: into customer workout session", ErrEmptyCustomerWorkoutSessionUUID)
+		return fmt.Errorf("%w: into customer workout session", ErrEmptyCustomerScheduleUUID)
 	}
 	if len(t.customerUUIDs) == 0 {
 		t.customerUUIDs = append(t.customerUUIDs, UUID)
@@ -127,18 +127,18 @@ func (t *TrainerWorkoutSession) AssignCustomer(UUID string) error {
 	return nil
 }
 
-func NewTrainerWorkoutSession(trainerUUID, name, desc string, date time.Time) (*TrainerWorkoutSession, error) {
-	dateAggregate := aggregates.NewWorkoutDate(3)
-	err := dateAggregate.Check(date)
+func NewTrainerSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedule, error) {
+	dataVerifier := verifiers.NewWorkoutDate(3)
+	err := dataVerifier.Check(date)
 	if err != nil {
 		return nil, err
 	}
-	descAggregate := aggregates.NewWorkoutDescription(100)
-	err = descAggregate.Check(desc)
+	descVerifier := verifiers.NewWorkoutDescription(100)
+	err = descVerifier.Check(desc)
 	if err != nil {
 		return nil, err
 	}
-	w := TrainerWorkoutSession{
+	w := TrainerSchedule{
 		uuid:          uuid.NewString(),
 		trainerUUID:   trainerUUID,
 		name:          name,
@@ -152,5 +152,5 @@ func NewTrainerWorkoutSession(trainerUUID, name, desc string, date time.Time) (*
 
 var (
 	ErrTrainerWorkouSessionLimitExceeded = errors.New("customer session workouts number exceeded")
-	ErrEmptyCustomerWorkoutSessionUUID   = errors.New("empty customer workout session UUID")
+	ErrEmptyCustomerScheduleUUID         = errors.New("empty customer workout session UUID")
 )

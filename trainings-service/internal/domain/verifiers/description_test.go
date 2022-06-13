@@ -1,10 +1,10 @@
-package aggregates_test
+package verifiers_test
 
 import (
 	"strings"
 	"testing"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/aggregates"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/verifiers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,7 +14,7 @@ func TesShouldNotReturnErrorWhenTextLengthIsUnderLimit_Unit(t *testing.T) {
 	// given:
 	s := strings.Repeat("a", 1)
 	const limit = 3
-	SUT := aggregates.NewWorkoutDescription(limit)
+	SUT := verifiers.NewWorkoutDescription(limit)
 
 	// when:
 	err := SUT.Check(s)
@@ -29,11 +29,11 @@ func TestShouldReturnErrorWhenTextLengthIsOverLimit_Unit(t *testing.T) {
 	// given:
 	const limit = 3
 	s := strings.Repeat("a", 100)
-	SUT := aggregates.NewWorkoutDescription(limit)
+	SUT := verifiers.NewWorkoutDescription(limit)
 
 	// when:
 	err := SUT.Check(s)
 
 	// then:
-	assert.ErrorIs(err, aggregates.ErrWorkoutSessionDescriptionExceeded)
+	assert.ErrorIs(err, verifiers.ErrScheduleDescriptionExceeded)
 }

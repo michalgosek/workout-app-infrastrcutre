@@ -18,23 +18,23 @@ func NewTrainingSchedules() *TrainingSchedules {
 	return &w
 }
 
-func (w *TrainingSchedules) UpsertTrainerWorkoutSession(ctx context.Context, s domain.TrainerWorkoutSession) error {
+func (w *TrainingSchedules) UpsertTrainerWorkoutSession(ctx context.Context, s domain.TrainerSchedule) error {
 	return w.trainers.UpsertSchedule(ctx, s)
 }
 
-func (w *TrainingSchedules) QueryTrainerWorkoutSessions(ctx context.Context, trainerUUID string) ([]domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) QueryTrainerWorkoutSessions(ctx context.Context, trainerUUID string) ([]domain.TrainerSchedule, error) {
 	return w.trainers.QuerySchedules(ctx, trainerUUID)
 }
 
-func (w *TrainingSchedules) QueryTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) QueryTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerSchedule, error) {
 	return w.trainers.QuerySchedule(ctx, sessionUUID)
 }
 
-func (w *TrainingSchedules) CancelTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) CancelTrainerWorkoutSession(ctx context.Context, sessionUUID string) (domain.TrainerSchedule, error) {
 	return w.trainers.CancelSchedule(ctx, sessionUUID)
 }
 
-func (w *TrainingSchedules) CancelTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerWorkoutSession, error) {
+func (w *TrainingSchedules) CancelTrainerWorkoutSessions(ctx context.Context, sessionUUIDs ...string) ([]domain.TrainerSchedule, error) {
 	return w.trainers.CancelSchedules(ctx, sessionUUIDs...)
 }
 

@@ -1,4 +1,4 @@
-package aggregates
+package verifiers
 
 import "errors"
 
@@ -14,9 +14,9 @@ func NewWorkoutDescription(length int) WorkoutDescription {
 
 func (w *WorkoutDescription) Check(s string) error {
 	if len(s) > w.length {
-		return ErrWorkoutSessionDescriptionExceeded
+		return ErrScheduleDescriptionExceeded
 	}
 	return nil
 }
 
-var ErrWorkoutSessionDescriptionExceeded = errors.New("description limit exceeded")
+var ErrScheduleDescriptionExceeded = errors.New("description limit exceeded")

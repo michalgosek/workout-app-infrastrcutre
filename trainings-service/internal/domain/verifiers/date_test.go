@@ -1,10 +1,10 @@
-package aggregates_test
+package verifiers_test
 
 import (
 	"testing"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/aggregates"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/verifiers"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,13 +15,13 @@ func TestShouldReturnErrorWhenSpecifiedTimeIsOneMinEarlierFromNow_Unit(t *testin
 	const limit = 3
 	threshold := limit * time.Hour
 	hourEarlier := time.Now().Add(threshold - 1*time.Hour)
-	SUT := aggregates.NewWorkoutDate(limit)
+	SUT := verifiers.NewWorkoutDate(limit)
 
 	// when:
 	err := SUT.Check(hourEarlier)
 
 	// then:
-	assert.ErrorIs(err, aggregates.ErrDateAggregateViolation)
+	assert.ErrorIs(err, verifiers.ErrDateValueViolation)
 }
 
 func TestShouldNotReturnErrorWhenSpecifiedTimeIsOneMinLaterFromCurrentAggregateLimit_Unit(t *testing.T) {
@@ -31,7 +31,7 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsOneMinLaterFromCurrentAggregateL
 	const limit = 3
 	threshold := limit * time.Hour
 	minLater := time.Now().Add(threshold + time.Hour)
-	SUT := aggregates.NewWorkoutDate(limit)
+	SUT := verifiers.NewWorkoutDate(limit)
 
 	// when:
 	err := SUT.Check(minLater)
@@ -47,7 +47,7 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsOneSecondLaterFromCurrentAggrega
 	const limit = 3
 	threshold := limit * time.Hour
 	minLater := time.Now().Add(threshold + time.Second)
-	SUT := aggregates.NewWorkoutDate(limit)
+	SUT := verifiers.NewWorkoutDate(limit)
 
 	// when:
 	err := SUT.Check(minLater)
@@ -61,7 +61,7 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsDayAfterThanCurrenDay_Unit(t *te
 
 	// given:
 	const limit = 3
-	SUT := aggregates.NewWorkoutDate(limit)
+	SUT := verifiers.NewWorkoutDate(limit)
 	now := time.Now()
 	nextDay := now.Add(24 * time.Hour)
 
@@ -80,7 +80,7 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsEqualToAggregateLimit_Unit(t *te
 
 	// given:
 	const limit = 3
-	SUT := aggregates.NewWorkoutDate(limit)
+	SUT := verifiers.NewWorkoutDate(limit)
 	now := time.Now()
 	timeUnderLimit := now.Add(limit * time.Hour)
 

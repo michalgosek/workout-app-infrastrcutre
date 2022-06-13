@@ -1,4 +1,4 @@
-package aggregates
+package verifiers
 
 import (
 	"errors"
@@ -24,7 +24,7 @@ func (w *WorkoutDate) Check(providedDate time.Time) error {
 	if providedDate.Equal(threshold) || providedDate.After(threshold) {
 		return nil
 	}
-	return ErrDateAggregateViolation
+	return ErrDateValueViolation
 }
 
-var ErrDateAggregateViolation = errors.New("specified date year should be equal current year")
+var ErrDateValueViolation = errors.New("specified date must be at least 3h before current hour")

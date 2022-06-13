@@ -1,11 +1,9 @@
 package domain_test
 
 import (
-	"sort"
 	"testing"
-	"time"
 
-	"github.com/google/uuid"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/testutil"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
 	"github.com/stretchr/testify/assert"
 )
@@ -24,7 +22,7 @@ func TestShouldReturnErrorWhenCustomerLimitExeeced_Unit(t *testing.T) {
 
 	// given:
 	trainerUUID := "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	SUT := GenerateTestTrainerWorkoutSession(trainerUUID)
+	SUT := testutil.GenerateTrainerSchedule(trainerUUID)
 
 	customerUUID1 := "346dcf15-549f-4853-aa92-6ecbc6486ce8"
 	customerUUID2 := "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
@@ -68,27 +66,4 @@ func TestShouldReturnErrorWhenCustomerLimitExeeced_Unit(t *testing.T) {
 	assert.ErrorIs(domain.ErrCustomerWorkouSessionLimitExceeded, err11)
 	assert.Equal(expecterdWorkoutLimit, SUT.Limit())
 	assert.Equal(expectedAssginedWorkouts, SUT.AssignedCustomers())
-}
-
-func GenerateTestTrainerWorkoutSession(trainerUUID string) domain.TrainerWorkoutSession {
-	return GenerateTestTrainerWorkoutSessions(trainerUUID, 1)[0]
-}
-
-func GenerateTestTrainerWorkoutSessions(trainerUUID string, n int) []domain.TrainerWorkoutSession {
-	var sessions []domain.TrainerWorkoutSession
-	for i := 0; i < n; i++ {
-		name := uuid.NewString()
-		desc := uuid.NewString()
-		ts := time.Now().Add(24 * time.Hour)
-		workout, err := domain.NewTrainerWorkoutSession(trainerUUID, name, desc, ts)
-		if err != nil {
-			panic(err)
-		}
-		sessions = append(sessions, *workout)
-	}
-
-	sort.SliceStable(sessions, func(i, j int) bool {
-		return sessions[i].UUID() < sessions[j].UUID()
-	})
-	return sessions
 }

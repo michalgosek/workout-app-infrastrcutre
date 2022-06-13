@@ -2,14 +2,10 @@ package cache_test
 
 import (
 	"context"
-	"sort"
 	"testing"
-	"time"
-
-	"github.com/google/uuid"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/cache"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,7 +15,7 @@ func TestShouldNotRegisterWorkoutSessionForNonExistingCustomer_Unit(t *testing.T
 	// given:
 	ctx := context.Background()
 	fakeCustomerUUID := "e5bf08ee-e287-40b6-8ef7-d43ec18fd17a"
-	trainerSession := GenerateTestTrainerWorkoutSession("97916cbc-f69b-4602-ac9d-b163b791e73b")
+	trainerSession := testutil.GenerateTrainerSchedule("97916cbc-f69b-4602-ac9d-b163b791e73b")
 	expectedSession := trainerSession
 
 	SUT := cache.NewTrainingSchedules()
@@ -43,8 +39,8 @@ func TestCustomerShouldNotRegisterToNonExistingTrainerWorkoutSession_Unit(t *tes
 	ctx := context.Background()
 	customerUUID := "e5bf08ee-e287-40b6-8ef7-d43ec18fd17a"
 	fakeSessionUUID := "c27c3952-3bb7-46ce-8700-62906ca192c6"
-	trainerSession := GenerateTestTrainerWorkoutSession("97916cbc-f69b-4602-ac9d-b163b791e73b")
-	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	trainerSession := testutil.GenerateTrainerSchedule("97916cbc-f69b-4602-ac9d-b163b791e73b")
+	customerSession := testutil.GenerateCustomerSchedule(customerUUID)
 	expectedSession := customerSession
 
 	SUT := cache.NewTrainingSchedules()
@@ -68,10 +64,10 @@ func TestCustomerShouldBeAssignedToDifferentWorkoutSessionsWithSucccess_Unit(t *
 	// given:
 	ctx := context.Background()
 	customerUUID := "e5bf08ee-e287-40b6-8ef7-d43ec18fd17a"
-	firstTrainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
-	secondTrainerSession := GenerateTestTrainerWorkoutSession("ba958504-e56d-438a-8d23-683da191c2f5")
+	firstTrainerSession := testutil.GenerateTrainerSchedule("c27c3952-3bb7-46ce-8700-62906ca192c6")
+	secondTrainerSession := testutil.GenerateTrainerSchedule("ba958504-e56d-438a-8d23-683da191c2f5")
 
-	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	customerSession := testutil.GenerateCustomerSchedule(customerUUID)
 
 	expectedSession := customerSession
 	expectedSession.AssignWorkout(firstTrainerSession.UUID())
@@ -84,7 +80,6 @@ func TestCustomerShouldBeAssignedToDifferentWorkoutSessionsWithSucccess_Unit(t *
 
 	// when:
 	err1 := SUT.AssignCustomerToWorkoutSession(ctx, customerUUID, firstTrainerSession.UUID())
-
 	err2 := SUT.AssignCustomerToWorkoutSession(ctx, customerUUID, secondTrainerSession.UUID())
 
 	// then:
@@ -102,8 +97,8 @@ func TestCustomerShouldBeAssignedToTrainerWorkoutSessionWithSucccess_Unit(t *tes
 	// given:
 	ctx := context.Background()
 	customerUUID := "e5bf08ee-e287-40b6-8ef7-d43ec18fd17a"
-	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
-	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	trainerSession := testutil.GenerateTrainerSchedule("c27c3952-3bb7-46ce-8700-62906ca192c6")
+	customerSession := testutil.GenerateCustomerSchedule(customerUUID)
 
 	expectedSession := customerSession
 	expectedSession.AssignWorkout(trainerSession.UUID())
@@ -129,8 +124,8 @@ func TestShouldRemoveCustomerFromTrainerWorkoutSession_Unit(t *testing.T) {
 	// given:
 	ctx := context.Background()
 	customerUUID := "b68f3b7e-af79-45d8-ab61-336f5aaff5c8"
-	trainerSession := GenerateTestTrainerWorkoutSession("c27c3952-3bb7-46ce-8700-62906ca192c6")
-	customerSession := GenerateTestCustomerWorkoutSession(customerUUID)
+	trainerSession := testutil.GenerateTrainerSchedule("c27c3952-3bb7-46ce-8700-62906ca192c6")
+	customerSession := testutil.GenerateCustomerSchedule(customerUUID)
 
 	SUT := cache.NewTrainingSchedules()
 	SUT.UpsertTrainerWorkoutSession(ctx, trainerSession)
@@ -147,37 +142,4 @@ func TestShouldRemoveCustomerFromTrainerWorkoutSession_Unit(t *testing.T) {
 	assert.Nil(err)
 	assert.NotEmpty(actualSession)
 	assert.Equal(actualSession.Customers(), 0)
-}
-
-func GenerateTestTrainerWorkoutSession(trainerUUID string) domain.TrainerWorkoutSession {
-	return GenerateTestTrainerWorkoutSessions(trainerUUID, 1)[0]
-}
-
-func GenerateTestTrainerWorkoutSessions(trainerUUID string, n int) []domain.TrainerWorkoutSession {
-	ts := time.Now()
-	ts = ts.Add(24 * time.Hour)
-
-	var sessions []domain.TrainerWorkoutSession
-	for i := 0; i < n; i++ {
-		name := uuid.NewString()
-		desc := uuid.NewString()
-		workout, err := domain.NewTrainerWorkoutSession(trainerUUID, name, desc, ts)
-		if err != nil {
-			panic(err)
-		}
-		sessions = append(sessions, *workout)
-	}
-
-	sort.SliceStable(sessions, func(i, j int) bool {
-		return sessions[i].UUID() < sessions[j].UUID()
-	})
-	return sessions
-}
-
-func GenerateTestCustomerWorkoutSession(customerUUID string) domain.CustomerWorkoutSession {
-	session, err := domain.NewCustomerWorkoutSessions(customerUUID)
-	if err != nil {
-		panic(err)
-	}
-	return *session
 }
