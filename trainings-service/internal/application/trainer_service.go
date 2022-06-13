@@ -21,28 +21,32 @@ type TrainerService struct {
 	repository TrainerRepository
 }
 
-type TrainerScheduleArgs struct {
+type TrainerSchedule struct {
 	TrainerUUID string
 	Name        string
 	Desc        string
 	Date        time.Time
 }
 
-func (t *TrainerService) CreateTrainerSchedule(ctx context.Context, args TrainerScheduleArgs) error {
+func (t *TrainerService) CreateTrainerSchedule(ctx context.Context, args TrainerSchedule) error {
 	schedule, err := domain.NewTrainerSchedule(args.TrainerUUID, args.Name, args.Desc, args.Date)
 	if err != nil {
 		return fmt.Errorf("creating trainer schedule failed: %v", err)
 	}
 	err = t.repository.UpsertSchedule(ctx, *schedule)
 	if err != nil {
-		return fmt.Errorf("upsert schedule failed: %v", err)
+		return fmt.Errorf("upsert schedule failed: %w", err)
 	}
 	logrus.WithFields(logrus.Fields{"Component": "TrainerService", "Method": "CreateTrainerSchedule"}).Info()
 	return nil
 }
 
 func (t *TrainerService) GetSchedule(ctx context.Context, trainerUUID string) (domain.TrainerSchedule, error) {
-	return domain.TrainerSchedule{}, nil
+	schedule, err := t.repository.QuerySchedule(ctx, trainerUUID)
+	if err != nil {
+		return domain.TrainerSchedule{}, fmt.Errorf("query schedule failed: %v", err)
+	}
+	return schedule, nil
 }
 
 func (t *TrainerService) GetSchedules(ctx context.Context, trainerUUID string) ([]domain.TrainerSchedule, error) {
@@ -58,6 +62,9 @@ func (t *TrainerService) DeleteSchedules(ctx context.Context, sessionUUID string
 }
 
 func NewTrainerService(repository TrainerRepository) *TrainerService {
+	if repository == nil {
+		panic("repository is nil")
+	}
 	return &TrainerService{
 		repository: repository,
 	}
