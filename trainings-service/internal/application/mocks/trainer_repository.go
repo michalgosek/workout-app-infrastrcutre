@@ -22,25 +22,18 @@ func (_m *TrainerRepository) EXPECT() *TrainerRepository_Expecter {
 	return &TrainerRepository_Expecter{mock: &_m.Mock}
 }
 
-// CancelSchedule provides a mock function with given fields: ctx, scheduleUUID
-func (_m *TrainerRepository) CancelSchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error) {
-	ret := _m.Called(ctx, scheduleUUID)
+// CancelSchedule provides a mock function with given fields: ctx, UUID, trainerUUID
+func (_m *TrainerRepository) CancelSchedule(ctx context.Context, UUID string, trainerUUID string) error {
+	ret := _m.Called(ctx, UUID, trainerUUID)
 
-	var r0 trainer.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, string) trainer.TrainerSchedule); ok {
-		r0 = rf(ctx, scheduleUUID)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
+		r0 = rf(ctx, UUID, trainerUUID)
 	} else {
-		r0 = ret.Get(0).(trainer.TrainerSchedule)
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, scheduleUUID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // TrainerRepository_CancelSchedule_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelSchedule'
@@ -50,51 +43,36 @@ type TrainerRepository_CancelSchedule_Call struct {
 
 // CancelSchedule is a helper method to define mock.On call
 //  - ctx context.Context
-//  - scheduleUUID string
-func (_e *TrainerRepository_Expecter) CancelSchedule(ctx interface{}, scheduleUUID interface{}) *TrainerRepository_CancelSchedule_Call {
-	return &TrainerRepository_CancelSchedule_Call{Call: _e.mock.On("CancelSchedule", ctx, scheduleUUID)}
+//  - UUID string
+//  - trainerUUID string
+func (_e *TrainerRepository_Expecter) CancelSchedule(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_CancelSchedule_Call {
+	return &TrainerRepository_CancelSchedule_Call{Call: _e.mock.On("CancelSchedule", ctx, UUID, trainerUUID)}
 }
 
-func (_c *TrainerRepository_CancelSchedule_Call) Run(run func(ctx context.Context, scheduleUUID string)) *TrainerRepository_CancelSchedule_Call {
+func (_c *TrainerRepository_CancelSchedule_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_CancelSchedule_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *TrainerRepository_CancelSchedule_Call) Return(_a0 trainer.TrainerSchedule, _a1 error) *TrainerRepository_CancelSchedule_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *TrainerRepository_CancelSchedule_Call) Return(_a0 error) *TrainerRepository_CancelSchedule_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-// CancelSchedules provides a mock function with given fields: ctx, scheduleUUIDs
-func (_m *TrainerRepository) CancelSchedules(ctx context.Context, scheduleUUIDs ...string) ([]trainer.TrainerSchedule, error) {
-	_va := make([]interface{}, len(scheduleUUIDs))
-	for _i := range scheduleUUIDs {
-		_va[_i] = scheduleUUIDs[_i]
-	}
-	var _ca []interface{}
-	_ca = append(_ca, ctx)
-	_ca = append(_ca, _va...)
-	ret := _m.Called(_ca...)
+// CancelSchedules provides a mock function with given fields: ctx, trainerUUID
+func (_m *TrainerRepository) CancelSchedules(ctx context.Context, trainerUUID string) error {
+	ret := _m.Called(ctx, trainerUUID)
 
-	var r0 []trainer.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, ...string) []trainer.TrainerSchedule); ok {
-		r0 = rf(ctx, scheduleUUIDs...)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, trainerUUID)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]trainer.TrainerSchedule)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, ...string) error); ok {
-		r1 = rf(ctx, scheduleUUIDs...)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // TrainerRepository_CancelSchedules_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelSchedules'
@@ -104,44 +82,37 @@ type TrainerRepository_CancelSchedules_Call struct {
 
 // CancelSchedules is a helper method to define mock.On call
 //  - ctx context.Context
-//  - scheduleUUIDs ...string
-func (_e *TrainerRepository_Expecter) CancelSchedules(ctx interface{}, scheduleUUIDs ...interface{}) *TrainerRepository_CancelSchedules_Call {
-	return &TrainerRepository_CancelSchedules_Call{Call: _e.mock.On("CancelSchedules",
-		append([]interface{}{ctx}, scheduleUUIDs...)...)}
+//  - trainerUUID string
+func (_e *TrainerRepository_Expecter) CancelSchedules(ctx interface{}, trainerUUID interface{}) *TrainerRepository_CancelSchedules_Call {
+	return &TrainerRepository_CancelSchedules_Call{Call: _e.mock.On("CancelSchedules", ctx, trainerUUID)}
 }
 
-func (_c *TrainerRepository_CancelSchedules_Call) Run(run func(ctx context.Context, scheduleUUIDs ...string)) *TrainerRepository_CancelSchedules_Call {
+func (_c *TrainerRepository_CancelSchedules_Call) Run(run func(ctx context.Context, trainerUUID string)) *TrainerRepository_CancelSchedules_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		variadicArgs := make([]string, len(args)-1)
-		for i, a := range args[1:] {
-			if a != nil {
-				variadicArgs[i] = a.(string)
-			}
-		}
-		run(args[0].(context.Context), variadicArgs...)
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *TrainerRepository_CancelSchedules_Call) Return(_a0 []trainer.TrainerSchedule, _a1 error) *TrainerRepository_CancelSchedules_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *TrainerRepository_CancelSchedules_Call) Return(_a0 error) *TrainerRepository_CancelSchedules_Call {
+	_c.Call.Return(_a0)
 	return _c
 }
 
-// QuerySchedule provides a mock function with given fields: ctx, scheduleUUID
-func (_m *TrainerRepository) QuerySchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error) {
-	ret := _m.Called(ctx, scheduleUUID)
+// QuerySchedule provides a mock function with given fields: ctx, UUID, trainerUUID
+func (_m *TrainerRepository) QuerySchedule(ctx context.Context, UUID string, trainerUUID string) (trainer.TrainerSchedule, error) {
+	ret := _m.Called(ctx, UUID, trainerUUID)
 
 	var r0 trainer.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, string) trainer.TrainerSchedule); ok {
-		r0 = rf(ctx, scheduleUUID)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) trainer.TrainerSchedule); ok {
+		r0 = rf(ctx, UUID, trainerUUID)
 	} else {
 		r0 = ret.Get(0).(trainer.TrainerSchedule)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, scheduleUUID)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, UUID, trainerUUID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -156,14 +127,15 @@ type TrainerRepository_QuerySchedule_Call struct {
 
 // QuerySchedule is a helper method to define mock.On call
 //  - ctx context.Context
-//  - scheduleUUID string
-func (_e *TrainerRepository_Expecter) QuerySchedule(ctx interface{}, scheduleUUID interface{}) *TrainerRepository_QuerySchedule_Call {
-	return &TrainerRepository_QuerySchedule_Call{Call: _e.mock.On("QuerySchedule", ctx, scheduleUUID)}
+//  - UUID string
+//  - trainerUUID string
+func (_e *TrainerRepository_Expecter) QuerySchedule(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_QuerySchedule_Call {
+	return &TrainerRepository_QuerySchedule_Call{Call: _e.mock.On("QuerySchedule", ctx, UUID, trainerUUID)}
 }
 
-func (_c *TrainerRepository_QuerySchedule_Call) Run(run func(ctx context.Context, scheduleUUID string)) *TrainerRepository_QuerySchedule_Call {
+func (_c *TrainerRepository_QuerySchedule_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_QuerySchedule_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string))
+		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }

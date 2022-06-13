@@ -67,11 +67,12 @@ func TestShouldReturnTrainerScheduleWithSuccess_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
+	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
 	ctx := context.Background()
-	trainerUUID := "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
+
 	repository := new(mocks.TrainerRepository)
 	expectedSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
-	repository.EXPECT().QuerySchedule(ctx, expectedSchedule.UUID()).Return(expectedSchedule, nil)
+	repository.EXPECT().QuerySchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID()).Return(expectedSchedule, nil)
 	SUT := application.NewTrainerService(repository)
 
 	// when:
@@ -87,16 +88,18 @@ func TestShouldReturnEmptyScheduleWhenNotBelongingToTrainer_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
+	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
+	const providedScheduleUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+
 	ctx := context.Background()
-	trainerUUID := "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
-	otherTrainerUUID := "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	otherTrainerSchedule := testutil.GenerateTrainerSchedule(otherTrainerUUID)
+	emptySchedule := trainer.TrainerSchedule{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, otherTrainerSchedule.UUID()).Return(otherTrainerSchedule, nil)
+	repository.EXPECT().QuerySchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	actualSchedule, err := SUT.GetSchedule(ctx, otherTrainerSchedule.UUID(), trainerUUID)
+	actualSchedule, err := SUT.GetSchedule(ctx, providedScheduleUUID, trainerUUID)
 
 	// then:
 	assert.Nil(err)
@@ -108,11 +111,13 @@ func TestShouldReturnEmptyTrainerSchedulesWhenNotExistWithSuccess_Unit(t *testin
 	assert := assert.New(t)
 
 	// given:
+	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	ctx := context.Background()
-	trainerUUID := "094bb50a-7da3-461f-86f6-46d16c055e1e"
+
 	repository := new(mocks.TrainerRepository)
 	expectedSchedules := []trainer.TrainerSchedule{}
 	repository.EXPECT().QuerySchedules(ctx, trainerUUID).Return(expectedSchedules, nil)
+
 	SUT := application.NewTrainerService(repository)
 
 	// when:
@@ -128,11 +133,13 @@ func TestShouldReturnAllTrainerSchedulesWithSuccess_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
+	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	ctx := context.Background()
-	trainerUUID := "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	firstSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
-	secodSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
-	expectedSchedules := []trainer.TrainerSchedule{firstSchedule, secodSchedule}
+
+	first := testutil.GenerateTrainerSchedule(trainerUUID)
+	second := testutil.GenerateTrainerSchedule(trainerUUID)
+	expectedSchedules := []trainer.TrainerSchedule{first, second}
+
 	repository := new(mocks.TrainerRepository)
 	repository.EXPECT().QuerySchedules(ctx, trainerUUID).Return(expectedSchedules, nil)
 	SUT := application.NewTrainerService(repository)
@@ -150,18 +157,19 @@ func TestShouldNotAssignCustomerToScheduleNotBelongingToTrainer_Unit(t *testing.
 	assert := assert.New(t)
 
 	// given:
+	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	const trainerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
+	const providedScheduleUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+
 	ctx := context.Background()
-	customerUUID := "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	trainerUUID := "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
-	otherTrainerUUID := "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	otherTrainerSchedule := testutil.GenerateTrainerSchedule(otherTrainerUUID)
+	emptySchedule := trainer.TrainerSchedule{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, otherTrainerSchedule.UUID()).Return(otherTrainerSchedule, nil)
+	repository.EXPECT().QuerySchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.AssingCustomer(ctx, customerUUID, otherTrainerSchedule.UUID(), trainerUUID)
+	err := SUT.AssingCustomer(ctx, customerUUID, providedScheduleUUID, trainerUUID)
 
 	// then:
 	assert.ErrorIs(err, application.ErrScheduleNotOwner)
@@ -172,22 +180,23 @@ func TestShouldNotAssignCustomerToSpecifiedScheduleWhenRepositoryFailure_Unit(t 
 	assert := assert.New(t)
 
 	// given:
+	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	const trainerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
+
 	ctx := context.Background()
-	customerUUID := "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	trainerUUID := "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
-	trainerSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
-	trainerScheduledWithCustomer := trainerSchedule
-	trainerScheduledWithCustomer.AssignCustomer(customerUUID)
+	schedule := testutil.GenerateTrainerSchedule(trainerUUID)
+	scheduledWithCustomer := schedule
+	scheduledWithCustomer.AssignCustomer(customerUUID)
 
 	repository := new(mocks.TrainerRepository)
 	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QuerySchedule(ctx, trainerSchedule.UUID()).Return(trainerSchedule, nil)
-	repository.EXPECT().UpsertSchedule(ctx, trainerScheduledWithCustomer).Return(expectedErr)
+	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().UpsertSchedule(ctx, scheduledWithCustomer).Return(expectedErr)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.AssingCustomer(ctx, customerUUID, trainerSchedule.UUID(), trainerUUID)
+	err := SUT.AssingCustomer(ctx, customerUUID, schedule.UUID(), trainerUUID)
 
 	// then:
 	assert.ErrorIs(err, application.ErrRepositoryFailure)
@@ -198,21 +207,89 @@ func TestShouldAssignCustomerToSpecifiedSchedule_Unit(t *testing.T) {
 	assert := assert.New(t)
 
 	// given:
+	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	const trainerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
+
 	ctx := context.Background()
-	customerUUID := "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	trainerUUID := "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
-	trainerSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
-	trainerScheduledWithCustomer := trainerSchedule
-	trainerScheduledWithCustomer.AssignCustomer(customerUUID)
+	schedule := testutil.GenerateTrainerSchedule(trainerUUID)
+	scheduledWithCustomer := schedule
+	scheduledWithCustomer.AssignCustomer(customerUUID)
 
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, trainerSchedule.UUID()).Return(trainerSchedule, nil)
-	repository.EXPECT().UpsertSchedule(ctx, trainerScheduledWithCustomer).Return(nil)
+	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().UpsertSchedule(ctx, scheduledWithCustomer).Return(nil)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.AssingCustomer(ctx, customerUUID, trainerSchedule.UUID(), trainerUUID)
+	err := SUT.AssingCustomer(ctx, customerUUID, schedule.UUID(), trainerUUID)
+
+	// then:
+	assert.Nil(err)
+	repository.AssertExpectations(t)
+}
+
+func TestShouldNotDeleteScheduleNotOwnedByTrainer_Unit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
+	const providedScheduleUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+
+	emptySchedule := trainer.TrainerSchedule{}
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QuerySchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+
+	SUT := application.NewTrainerService(repository)
+
+	// when:
+	err := SUT.DeleteSchedule(ctx, providedScheduleUUID, trainerUUID)
+
+	// then:
+	assert.Equal(application.ErrScheduleNotOwner, err)
+	repository.AssertExpectations(t)
+}
+
+func TestShouldNotDeleteScheduleOwnedByTrainerWhenRepositoryFailure_Unit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
+
+	schedule := testutil.GenerateTrainerSchedule(trainerUUID)
+	repository := new(mocks.TrainerRepository)
+	expectedErr := errors.New("repository failure")
+	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().CancelSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(expectedErr)
+
+	SUT := application.NewTrainerService(repository)
+
+	// when:
+	err := SUT.DeleteSchedule(ctx, schedule.UUID(), schedule.TrainerUUID())
+
+	// then:
+	assert.Contains(err.Error(), expectedErr.Error())
+	repository.AssertExpectations(t)
+}
+
+func TestShouldDeleteScheduleOwnedByTrainer_Unit(t *testing.T) {
+	assert := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
+
+	schedule := testutil.GenerateTrainerSchedule(trainerUUID)
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().CancelSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(nil)
+
+	SUT := application.NewTrainerService(repository)
+
+	// when:
+	err := SUT.DeleteSchedule(ctx, schedule.UUID(), schedule.TrainerUUID())
 
 	// then:
 	assert.Nil(err)
@@ -222,7 +299,7 @@ func TestShouldAssignCustomerToSpecifiedSchedule_Unit(t *testing.T) {
 func assertTrainerSchedule(assert *assert.Assertions, expectedSchedule trainer.TrainerSchedule, actualSchedule trainer.TrainerSchedule) {
 	assert.Equal(expectedSchedule.UUID(), actualSchedule.UUID())
 	assert.Equal(expectedSchedule.TrainerUUID(), actualSchedule.TrainerUUID())
-	assert.Equal(expectedSchedule.Customers(), actualSchedule.Customers())
+	assert.Equal(expectedSchedule.CustomerUUIDs(), actualSchedule.CustomerUUIDs())
 	assert.Equal(expectedSchedule.Limit(), actualSchedule.Limit())
 	assert.Equal(expectedSchedule.Desc(), actualSchedule.Desc())
 }

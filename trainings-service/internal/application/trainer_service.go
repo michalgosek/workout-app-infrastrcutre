@@ -10,10 +10,10 @@ import (
 
 type TrainerRepository interface {
 	UpsertSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error
-	QuerySchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error)
+	QuerySchedule(ctx context.Context, UUID, trainerUUID string) (trainer.TrainerSchedule, error)
 	QuerySchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error)
-	CancelSchedules(ctx context.Context, scheduleUUIDs ...string) ([]trainer.TrainerSchedule, error)
-	CancelSchedule(ctx context.Context, scheduleUUID string) (trainer.TrainerSchedule, error)
+	CancelSchedules(ctx context.Context, trainerUUID string) error
+	CancelSchedule(ctx context.Context, UUID, trainerUUID string) error
 }
 
 type TrainerService struct {
@@ -40,7 +40,7 @@ func (t *TrainerService) CreateTrainerSchedule(ctx context.Context, args Trainer
 }
 
 func (t *TrainerService) GetSchedule(ctx context.Context, scheduleUUID, trainerUUID string) (trainer.TrainerSchedule, error) {
-	schedule, err := t.repository.QuerySchedule(ctx, scheduleUUID)
+	schedule, err := t.repository.QuerySchedule(ctx, scheduleUUID, trainerUUID)
 	if err != nil {
 		return trainer.TrainerSchedule{}, fmt.Errorf("query schedule failed: %v", err)
 	}
@@ -51,7 +51,7 @@ func (t *TrainerService) GetSchedule(ctx context.Context, scheduleUUID, trainerU
 }
 
 func (t *TrainerService) AssingCustomer(ctx context.Context, customerUUID, scheduleUUID, trainerUUID string) error {
-	schedule, err := t.repository.QuerySchedule(ctx, scheduleUUID)
+	schedule, err := t.repository.QuerySchedule(ctx, scheduleUUID, trainerUUID)
 	if err != nil {
 		return err
 	}
@@ -78,6 +78,17 @@ func (t *TrainerService) GetSchedules(ctx context.Context, trainerUUID string) (
 }
 
 func (t *TrainerService) DeleteSchedule(ctx context.Context, sessionUUID, trainerUUID string) error {
+	schedule, err := t.repository.QuerySchedule(ctx, sessionUUID, trainerUUID)
+	if err != nil {
+		return fmt.Errorf("get schedule failed: %v", err)
+	}
+	if schedule.TrainerUUID() != trainerUUID {
+		return ErrScheduleNotOwner
+	}
+	err = t.repository.CancelSchedule(ctx, sessionUUID, trainerUUID)
+	if err != nil {
+		return fmt.Errorf("cancel schedule failed: %v", err)
+	}
 	return nil
 }
 

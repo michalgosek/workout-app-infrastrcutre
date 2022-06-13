@@ -8,6 +8,12 @@ import (
 	"github.com/google/uuid"
 )
 
+// Trainer:
+// * Trainer cannot have more than 10 people during session and not less than 1
+// * Training date must be not earlier than 3 hours from current date
+// * Desc cannot be length than 100 chars
+// * Name cannot be length than 15 chars
+
 type TrainerSchedule struct {
 	uuid          string
 	trainerUUID   string
@@ -42,8 +48,25 @@ func (t *TrainerSchedule) Desc() string {
 	return t.desc
 }
 
-func (t *TrainerSchedule) Customers() int {
+func (t *TrainerSchedule) CustomerUUIDs() []string {
+	return t.customerUUIDs
+}
+
+func (t *TrainerSchedule) AssignedCustomers() int {
 	return len(t.customerUUIDs)
+}
+
+func isProposedTimeNotExceeded(date time.Time) bool {
+	threshold := time.Now().Add(3 * time.Hour)
+	return date.Equal(threshold) || date.After(threshold)
+}
+
+func isProposedDescriptionNotExceeded(desc string) bool {
+	return len(desc) > 100
+}
+
+func isProposedNameNotExceeded(name string) bool {
+	return len(name) > 15
 }
 
 func (t *TrainerSchedule) UpdateDesc(s string) error {
@@ -70,19 +93,6 @@ func (t *TrainerSchedule) UpdateDate(d time.Time) error {
 	return nil
 }
 
-func isProposedTimeNotExceeded(date time.Time) bool {
-	threshold := time.Now().Add(3 * time.Hour)
-	return date.Equal(threshold) || date.After(threshold)
-}
-
-func isProposedDescriptionNotExceeded(desc string) bool {
-	return len(desc) > 100
-}
-
-func isProposedNameNotExceeded(name string) bool {
-	return len(name) > 15
-}
-
 func (t *TrainerSchedule) UnregisterCustomer(UUID string) {
 	var filtered []string
 	for _, u := range t.customerUUIDs {
@@ -92,7 +102,7 @@ func (t *TrainerSchedule) UnregisterCustomer(UUID string) {
 		filtered = append(filtered, u)
 	}
 
-	t.limit = len(filtered)
+	t.limit++
 	t.customerUUIDs = filtered
 }
 
@@ -118,8 +128,24 @@ func (t *TrainerSchedule) AssignCustomer(UUID string) error {
 	return nil
 }
 
+func UnmarshalFromDatabase(UUID, trainerUUID, name, desc string, customerUUIDs []string, date time.Time, limit int) TrainerSchedule {
+	return TrainerSchedule{
+		uuid:          UUID,
+		trainerUUID:   trainerUUID,
+		limit:         limit,
+		customerUUIDs: customerUUIDs,
+		name:          name,
+		desc:          desc,
+		date:          date,
+	}
+}
+
 func NewSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedule, error) {
-	ok := isProposedTimeNotExceeded(date)
+	ok := date.IsZero()
+	if ok {
+		return nil, ErrScheduleDateViolation
+	}
+	ok = isProposedTimeNotExceeded(date)
 	if !ok {
 		return nil, ErrScheduleDateViolation
 	}

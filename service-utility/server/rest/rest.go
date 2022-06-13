@@ -49,10 +49,10 @@ type JSONResponse struct {
 }
 
 func healthHandler(w http.ResponseWriter, r *http.Request) {
-	response(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
+	SendJSONResponse(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
 }
 
-func response(w http.ResponseWriter, data interface{}, code int) {
+func SendJSONResponse(w http.ResponseWriter, data interface{}, code int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	if data != nil {
