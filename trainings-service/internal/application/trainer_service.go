@@ -27,16 +27,16 @@ type TrainerSchedule struct {
 	Date        time.Time
 }
 
-func (t *TrainerService) CreateTrainerSchedule(ctx context.Context, args TrainerSchedule) error {
+func (t *TrainerService) CreateSchedule(ctx context.Context, args TrainerSchedule) (string, error) {
 	schedule, err := trainer.NewSchedule(args.TrainerUUID, args.Name, args.Desc, args.Date)
 	if err != nil {
-		return fmt.Errorf("creating trainer schedule failed: %v", err)
+		return "", fmt.Errorf("creating trainer schedule failed: %v", err)
 	}
 	err = t.repository.UpsertTrainerSchedule(ctx, *schedule)
 	if err != nil {
-		return fmt.Errorf("upsert schedule UUID: %s for trainer UUID: %s failed, reason: %w", schedule.UUID(), args.TrainerUUID, err)
+		return "", fmt.Errorf("upsert schedule UUID: %s for trainer UUID: %s failed, reason: %w", schedule.UUID(), args.TrainerUUID, err)
 	}
-	return nil
+	return schedule.UUID(), nil
 }
 
 func (t *TrainerService) GetSchedule(ctx context.Context, scheduleUUID, trainerUUID string) (trainer.TrainerSchedule, error) {
@@ -77,22 +77,29 @@ func (t *TrainerService) GetSchedules(ctx context.Context, trainerUUID string) (
 	return schedules, nil
 }
 
-func (t *TrainerService) DeleteSchedule(ctx context.Context, sessionUUID, trainerUUID string) error {
-	schedule, err := t.repository.QueryTrainerSchedule(ctx, sessionUUID, trainerUUID)
+func (t *TrainerService) DeleteSchedule(ctx context.Context, scheduleUUID, trainerUUID string) error {
+	schedule, err := t.repository.QueryTrainerSchedule(ctx, scheduleUUID, trainerUUID)
 	if err != nil {
 		return fmt.Errorf("get schedule failed: %v", err)
 	}
 	if schedule.TrainerUUID() != trainerUUID {
 		return ErrScheduleNotOwner
 	}
-	err = t.repository.CancelTrainerSchedule(ctx, sessionUUID, trainerUUID)
+	err = t.repository.CancelTrainerSchedule(ctx, scheduleUUID, trainerUUID)
 	if err != nil {
 		return fmt.Errorf("cancel schedule failed: %v", err)
 	}
 	return nil
 }
 
-func (t *TrainerService) DeleteSchedules(ctx context.Context, sessionUUID string) error {
+func (t *TrainerService) DeleteSchedules(ctx context.Context, trainerUUID string) error {
+	if trainerUUID == "" {
+		return nil
+	}
+	err := t.repository.CancelTrainerSchedules(ctx, trainerUUID)
+	if err != nil {
+		return fmt.Errorf("cancel schedules failed: %v", err)
+	}
 	return nil
 }
 

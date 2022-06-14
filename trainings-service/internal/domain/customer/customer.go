@@ -2,7 +2,6 @@ package customer
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 )
@@ -50,7 +49,7 @@ func (c *CustomerSchedule) UnregisterWorkout(UUID string) {
 
 func (c *CustomerSchedule) AssignWorkout(UUID string) error {
 	if UUID == "" {
-		return fmt.Errorf("%w: into customer workout session", ErrEmptyScheduleUUID)
+		return ErrEmptyScheduleUUID
 	}
 	if c.limit == 0 {
 		return ErrSchedulesLimitExceeded
@@ -71,7 +70,9 @@ func (c *CustomerSchedule) AssignWorkout(UUID string) error {
 }
 
 func NewSchedule(userUUID string) (*CustomerSchedule, error) {
-	// verify logic
+	if userUUID == "" {
+		return nil, ErrEmptyUserUUID
+	}
 	c := CustomerSchedule{
 		uuid:     uuid.NewString(),
 		userUUID: userUUID,
@@ -81,7 +82,8 @@ func NewSchedule(userUUID string) (*CustomerSchedule, error) {
 }
 
 var (
-	ErrEmptyScheduleUUID      = errors.New("empty trainer workout UUID")
+	ErrEmptyUserUUID          = errors.New("empty userUUID")
+	ErrEmptyScheduleUUID      = errors.New("empty schedule UUID")
 	ErrSchedulesLimitExceeded = errors.New("schedules limit exceeded")
 	ErrScheduleDuplicate      = errors.New("schedule duplicate found")
 )

@@ -31,7 +31,7 @@ func TestShouldCreateTrainerScheduleWithSuccess_Unit(t *testing.T) {
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.CreateTrainerSchedule(ctx, args)
+	_, err := SUT.CreateSchedule(ctx, args)
 
 	// then:
 	assert.Nil(err)
@@ -56,7 +56,7 @@ func TestShouldReturnErrorWhenTrainerSchedulesRepositoryFailure_Unit(t *testing.
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.CreateTrainerSchedule(ctx, args)
+	_, err := SUT.CreateSchedule(ctx, args)
 
 	// then:
 	assert.ErrorContains(err, err.Error())

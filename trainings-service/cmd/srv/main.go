@@ -27,6 +27,7 @@ func execute() error {
 		CommandTimeout:    10 * time.Second,
 		QueryTimeout:      10 * time.Second,
 		ConnectionTimeout: 10 * time.Second,
+		Format:            "02/01/2006 15:04",
 	}
 	repository, err := mongodb.NewMongoDB(cfg)
 	if err != nil {
@@ -34,12 +35,16 @@ func execute() error {
 	}
 
 	service := application.NewTrainerService(repository)
-	HTTP := ports.NewHTTPT(service)
+	HTTP := ports.NewHTTP(service, cfg.Format)
 
 	API := rest.NewRouter()
 	API.Route("/api/v1/", func(r chi.Router) {
 		r.Route("/trainer", func(r chi.Router) {
-			r.Post("/schedule", HTTP.CreateTrainerSchedule)
+			r.Post("/schedule", HTTP.CreateSchedule)
+			r.Get("/schedule", HTTP.GetSchedule)
+			r.Get("/schedules", HTTP.GetSchedules)
+			r.Delete("/schedule", HTTP.DeleteSchedule)
+			r.Delete("/schedules", HTTP.DeleteSchedules)
 		})
 	})
 
