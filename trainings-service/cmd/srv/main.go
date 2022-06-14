@@ -8,7 +8,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports"
 )
@@ -20,15 +20,15 @@ func main() {
 }
 
 func execute() error {
-	cfg := adapters.MongoDBConfig{
+	cfg := mongodb.Config{
 		Addr:              "mongodb://localhost:27017",
 		Database:          "trainings_service_test",
-		Collection:        "trainer_schedules",
+		TrainerCollection: "trainer_schedules",
 		CommandTimeout:    10 * time.Second,
 		QueryTimeout:      10 * time.Second,
 		ConnectionTimeout: 10 * time.Second,
 	}
-	repository, err := adapters.NewMongoDB(cfg)
+	repository, err := mongodb.NewMongoDB(cfg)
 	if err != nil {
 		return fmt.Errorf("creating repository failed: %v", err)
 	}
