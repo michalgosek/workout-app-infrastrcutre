@@ -1,15 +1,13 @@
 package trainer_test
 
 import (
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/testutil"
+	"github.com/google/uuid"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
+	"github.com/stretchr/testify/assert"
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestShouldReturnErrorWhenCustomerLimitExeeced_Unit(t *testing.T) {
