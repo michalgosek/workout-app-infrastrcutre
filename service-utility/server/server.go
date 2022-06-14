@@ -79,6 +79,7 @@ func NewHTTP(h http.Handler, cfg Config) *HTTP {
 			ReadTimeout:    cfg.ReadTimeout,
 			WriteTimeout:   cfg.ReadTimeout,
 			MaxHeaderBytes: cfg.MaxHeaderBytes,
+			Handler:        h,
 		},
 		cfg:            cfg,
 		sigs:           make(chan os.Signal, 1),

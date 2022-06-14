@@ -27,7 +27,7 @@ func TestShouldCreateTrainerScheduleWithSuccess_Unit(t *testing.T) {
 	}
 
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().UpsertSchedule(ctx, mock.Anything).Return(nil)
+	repository.EXPECT().UpsertTrainerSchedule(ctx, mock.Anything).Return(nil)
 	SUT := application.NewTrainerService(repository)
 
 	// when:
@@ -52,7 +52,7 @@ func TestShouldReturnErrorWhenTrainerSchedulesRepositoryFailure_Unit(t *testing.
 
 	expectedError := errors.New("repository failure")
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().UpsertSchedule(ctx, mock.Anything).Return(expectedError)
+	repository.EXPECT().UpsertTrainerSchedule(ctx, mock.Anything).Return(expectedError)
 	SUT := application.NewTrainerService(repository)
 
 	// when:
@@ -72,7 +72,7 @@ func TestShouldReturnTrainerScheduleWithSuccess_Unit(t *testing.T) {
 
 	repository := new(mocks.TrainerRepository)
 	expectedSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
-	repository.EXPECT().QuerySchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID()).Return(expectedSchedule, nil)
+	repository.EXPECT().QueryTrainerSchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID()).Return(expectedSchedule, nil)
 	SUT := application.NewTrainerService(repository)
 
 	// when:
@@ -80,7 +80,7 @@ func TestShouldReturnTrainerScheduleWithSuccess_Unit(t *testing.T) {
 
 	// then:
 	assert.Nil(err)
-	assertTrainerSchedule(assert, expectedSchedule, actualSchedule)
+	assert.Equal(expectedSchedule, actualSchedule)
 	repository.AssertExpectations(t)
 }
 
@@ -94,7 +94,7 @@ func TestShouldReturnEmptyScheduleWhenNotBelongingToTrainer_Unit(t *testing.T) {
 	ctx := context.Background()
 	emptySchedule := trainer.TrainerSchedule{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+	repository.EXPECT().QueryTrainerSchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -116,7 +116,7 @@ func TestShouldReturnEmptyTrainerSchedulesWhenNotExistWithSuccess_Unit(t *testin
 
 	repository := new(mocks.TrainerRepository)
 	expectedSchedules := []trainer.TrainerSchedule{}
-	repository.EXPECT().QuerySchedules(ctx, trainerUUID).Return(expectedSchedules, nil)
+	repository.EXPECT().QueryTrainerSchedules(ctx, trainerUUID).Return(expectedSchedules, nil)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -141,7 +141,7 @@ func TestShouldReturnAllTrainerSchedulesWithSuccess_Unit(t *testing.T) {
 	expectedSchedules := []trainer.TrainerSchedule{first, second}
 
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedules(ctx, trainerUUID).Return(expectedSchedules, nil)
+	repository.EXPECT().QueryTrainerSchedules(ctx, trainerUUID).Return(expectedSchedules, nil)
 	SUT := application.NewTrainerService(repository)
 
 	// when:
@@ -164,7 +164,7 @@ func TestShouldNotAssignCustomerToScheduleNotBelongingToTrainer_Unit(t *testing.
 	ctx := context.Background()
 	emptySchedule := trainer.TrainerSchedule{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+	repository.EXPECT().QueryTrainerSchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -190,8 +190,8 @@ func TestShouldNotAssignCustomerToSpecifiedScheduleWhenRepositoryFailure_Unit(t 
 
 	repository := new(mocks.TrainerRepository)
 	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().UpsertSchedule(ctx, scheduledWithCustomer).Return(expectedErr)
+	repository.EXPECT().QueryTrainerSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().UpsertTrainerSchedule(ctx, scheduledWithCustomer).Return(expectedErr)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -216,8 +216,8 @@ func TestShouldAssignCustomerToSpecifiedSchedule_Unit(t *testing.T) {
 	scheduledWithCustomer.AssignCustomer(customerUUID)
 
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().UpsertSchedule(ctx, scheduledWithCustomer).Return(nil)
+	repository.EXPECT().QueryTrainerSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().UpsertTrainerSchedule(ctx, scheduledWithCustomer).Return(nil)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -239,7 +239,7 @@ func TestShouldNotDeleteScheduleNotOwnedByTrainer_Unit(t *testing.T) {
 
 	emptySchedule := trainer.TrainerSchedule{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+	repository.EXPECT().QueryTrainerSchedule(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -261,8 +261,8 @@ func TestShouldNotDeleteScheduleOwnedByTrainerWhenRepositoryFailure_Unit(t *test
 	schedule := testutil.GenerateTrainerSchedule(trainerUUID)
 	repository := new(mocks.TrainerRepository)
 	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().CancelSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(expectedErr)
+	repository.EXPECT().QueryTrainerSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().CancelTrainerSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(expectedErr)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -283,8 +283,8 @@ func TestShouldDeleteScheduleOwnedByTrainer_Unit(t *testing.T) {
 
 	schedule := testutil.GenerateTrainerSchedule(trainerUUID)
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QuerySchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().CancelSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(nil)
+	repository.EXPECT().QueryTrainerSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
+	repository.EXPECT().CancelTrainerSchedule(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(nil)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -294,12 +294,4 @@ func TestShouldDeleteScheduleOwnedByTrainer_Unit(t *testing.T) {
 	// then:
 	assert.Nil(err)
 	repository.AssertExpectations(t)
-}
-
-func assertTrainerSchedule(assert *assert.Assertions, expectedSchedule trainer.TrainerSchedule, actualSchedule trainer.TrainerSchedule) {
-	assert.Equal(expectedSchedule.UUID(), actualSchedule.UUID())
-	assert.Equal(expectedSchedule.TrainerUUID(), actualSchedule.TrainerUUID())
-	assert.Equal(expectedSchedule.CustomerUUIDs(), actualSchedule.CustomerUUIDs())
-	assert.Equal(expectedSchedule.Limit(), actualSchedule.Limit())
-	assert.Equal(expectedSchedule.Desc(), actualSchedule.Desc())
 }

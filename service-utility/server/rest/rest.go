@@ -14,33 +14,16 @@ const (
 	VersionEndponit = "/api/v1/version"
 )
 
-type Config struct {
-	MiddlewareTimeout time.Duration
-}
-
-type API struct {
-	router chi.Router
-}
-
-func (a *API) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	a.router.ServeHTTP(w, r)
-}
-
-func (a *API) SetEndpoints() {
-	a.router.Get(HealthEndpoint, healthHandler)
-}
-
-func NewAPI() *API {
+// NewRouter returns chi.Router with basic middlewares setup, health check route.
+func NewRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
-	a := API{
-		router: r,
-	}
-	return &a
+	r.Get(HealthEndpoint, healthHandler)
+	return r
 }
 
 type JSONResponse struct {

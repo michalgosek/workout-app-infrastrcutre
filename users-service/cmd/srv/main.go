@@ -14,12 +14,9 @@ func main() {
 }
 
 func execute() error {
-	API := rest.NewAPI()
-	API.SetEndpoints()
-
+	API := rest.NewRouter()
 	serverCfg := server.DefaultHTTPConfig("localhost:8060", "users-service")
 	srv := server.NewHTTP(API, serverCfg)
 	srv.StartHTTPServer()
-
 	return nil
 }

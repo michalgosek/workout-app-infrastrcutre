@@ -6,12 +6,23 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
+
+type TrainerScheduleDocument struct {
+	UUID          string   `bson:"_id"`
+	TrainerUUID   string   `bson:"trainer_uuid"`
+	Limit         int      `bson:"limit"`
+	CustomerUUIDs []string `bson:"customer_uuids"`
+	Name          string   `bson:"name"`
+	Desc          string   `bson:"desc"`
+	Date          string   `bson:"date"`
+}
 
 type Filter struct {
 	ScheduleUUID string
@@ -26,46 +37,27 @@ type MongoDBConfig struct {
 	CommandTimeout    time.Duration
 	QueryTimeout      time.Duration
 	ConnectionTimeout time.Duration
+	Format            string
 }
 
-type TrainerSchedulesMongoDB struct {
+type MongoDB struct {
 	cli *mongo.Client
 	cfg MongoDBConfig
 }
 
-type TrainerScheduleDocument struct {
-	UUID          string    `bson:"_id"`
-	TrainerUUID   string    `bson:"trainer_uuid"`
-	Limit         int       `bson:"limit"`
-	CustomerUUIDs []string  `bson:"customer_uuids"`
-	Name          string    `bson:"name"`
-	Desc          string    `bson:"desc"`
-	Date          time.Time `bson:"date"`
+func (m *MongoDB) QueryCustomerSchedule(ctx context.Context, customerUUID string) (customer.CustomerSchedule, error) {
+	return customer.CustomerSchedule{}, nil
 }
 
-func (t *TrainerSchedulesMongoDB) Disconnect(ctx context.Context) error {
-	return t.cli.Disconnect(ctx)
+func (m *MongoDB) QueryCustomerSchedules(ctx context.Context, customerUUID string) ([]customer.CustomerSchedule, error) {
+	return []customer.CustomerSchedule{}, nil
 }
 
-func (t *TrainerSchedulesMongoDB) Ping(ctx context.Context) error {
-	err := t.cli.Ping(context.Background(), readpref.Primary())
-	if err != nil {
-		return fmt.Errorf("ping request failed: %v", err)
-	}
-	return err
+func (m *MongoDB) UpsertCustomerSchedule(ctx context.Context, schedule customer.CustomerSchedule) error {
+	return nil
 }
 
-func (t *TrainerSchedulesMongoDB) DropCollection(ctx context.Context) error {
-	db := t.cli.Database(t.cfg.Database)
-	coll := db.Collection(t.cfg.Collection)
-	return coll.Drop(ctx)
-}
-
-func (t *TrainerSchedulesMongoDB) UpsertSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error {
-	db := t.cli.Database(t.cfg.Database)
-	coll := db.Collection(t.cfg.Collection)
-	opts := options.Update()
-	opts.SetUpsert(true)
+func (m *MongoDB) UpsertTrainerSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error {
 	doc := TrainerScheduleDocument{
 		UUID:          schedule.UUID(),
 		TrainerUUID:   schedule.TrainerUUID(),
@@ -73,21 +65,19 @@ func (t *TrainerSchedulesMongoDB) UpsertSchedule(ctx context.Context, schedule t
 		CustomerUUIDs: schedule.CustomerUUIDs(),
 		Name:          schedule.Name(),
 		Desc:          schedule.Desc(),
-		Date:          schedule.Date(),
-	}
-	update := bson.M{
-		"$set": doc,
+		Date:          schedule.Date().Format(m.cfg.Format),
 	}
 	filter := bson.M{"_id": schedule.UUID(), "trainer_uuid": schedule.TrainerUUID()}
-	_, err := coll.UpdateOne(ctx, filter, update, opts)
+	err := m.updateOne(ctx, filter, doc)
 	if err != nil {
-		return fmt.Errorf("update document failed: %v", err)
+		return fmt.Errorf("update one failed: %v", err)
 	}
 	return nil
 }
-func (t *TrainerSchedulesMongoDB) QuerySchedule(ctx context.Context, UUID, trainerUUID string) (trainer.TrainerSchedule, error) {
-	db := t.cli.Database(t.cfg.Database)
-	coll := db.Collection(t.cfg.Collection)
+
+func (m *MongoDB) QueryTrainerSchedule(ctx context.Context, UUID, trainerUUID string) (trainer.TrainerSchedule, error) {
+	db := m.cli.Database(m.cfg.Database)
+	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"_id": UUID, "trainer_uuid": trainerUUID}
 	res := coll.FindOne(ctx, f)
 	err := res.Err()
@@ -103,11 +93,15 @@ func (t *TrainerSchedulesMongoDB) QuerySchedule(ctx context.Context, UUID, train
 	if err != nil {
 		return trainer.TrainerSchedule{}, fmt.Errorf("decoding failed: %v", err)
 	}
-	out := trainer.UnmarshalFromDatabase(dst.UUID, dst.TrainerUUID, dst.Name, dst.Desc, dst.CustomerUUIDs, dst.Date, dst.Limit)
+	date, err := time.Parse(m.cfg.Format, dst.Date)
+	if err != nil {
+		return trainer.TrainerSchedule{}, fmt.Errorf("parsing date value from document failed: %v", err)
+	}
+	out := trainer.UnmarshalFromDatabase(dst.UUID, dst.TrainerUUID, dst.Name, dst.Desc, dst.CustomerUUIDs, date, dst.Limit)
 	return out, nil
 }
 
-func (m *TrainerSchedulesMongoDB) QuerySchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
+func (m *MongoDB) QueryTrainerSchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -124,13 +118,17 @@ func (m *TrainerSchedulesMongoDB) QuerySchedules(ctx context.Context, trainerUUI
 
 	var out []trainer.TrainerSchedule
 	for _, d := range dst {
-		s := trainer.UnmarshalFromDatabase(d.UUID, d.TrainerUUID, d.Name, d.Desc, d.CustomerUUIDs, d.Date, d.Limit)
+		date, err := time.Parse(m.cfg.Format, d.Date)
+		if err != nil {
+			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
+		}
+		s := trainer.UnmarshalFromDatabase(d.UUID, d.TrainerUUID, d.Name, d.Desc, d.CustomerUUIDs, date, d.Limit)
 		out = append(out, s)
 	}
 	return out, nil
 }
 
-func (m *TrainerSchedulesMongoDB) CancelSchedules(ctx context.Context, trainerUUID string) error {
+func (m *MongoDB) CancelTrainerSchedules(ctx context.Context, trainerUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -141,7 +139,7 @@ func (m *TrainerSchedulesMongoDB) CancelSchedules(ctx context.Context, trainerUU
 	return nil
 }
 
-func (m *TrainerSchedulesMongoDB) CancelSchedule(ctx context.Context, UUID, trainerUUID string) error {
+func (m *MongoDB) CancelTrainerSchedule(ctx context.Context, UUID, trainerUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"_id": UUID, "trainer_uuid": trainerUUID}
@@ -152,7 +150,45 @@ func (m *TrainerSchedulesMongoDB) CancelSchedule(ctx context.Context, UUID, trai
 	return nil
 }
 
-func NewTrainerSchedulesMongoDB(cfg MongoDBConfig) (*TrainerSchedulesMongoDB, error) {
+func (m *MongoDB) Disconnect(ctx context.Context) error {
+	return m.cli.Disconnect(ctx)
+}
+
+func (m *MongoDB) DropDatabase(ctx context.Context) error {
+	db := m.cli.Database(m.cfg.Database)
+	return db.Drop(ctx)
+}
+
+func (m *MongoDB) Ping(ctx context.Context) error {
+	err := m.cli.Ping(context.Background(), readpref.Primary())
+	if err != nil {
+		return fmt.Errorf("ping request failed: %v", err)
+	}
+	return err
+}
+
+func (m *MongoDB) updateOne(ctx context.Context, filter bson.M, doc interface{}) error {
+	db := m.cli.Database(m.cfg.Database)
+	coll := db.Collection(m.cfg.Collection)
+	update := bson.M{
+		"$set": doc,
+	}
+	opts := options.Update()
+	opts.SetUpsert(true)
+	_, err := coll.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("update document failed: %v", err)
+	}
+	return nil
+}
+
+func (m *MongoDB) DropCollection(ctx context.Context) error {
+	db := m.cli.Database(m.cfg.Database)
+	coll := db.Collection(m.cfg.Collection)
+	return coll.Drop(ctx)
+}
+
+func NewMongoDB(cfg MongoDBConfig) (*MongoDB, error) {
 	opts := options.Client()
 	opts.SetConnectTimeout(cfg.ConnectionTimeout)
 	opts.ApplyURI(cfg.Addr)
@@ -166,7 +202,7 @@ func NewTrainerSchedulesMongoDB(cfg MongoDBConfig) (*TrainerSchedulesMongoDB, er
 		return nil, fmt.Errorf("connect failed: %v", err)
 	}
 
-	m := TrainerSchedulesMongoDB{
+	m := MongoDB{
 		cli: cli,
 		cfg: cfg,
 	}

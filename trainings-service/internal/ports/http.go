@@ -28,9 +28,7 @@ func (h *HTTP) GetSchedule(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func NewHTTP(service TrainingService) *HTTP {
-	h := HTTP{
-		service: service,
-	}
+func NewHTTPT(service TrainingService) *HTTP {
+	h := HTTP{}
 	return &h
 }

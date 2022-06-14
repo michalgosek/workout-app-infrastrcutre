@@ -9,16 +9,19 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/testutil"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/stretchr/testify/assert"
-
 	"github.com/stretchr/testify/suite"
 )
 
-type MongoDBTrainerSchedulesSuite struct {
-	suite.Suite
-	SUT *adapters.TrainerSchedulesMongoDB
+func TestMongoDBSuite_Integration(t *testing.T) {
+	suite.Run(t, new(MongoDBSuite))
 }
 
-func (m *MongoDBTrainerSchedulesSuite) BeforeTest(mName, testName string) {
+type MongoDBSuite struct {
+	suite.Suite
+	SUT *adapters.MongoDB
+}
+
+func (m *MongoDBSuite) BeforeTest(mName, testName string) {
 	t := m.T()
 	cfg := adapters.MongoDBConfig{
 		Addr:              "mongodb://localhost:27017",
@@ -27,9 +30,10 @@ func (m *MongoDBTrainerSchedulesSuite) BeforeTest(mName, testName string) {
 		CommandTimeout:    10 * time.Second,
 		QueryTimeout:      10 * time.Second,
 		ConnectionTimeout: 10 * time.Second,
+		Format:            "2006-01-02 15:04",
 	}
 
-	SUT, err := adapters.NewTrainerSchedulesMongoDB(cfg)
+	SUT, err := adapters.NewMongoDB(cfg)
 	if err != nil {
 		t.Fatalf("creating SUT failed: %v", err)
 	}
@@ -43,7 +47,7 @@ func (m *MongoDBTrainerSchedulesSuite) BeforeTest(mName, testName string) {
 	t.Logf("SUT connection established with mongodb node on addr: %s", cfg.Addr)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) AfterTest(mName, testName string) {
+func (m *MongoDBSuite) AfterTest(suiteName, testName string) {
 	t := m.T()
 	ctx := context.Background()
 	err := m.SUT.DropCollection(ctx)
@@ -51,6 +55,17 @@ func (m *MongoDBTrainerSchedulesSuite) AfterTest(mName, testName string) {
 		t.Fatalf("SUT dropping collection failed: %v", err)
 	}
 	t.Log("SUT cli dropped collection successfully")
+}
+
+func (m *MongoDBSuite) TearDownSuite() {
+	t := m.T()
+	ctx := context.Background()
+
+	err := m.SUT.DropDatabase(ctx)
+	if err != nil {
+		t.Logf("SUT cli dropping db failed: %v", err)
+	}
+	t.Logf("SUT cli dropped db successfully")
 
 	err = m.SUT.Disconnect(ctx)
 	if err != nil {
@@ -59,7 +74,7 @@ func (m *MongoDBTrainerSchedulesSuite) AfterTest(mName, testName string) {
 	t.Logf("SUT cli disconnect successfully")
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldInsertTrainerScheduleWhenNotExist() {
+func (m *MongoDBSuite) TestShouldInsertTrainerScheduleWhenNotExist() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -68,17 +83,17 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldInsertTrainerScheduleWhenNotExi
 	ctx := context.Background()
 	expectedSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
 	// when:
-	err := m.SUT.UpsertSchedule(ctx, expectedSchedule)
+	err := m.SUT.UpsertTrainerSchedule(ctx, expectedSchedule)
 
 	// then:
 	assert.Nil(err)
 
-	actualSchedule, err := m.SUT.QuerySchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
+	actualSchedule, err := m.SUT.QueryTrainerSchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
 	assert.Nil(err)
-	AssertTrainerSchedule(t, expectedSchedule, actualSchedule)
+	assert.Equal(expectedSchedule, actualSchedule)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldUpdateNameOfExisitingSchedule() {
+func (m *MongoDBSuite) TestShouldUpdateNameOfExisitingSchedule() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -87,21 +102,21 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldUpdateNameOfExisitingSchedule()
 	ctx := context.Background()
 	expectedSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
 
-	m.SUT.UpsertSchedule(ctx, expectedSchedule)
+	m.SUT.UpsertTrainerSchedule(ctx, expectedSchedule)
 	expectedSchedule.UpdateDesc("dummy2")
 
 	// when:
-	err := m.SUT.UpsertSchedule(ctx, expectedSchedule)
+	err := m.SUT.UpsertTrainerSchedule(ctx, expectedSchedule)
 
 	// then:
 	assert.Nil(err)
 
-	actualSchedule, err := m.SUT.QuerySchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
+	actualSchedule, err := m.SUT.QueryTrainerSchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
 	assert.Nil(err)
-	AssertTrainerSchedule(t, expectedSchedule, actualSchedule)
+	assert.Equal(expectedSchedule, actualSchedule)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldCancelTrainerScheduleWithSuccess() {
+func (m *MongoDBSuite) TestShouldCancelTrainerScheduleWithSuccess() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -110,20 +125,20 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldCancelTrainerScheduleWithSucces
 	ctx := context.Background()
 	expectedSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
 
-	m.SUT.UpsertSchedule(ctx, expectedSchedule)
+	m.SUT.UpsertTrainerSchedule(ctx, expectedSchedule)
 
 	// when:
-	err := m.SUT.CancelSchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
+	err := m.SUT.CancelTrainerSchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
 
 	// then:
 	assert.Nil(err)
 
-	actualSchedule, err := m.SUT.QuerySchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
+	actualSchedule, err := m.SUT.QueryTrainerSchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
 	assert.Nil(err)
 	assert.Empty(actualSchedule)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnEmptyScheduleWhenNoExistForSpecifiedTrainer() {
+func (m *MongoDBSuite) TestShouldReturnEmptyScheduleWhenNoExistForSpecifiedTrainer() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -134,20 +149,20 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnEmptyScheduleWhenNoExistF
 	ctx := context.Background()
 	expectedSchedule := testutil.GenerateTrainerSchedule(trainerUUID)
 
-	m.SUT.UpsertSchedule(ctx, expectedSchedule)
+	m.SUT.UpsertTrainerSchedule(ctx, expectedSchedule)
 
 	// when:
-	err := m.SUT.CancelSchedule(ctx, fakeUUID, fakeTrainerUUID)
+	err := m.SUT.CancelTrainerSchedule(ctx, fakeUUID, fakeTrainerUUID)
 
 	// then:
 	assert.Nil(err)
 
-	actualSchedule, err := m.SUT.QuerySchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
+	actualSchedule, err := m.SUT.QueryTrainerSchedule(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID())
 	assert.Nil(err)
-	AssertTrainerSchedule(t, expectedSchedule, actualSchedule)
+	assert.Equal(expectedSchedule, actualSchedule)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnTwoSchedulesWithSuccess() {
+func (m *MongoDBSuite) TestShouldReturnTwoSchedulesWithSuccess() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -158,18 +173,18 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnTwoSchedulesWithSuccess()
 	second := testutil.GenerateTrainerSchedule(trainerUUID)
 	expectedSchedules := []trainer.TrainerSchedule{first, second}
 
-	m.SUT.UpsertSchedule(ctx, first)
-	m.SUT.UpsertSchedule(ctx, second)
+	m.SUT.UpsertTrainerSchedule(ctx, first)
+	m.SUT.UpsertTrainerSchedule(ctx, second)
 
 	// when:
-	actualSchedules, err := m.SUT.QuerySchedules(ctx, trainerUUID)
+	actualSchedules, err := m.SUT.QueryTrainerSchedules(ctx, trainerUUID)
 
 	// then:
 	assert.Nil(err)
-	AssertTrainerSchedules(t, expectedSchedules, actualSchedules)
+	assert.Equal(expectedSchedules, actualSchedules)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnEmptySchedulesWhenNotExist() {
+func (m *MongoDBSuite) TestShouldReturnEmptySchedulesWhenNotExist() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -178,14 +193,14 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnEmptySchedulesWhenNotExis
 	ctx := context.Background()
 
 	// when:
-	actualSchedules, err := m.SUT.QuerySchedules(ctx, trainerUUID)
+	actualSchedules, err := m.SUT.QueryTrainerSchedules(ctx, trainerUUID)
 
 	// then:
 	assert.Nil(err)
 	assert.Empty(actualSchedules)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldCancelAllUpsertedSchedules() {
+func (m *MongoDBSuite) TestShouldCancelAllUpsertedSchedules() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -195,21 +210,21 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldCancelAllUpsertedSchedules() {
 	first := testutil.GenerateTrainerSchedule(trainerUUID)
 	second := testutil.GenerateTrainerSchedule(trainerUUID)
 
-	m.SUT.UpsertSchedule(ctx, first)
-	m.SUT.UpsertSchedule(ctx, second)
+	m.SUT.UpsertTrainerSchedule(ctx, first)
+	m.SUT.UpsertTrainerSchedule(ctx, second)
 
 	// when:
-	err := m.SUT.CancelSchedules(ctx, trainerUUID)
+	err := m.SUT.CancelTrainerSchedules(ctx, trainerUUID)
 
 	// then:
 	assert.Nil(err)
 
-	actualSchedules, err := m.SUT.QuerySchedules(ctx, trainerUUID)
+	actualSchedules, err := m.SUT.QueryTrainerSchedules(ctx, trainerUUID)
 	assert.Nil(err)
 	assert.Empty(actualSchedules)
 }
 
-func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnEmptySchedulesWhenNoExistForSpecifiedTrainer() {
+func (m *MongoDBSuite) TestShouldReturnEmptySchedulesWhenNoExistForSpecifiedTrainer() {
 	t := m.T()
 	assert := assert.New(t)
 
@@ -218,36 +233,12 @@ func (m *MongoDBTrainerSchedulesSuite) TestShouldReturnEmptySchedulesWhenNoExist
 	ctx := context.Background()
 
 	// when:
-	err := m.SUT.CancelSchedules(ctx, trainerUUID)
+	err := m.SUT.CancelTrainerSchedules(ctx, trainerUUID)
 
 	// then:
 	assert.Nil(err)
 
-	actualSchedules, err := m.SUT.QuerySchedules(ctx, trainerUUID)
+	actualSchedules, err := m.SUT.QueryTrainerSchedules(ctx, trainerUUID)
 	assert.Nil(err)
 	assert.Empty(actualSchedules)
-}
-
-// In order for 'go test' to run this m, we need to create
-// a normal test function and pass our m to m.Run
-func TestMongoDBTrainerSchedulesSuite_Integration(t *testing.T) {
-	suite.Run(t, new(MongoDBTrainerSchedulesSuite))
-}
-
-func AssertTrainerSchedule(t *testing.T, expected, actual trainer.TrainerSchedule) {
-	assert := assert.New(t)
-	assert.Equal(expected.UUID(), actual.UUID())
-	assert.Equal(expected.CustomerUUIDs(), actual.CustomerUUIDs())
-	assert.Equal(expected.TrainerUUID(), actual.TrainerUUID())
-	assert.Equal(expected.Name(), actual.Name())
-	assert.Equal(expected.Limit(), actual.Limit())
-	assert.Equal(expected.Desc(), actual.Desc())
-}
-
-func AssertTrainerSchedules(t *testing.T, expected, actual []trainer.TrainerSchedule) {
-	assert := assert.New(t)
-	assert.Len(actual, len(expected))
-	for i := 0; i < len(expected); i++ {
-		AssertTrainerSchedule(t, expected[i], actual[i])
-	}
 }

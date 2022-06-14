@@ -12,9 +12,9 @@ import (
 func TestShouldShutdownGracefullyShutdownIntegration(t *testing.T) {
 	assert := assert.New(t)
 	// given:
-	API := rest.NewAPI()
+	router := rest.NewRouter()
 	cfg := server.DefaultHTTPConfig("localhost:8080", "test-server")
-	srv := server.NewHTTP(API, cfg)
+	srv := server.NewHTTP(router, cfg)
 
 	time.AfterFunc(2*time.Second, func() {
 		srv.Terminate()

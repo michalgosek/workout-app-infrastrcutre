@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters"
@@ -27,20 +28,23 @@ func execute() error {
 		QueryTimeout:      10 * time.Second,
 		ConnectionTimeout: 10 * time.Second,
 	}
-	repository, err := adapters.NewTrainerSchedulesMongoDB(cfg)
+	repository, err := adapters.NewMongoDB(cfg)
 	if err != nil {
 		return fmt.Errorf("creating repository failed: %v", err)
 	}
 
 	service := application.NewTrainerService(repository)
-	_ = ports.NewHTTP(service)
+	HTTP := ports.NewHTTPT(service)
 
-	API := rest.NewAPI()
-	API.SetEndpoints()
+	API := rest.NewRouter()
+	API.Route("/api/v1/", func(r chi.Router) {
+		r.Route("/trainer", func(r chi.Router) {
+			r.Post("/schedule", HTTP.CreateTrainerSchedule)
+		})
+	})
 
 	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
 	srv := server.NewHTTP(API, serverCfg)
 	srv.StartHTTPServer()
-
 	return nil
 }
