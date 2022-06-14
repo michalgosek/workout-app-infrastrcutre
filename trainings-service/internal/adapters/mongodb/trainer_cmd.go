@@ -39,8 +39,8 @@ func (m *TrainerCommandHandler) DropCollection(ctx context.Context) error {
 	return coll.Drop(ctx)
 }
 
-func (m *TrainerCommandHandler) UpsertSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error {
-	doc := TrainerScheduleDocument{
+func (m *TrainerCommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
+	doc := TrainerWorkoutGroupDocument{
 		UUID:          schedule.UUID(),
 		TrainerUUID:   schedule.TrainerUUID(),
 		Limit:         schedule.Limit(),
@@ -67,7 +67,7 @@ func (m *TrainerCommandHandler) UpsertSchedule(ctx context.Context, schedule tra
 	return nil
 }
 
-func (m *TrainerCommandHandler) CancelSchedules(ctx context.Context, trainerUUID string) error {
+func (m *TrainerCommandHandler) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -78,7 +78,7 @@ func (m *TrainerCommandHandler) CancelSchedules(ctx context.Context, trainerUUID
 	return nil
 }
 
-func (m *TrainerCommandHandler) CancelSchedule(ctx context.Context, UUID, trainerUUID string) error {
+func (m *TrainerCommandHandler) DeleteWorkoutGroup(ctx context.Context, UUID, trainerUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"_id": UUID, "trainer_uuid": trainerUUID}

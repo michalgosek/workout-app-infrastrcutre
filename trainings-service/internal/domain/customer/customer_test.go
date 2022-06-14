@@ -2,119 +2,161 @@ package customer_test
 
 import (
 	"testing"
+	"time"
 
-	"github.com/google/uuid"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestShouldAssignOneScheduleToCustomerWithSuccess_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldCreateCustomerWorkoutDayWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const scheduleUUID = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	const scheduleLeft = 4
-	const scheduleAssgined = 1
-
-	SUT := GenerateTestcustomerSchedule(customerUUID)
+	const trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
+	date := time.Now().Add(24 * time.Hour)
 
 	// when:
-	err := SUT.AssignSchedule(scheduleUUID)
+	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
-	assert.Nil(err)
-	assert.Equal(SUT.Limit(), scheduleLeft)
-	assert.Equal(SUT.AssignedSchedules(), scheduleAssgined)
+	assertions.Nil(err)
+	assertions.Equal(customerUUID, workout.CustomerUUID())
+	assertions.Equal(date, workout.Date())
+	assertions.Equal(trainerWorkoutGroupUUID, workout.TrainerWorkoutGroupUUID())
 }
 
-func TestShouldReturnErrorWhenAssignDuplicateScheduleToCustomer_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerUUID_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	date := time.Now().Add(24 * time.Hour)
+	const trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
+
+	// when:
+	workout, err := customer.NewWorkoutDay("", trainerWorkoutGroupUUID, date)
+
+	// then:
+	assertions.Equal(customer.ErrEmptyCustomerUUID, err)
+	assertions.Nil(workout)
+}
+
+func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyDate_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const scheduleUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	const scheduleUUID2 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	const schedulesLeft = 4
-
-	SUT := GenerateTestcustomerSchedule(customerUUID)
-	SUT.AssignSchedule(scheduleUUID1)
+	const trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
+	date := time.Time{}
 
 	// when:
-	err := SUT.AssignSchedule(scheduleUUID2)
+	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
-	assert.Equal(err, customer.ErrScheduleDuplicate)
-	assert.Equal(SUT.Limit(), schedulesLeft)
+	assertions.Equal(customer.ErrEmptyWorkoutDate, err)
+	assertions.Nil(workout)
 }
 
-func TestShouldAssignTwoSchedulesToCustomerWithSuccess_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyWorkoutUUID_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const scheduleUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	const scheduleUUID2 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
-	const scheduleAssgined = 2
-	const scheduleLeft = 3
-
-	SUT := GenerateTestcustomerSchedule(customerUUID)
-	SUT.AssignSchedule(scheduleUUID1)
+	const trainerWorkoutGroupUUID = ""
+	date := time.Now()
 
 	// when:
-	err := SUT.AssignSchedule(scheduleUUID2)
+	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
-	assert.Nil(err)
-	assert.Equal(SUT.Limit(), scheduleLeft)
-	assert.Equal(SUT.AssignedSchedules(), scheduleAssgined)
+	assertions.Equal(customer.ErrEmptyTrainerWorkoutGroupUUID, err)
+	assertions.Nil(workout)
 }
 
-func TestShouldReturnErrorWhenAssignEmptyScheduleUUIDToCustomer_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
-	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	SUT := GenerateTestcustomerSchedule(customerUUID)
+	const customerWorkoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+	const customerUUID = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+	date := time.Now()
 
 	// when:
-	err := SUT.AssignSchedule("")
+	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
-	assert.ErrorIs(err, customer.ErrEmptyScheduleUUID)
+	assertions.Nil(err)
+	assertions.Equal(trainerWorkoutGroupUUID, workout.TrainerWorkoutGroupUUID())
+	assertions.Equal(customerUUID, workout.CustomerUUID())
+	assertions.Equal(customerWorkoutDayUUID, workout.UUID())
+	assertions.Equal(date, workout.Date())
 }
 
-func TestShouldReturnErrorWhenCustomerScheduleLimitExeeced_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerWorkoutDayUUID_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
-	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const scheduleUUID6 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
-	const scheduleAssgined = 5
-	const scheduleLeft = 0
-
-	SUT := GenerateTestcustomerSchedule(customerUUID)
-	AssignScheduleUUIDsToCustomer(&SUT, 5)
+	const customerWorkoutDayUUID = ""
+	const trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+	const customerUUID = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+	date := time.Now()
 
 	// when:
-	err := SUT.AssignSchedule(scheduleUUID6)
+	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
-	assert.ErrorIs(customer.ErrSchedulesLimitExceeded, err)
-	assert.Equal(scheduleLeft, SUT.Limit())
-	assert.Equal(scheduleAssgined, SUT.AssignedSchedules())
+	assertions.Equal(customer.ErrEmptyCustomerWorkoutUUID, err)
+	assertions.Empty(workout)
 }
 
-func GenerateTestcustomerSchedule(customerUUID string) customer.CustomerSchedule {
-	c, err := customer.NewSchedule(customerUUID)
-	if err != nil {
-		panic(err)
-	}
-	return *c
+func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerUUID_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const customerWorkoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+	const customerUUID = ""
+	date := time.Now()
+
+	// when:
+	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
+
+	// then:
+	assertions.Equal(customer.ErrEmptyCustomerUUID, err)
+	assertions.Empty(workout)
 }
 
-func AssignScheduleUUIDsToCustomer(schedule *customer.CustomerSchedule, n int) {
-	for i := 0; i < n; i++ {
-		schedule.AssignSchedule(uuid.NewString())
-	}
+func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyWorkoutUUID_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const customerWorkoutDayUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+	const trainerWorkoutGroupUUID = ""
+	const customerUUID = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+	date := time.Now()
+
+	// when:
+	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
+
+	// then:
+	assertions.Equal(customer.ErrEmptyTrainerWorkoutGroupUUID, err)
+	assertions.Empty(workout)
+}
+
+func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyWorkoutDate_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const customerWorkoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+	const customerUUID = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+	date := time.Time{}
+
+	// when:
+	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
+
+	// then:
+	assertions.Equal(customer.ErrEmptyWorkoutDate, err)
+	assertions.Empty(workout)
 }

@@ -2,11 +2,11 @@ package mongodb_test
 
 import (
 	"context"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"testing"
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -36,7 +36,7 @@ func TestCustomerTestSuite_Integration(t *testing.T) {
 	})
 }
 
-func (m *CustomerTestSuite) BeforeTest(mName, testName string) {
+func (m *CustomerTestSuite) BeforeTest(string, string) {
 	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.ConnectionTimeout)
 	defer cancel()
 	mongoCLI, err := mongo.NewClient(options.Client().ApplyURI(m.cfg.Addr))
@@ -71,7 +71,7 @@ func (m *CustomerTestSuite) BeforeTest(mName, testName string) {
 	})
 }
 
-func (m *CustomerTestSuite) AfterTest(suiteName, testName string) {
+func (m *CustomerTestSuite) AfterTest(string, string) {
 	ctx := context.Background()
 	err := m.commandHandler.DropCollection(ctx)
 	if err != nil {
@@ -95,69 +95,44 @@ func (m *CustomerTestSuite) TearDownSuite() {
 	}
 }
 
-func (m *CustomerTestSuite) TestShouldInsertCustomerScheduleWhenNotExist() {
+func (m *CustomerTestSuite) TestShouldUpsertCustomerWorkoutDayWhenNotExistWithSuccess() {
 	t := m.T()
-	assert := assert.New(t)
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	ctx := context.Background()
-	expectedSchedule := testutil.GenerateCustomerSchedule(customerUUID)
+	workout := testutil.GenerateNewWorkoutDay(customerUUID)
 
 	// when:
-	err := m.commandHandler.UpsertSchedule(ctx, expectedSchedule)
+	err := m.commandHandler.UpsertCustomerWorkoutDay(ctx, workout)
 
 	// then:
-	assert.Nil(err)
+	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QuerySchedule(ctx, expectedSchedule.CustomerUUID())
-	assert.Nil(err)
-	assert.Equal(expectedSchedule, actualSchedule)
+	actualSchedule, err := m.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	assertions.Nil(err)
+	assertions.Equal(workout, actualSchedule)
 }
 
-func (m *CustomerTestSuite) TestShouldUpdateScheduelsListOfExistingCustomerSchedule() {
+func (m *CustomerTestSuite) TestShouldDeleteCustomerWorkoutDayWithSuccess() {
 	t := m.T()
-	assert := assert.New(t)
-
-	// given:
-	const trainerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
-	ctx := context.Background()
-	expectedSchedule := testutil.GenerateCustomerSchedule(trainerUUID)
-
-	m.commandHandler.UpsertSchedule(ctx, expectedSchedule)
-	expectedSchedule.AssignSchedule("371c59fb-588e-4335-8fb6-3b0186795fd0")
-
-	// when:
-	err := m.commandHandler.UpsertSchedule(ctx, expectedSchedule)
-
-	// then:
-	assert.Nil(err)
-
-	actualSchedule, err := m.queryHandler.QuerySchedule(ctx, expectedSchedule.CustomerUUID())
-	assert.Nil(err)
-	assert.Equal(expectedSchedule, actualSchedule)
-}
-
-func (m *CustomerTestSuite) TestShouldDeleteCustomerScheduleWithSuccess() {
-	t := m.T()
-	assert := assert.New(t)
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
-	const scheduleUUID = "2d0d3ce5-3ec4-48b1-a03b-a2fa5440963d"
 	ctx := context.Background()
-	expectedSchedule := testutil.GenerateCustomerSchedule(customerUUID)
-	expectedSchedule.AssignSchedule(scheduleUUID)
+	workout := testutil.GenerateNewWorkoutDay(customerUUID)
 
-	m.commandHandler.UpsertSchedule(ctx, expectedSchedule)
+	_ = m.commandHandler.UpsertCustomerWorkoutDay(ctx, workout)
 
 	// when:
-	err := m.commandHandler.DeleteSchedule(ctx, customerUUID, expectedSchedule.UUID())
+	err := m.commandHandler.DeleteCustomerWorkoutDay(ctx, customerUUID, workout.UUID())
 
 	// then:
-	assert.Nil(err)
+	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QuerySchedule(ctx, expectedSchedule.CustomerUUID())
-	assert.Nil(err)
-	assert.Empty(actualSchedule)
+	actualSchedule, err := m.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	assertions.Nil(err)
+	assertions.Empty(actualSchedule)
 }

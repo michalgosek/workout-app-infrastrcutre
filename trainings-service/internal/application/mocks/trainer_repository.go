@@ -22,8 +22,8 @@ func (_m *TrainerRepository) EXPECT() *TrainerRepository_Expecter {
 	return &TrainerRepository_Expecter{mock: &_m.Mock}
 }
 
-// CancelTrainerSchedule provides a mock function with given fields: ctx, UUID, trainerUUID
-func (_m *TrainerRepository) CancelTrainerSchedule(ctx context.Context, UUID string, trainerUUID string) error {
+// DeleteWorkoutGroup provides a mock function with given fields: ctx, UUID, trainerUUID
+func (_m *TrainerRepository) DeleteWorkoutGroup(ctx context.Context, UUID string, trainerUUID string) error {
 	ret := _m.Called(ctx, UUID, trainerUUID)
 
 	var r0 error
@@ -36,33 +36,33 @@ func (_m *TrainerRepository) CancelTrainerSchedule(ctx context.Context, UUID str
 	return r0
 }
 
-// TrainerRepository_CancelTrainerSchedule_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelTrainerSchedule'
-type TrainerRepository_CancelTrainerSchedule_Call struct {
+// TrainerRepository_DeleteWorkoutGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteWorkoutGroup'
+type TrainerRepository_DeleteWorkoutGroup_Call struct {
 	*mock.Call
 }
 
-// CancelTrainerSchedule is a helper method to define mock.On call
+// DeleteWorkoutGroup is a helper method to define mock.On call
 //  - ctx context.Context
 //  - UUID string
 //  - trainerUUID string
-func (_e *TrainerRepository_Expecter) CancelTrainerSchedule(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_CancelTrainerSchedule_Call {
-	return &TrainerRepository_CancelTrainerSchedule_Call{Call: _e.mock.On("CancelTrainerSchedule", ctx, UUID, trainerUUID)}
+func (_e *TrainerRepository_Expecter) DeleteWorkoutGroup(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_DeleteWorkoutGroup_Call {
+	return &TrainerRepository_DeleteWorkoutGroup_Call{Call: _e.mock.On("DeleteWorkoutGroup", ctx, UUID, trainerUUID)}
 }
 
-func (_c *TrainerRepository_CancelTrainerSchedule_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_CancelTrainerSchedule_Call {
+func (_c *TrainerRepository_DeleteWorkoutGroup_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_DeleteWorkoutGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *TrainerRepository_CancelTrainerSchedule_Call) Return(_a0 error) *TrainerRepository_CancelTrainerSchedule_Call {
+func (_c *TrainerRepository_DeleteWorkoutGroup_Call) Return(_a0 error) *TrainerRepository_DeleteWorkoutGroup_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-// CancelTrainerSchedules provides a mock function with given fields: ctx, trainerUUID
-func (_m *TrainerRepository) CancelTrainerSchedules(ctx context.Context, trainerUUID string) error {
+// DeleteWorkoutGroups provides a mock function with given fields: ctx, trainerUUID
+func (_m *TrainerRepository) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error {
 	ret := _m.Called(ctx, trainerUUID)
 
 	var r0 error
@@ -75,39 +75,39 @@ func (_m *TrainerRepository) CancelTrainerSchedules(ctx context.Context, trainer
 	return r0
 }
 
-// TrainerRepository_CancelTrainerSchedules_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelTrainerSchedules'
-type TrainerRepository_CancelTrainerSchedules_Call struct {
+// TrainerRepository_DeleteWorkoutGroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteWorkoutGroups'
+type TrainerRepository_DeleteWorkoutGroups_Call struct {
 	*mock.Call
 }
 
-// CancelTrainerSchedules is a helper method to define mock.On call
+// DeleteWorkoutGroups is a helper method to define mock.On call
 //  - ctx context.Context
 //  - trainerUUID string
-func (_e *TrainerRepository_Expecter) CancelTrainerSchedules(ctx interface{}, trainerUUID interface{}) *TrainerRepository_CancelTrainerSchedules_Call {
-	return &TrainerRepository_CancelTrainerSchedules_Call{Call: _e.mock.On("CancelTrainerSchedules", ctx, trainerUUID)}
+func (_e *TrainerRepository_Expecter) DeleteWorkoutGroups(ctx interface{}, trainerUUID interface{}) *TrainerRepository_DeleteWorkoutGroups_Call {
+	return &TrainerRepository_DeleteWorkoutGroups_Call{Call: _e.mock.On("DeleteWorkoutGroups", ctx, trainerUUID)}
 }
 
-func (_c *TrainerRepository_CancelTrainerSchedules_Call) Run(run func(ctx context.Context, trainerUUID string)) *TrainerRepository_CancelTrainerSchedules_Call {
+func (_c *TrainerRepository_DeleteWorkoutGroups_Call) Run(run func(ctx context.Context, trainerUUID string)) *TrainerRepository_DeleteWorkoutGroups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *TrainerRepository_CancelTrainerSchedules_Call) Return(_a0 error) *TrainerRepository_CancelTrainerSchedules_Call {
+func (_c *TrainerRepository_DeleteWorkoutGroups_Call) Return(_a0 error) *TrainerRepository_DeleteWorkoutGroups_Call {
 	_c.Call.Return(_a0)
 	return _c
 }
 
-// QueryTrainerSchedule provides a mock function with given fields: ctx, UUID, trainerUUID
-func (_m *TrainerRepository) QueryTrainerSchedule(ctx context.Context, UUID string, trainerUUID string) (trainer.TrainerSchedule, error) {
+// QueryWorkoutGroup provides a mock function with given fields: ctx, UUID, trainerUUID
+func (_m *TrainerRepository) QueryWorkoutGroup(ctx context.Context, UUID string, trainerUUID string) (trainer.WorkoutGroup, error) {
 	ret := _m.Called(ctx, UUID, trainerUUID)
 
-	var r0 trainer.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) trainer.TrainerSchedule); ok {
+	var r0 trainer.WorkoutGroup
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) trainer.WorkoutGroup); ok {
 		r0 = rf(ctx, UUID, trainerUUID)
 	} else {
-		r0 = ret.Get(0).(trainer.TrainerSchedule)
+		r0 = ret.Get(0).(trainer.WorkoutGroup)
 	}
 
 	var r1 error
@@ -120,41 +120,41 @@ func (_m *TrainerRepository) QueryTrainerSchedule(ctx context.Context, UUID stri
 	return r0, r1
 }
 
-// TrainerRepository_QueryTrainerSchedule_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryTrainerSchedule'
-type TrainerRepository_QueryTrainerSchedule_Call struct {
+// TrainerRepository_QueryWorkoutGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryWorkoutGroup'
+type TrainerRepository_QueryWorkoutGroup_Call struct {
 	*mock.Call
 }
 
-// QueryTrainerSchedule is a helper method to define mock.On call
+// QueryWorkoutGroup is a helper method to define mock.On call
 //  - ctx context.Context
 //  - UUID string
 //  - trainerUUID string
-func (_e *TrainerRepository_Expecter) QueryTrainerSchedule(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_QueryTrainerSchedule_Call {
-	return &TrainerRepository_QueryTrainerSchedule_Call{Call: _e.mock.On("QueryTrainerSchedule", ctx, UUID, trainerUUID)}
+func (_e *TrainerRepository_Expecter) QueryWorkoutGroup(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_QueryWorkoutGroup_Call {
+	return &TrainerRepository_QueryWorkoutGroup_Call{Call: _e.mock.On("QueryWorkoutGroup", ctx, UUID, trainerUUID)}
 }
 
-func (_c *TrainerRepository_QueryTrainerSchedule_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_QueryTrainerSchedule_Call {
+func (_c *TrainerRepository_QueryWorkoutGroup_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_QueryWorkoutGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *TrainerRepository_QueryTrainerSchedule_Call) Return(_a0 trainer.TrainerSchedule, _a1 error) *TrainerRepository_QueryTrainerSchedule_Call {
+func (_c *TrainerRepository_QueryWorkoutGroup_Call) Return(_a0 trainer.WorkoutGroup, _a1 error) *TrainerRepository_QueryWorkoutGroup_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// QueryTrainerSchedules provides a mock function with given fields: ctx, trainerUUID
-func (_m *TrainerRepository) QueryTrainerSchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
+// QueryWorkoutGroups provides a mock function with given fields: ctx, trainerUUID
+func (_m *TrainerRepository) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
 	ret := _m.Called(ctx, trainerUUID)
 
-	var r0 []trainer.TrainerSchedule
-	if rf, ok := ret.Get(0).(func(context.Context, string) []trainer.TrainerSchedule); ok {
+	var r0 []trainer.WorkoutGroup
+	if rf, ok := ret.Get(0).(func(context.Context, string) []trainer.WorkoutGroup); ok {
 		r0 = rf(ctx, trainerUUID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]trainer.TrainerSchedule)
+			r0 = ret.Get(0).([]trainer.WorkoutGroup)
 		}
 	}
 
@@ -168,36 +168,36 @@ func (_m *TrainerRepository) QueryTrainerSchedules(ctx context.Context, trainerU
 	return r0, r1
 }
 
-// TrainerRepository_QueryTrainerSchedules_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryTrainerSchedules'
-type TrainerRepository_QueryTrainerSchedules_Call struct {
+// TrainerRepository_QueryWorkoutGroups_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryWorkoutGroups'
+type TrainerRepository_QueryWorkoutGroups_Call struct {
 	*mock.Call
 }
 
-// QueryTrainerSchedules is a helper method to define mock.On call
+// QueryWorkoutGroups is a helper method to define mock.On call
 //  - ctx context.Context
 //  - trainerUUID string
-func (_e *TrainerRepository_Expecter) QueryTrainerSchedules(ctx interface{}, trainerUUID interface{}) *TrainerRepository_QueryTrainerSchedules_Call {
-	return &TrainerRepository_QueryTrainerSchedules_Call{Call: _e.mock.On("QueryTrainerSchedules", ctx, trainerUUID)}
+func (_e *TrainerRepository_Expecter) QueryWorkoutGroups(ctx interface{}, trainerUUID interface{}) *TrainerRepository_QueryWorkoutGroups_Call {
+	return &TrainerRepository_QueryWorkoutGroups_Call{Call: _e.mock.On("QueryWorkoutGroups", ctx, trainerUUID)}
 }
 
-func (_c *TrainerRepository_QueryTrainerSchedules_Call) Run(run func(ctx context.Context, trainerUUID string)) *TrainerRepository_QueryTrainerSchedules_Call {
+func (_c *TrainerRepository_QueryWorkoutGroups_Call) Run(run func(ctx context.Context, trainerUUID string)) *TrainerRepository_QueryWorkoutGroups_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
 
-func (_c *TrainerRepository_QueryTrainerSchedules_Call) Return(_a0 []trainer.TrainerSchedule, _a1 error) *TrainerRepository_QueryTrainerSchedules_Call {
+func (_c *TrainerRepository_QueryWorkoutGroups_Call) Return(_a0 []trainer.WorkoutGroup, _a1 error) *TrainerRepository_QueryWorkoutGroups_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-// UpsertTrainerSchedule provides a mock function with given fields: ctx, schedule
-func (_m *TrainerRepository) UpsertTrainerSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error {
+// UpsertWorkoutGroup provides a mock function with given fields: ctx, schedule
+func (_m *TrainerRepository) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
 	ret := _m.Called(ctx, schedule)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, trainer.TrainerSchedule) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, trainer.WorkoutGroup) error); ok {
 		r0 = rf(ctx, schedule)
 	} else {
 		r0 = ret.Error(0)
@@ -206,26 +206,26 @@ func (_m *TrainerRepository) UpsertTrainerSchedule(ctx context.Context, schedule
 	return r0
 }
 
-// TrainerRepository_UpsertTrainerSchedule_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertTrainerSchedule'
-type TrainerRepository_UpsertTrainerSchedule_Call struct {
+// TrainerRepository_UpsertWorkoutGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpsertWorkoutGroup'
+type TrainerRepository_UpsertWorkoutGroup_Call struct {
 	*mock.Call
 }
 
-// UpsertTrainerSchedule is a helper method to define mock.On call
+// UpsertWorkoutGroup is a helper method to define mock.On call
 //  - ctx context.Context
-//  - schedule trainer.TrainerSchedule
-func (_e *TrainerRepository_Expecter) UpsertTrainerSchedule(ctx interface{}, schedule interface{}) *TrainerRepository_UpsertTrainerSchedule_Call {
-	return &TrainerRepository_UpsertTrainerSchedule_Call{Call: _e.mock.On("UpsertTrainerSchedule", ctx, schedule)}
+//  - schedule trainer.WorkoutGroup
+func (_e *TrainerRepository_Expecter) UpsertWorkoutGroup(ctx interface{}, schedule interface{}) *TrainerRepository_UpsertWorkoutGroup_Call {
+	return &TrainerRepository_UpsertWorkoutGroup_Call{Call: _e.mock.On("UpsertWorkoutGroup", ctx, schedule)}
 }
 
-func (_c *TrainerRepository_UpsertTrainerSchedule_Call) Run(run func(ctx context.Context, schedule trainer.TrainerSchedule)) *TrainerRepository_UpsertTrainerSchedule_Call {
+func (_c *TrainerRepository_UpsertWorkoutGroup_Call) Run(run func(ctx context.Context, schedule trainer.WorkoutGroup)) *TrainerRepository_UpsertWorkoutGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(trainer.TrainerSchedule))
+		run(args[0].(context.Context), args[1].(trainer.WorkoutGroup))
 	})
 	return _c
 }
 
-func (_c *TrainerRepository_UpsertTrainerSchedule_Call) Return(_a0 error) *TrainerRepository_UpsertTrainerSchedule_Call {
+func (_c *TrainerRepository_UpsertWorkoutGroup_Call) Return(_a0 error) *TrainerRepository_UpsertWorkoutGroup_Call {
 	_c.Call.Return(_a0)
 	return _c
 }

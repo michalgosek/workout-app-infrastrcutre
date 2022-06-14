@@ -31,28 +31,32 @@ func NewCustomerQueryHandler(cli *mongo.Client, cfg CustomerQueryHandlerConfig) 
 	return &t
 }
 
-func (c *CustomerQueryHandler) QuerySchedule(ctx context.Context, customerUUID string) (customer.CustomerSchedule, error) {
+func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID, trainerWorkoutGroupUUID string) (customer.WorkoutDay, error) {
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
-	f := bson.M{"customer_uuid": customerUUID}
+	f := bson.M{"customer_uuid": customerUUID, "trainer_workout_group_uuid": trainerWorkoutGroupUUID}
 	res := coll.FindOne(ctx, f)
 	err := res.Err()
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return customer.CustomerSchedule{}, nil
+		return customer.WorkoutDay{}, nil
 	}
 	if err != nil {
-		return customer.CustomerSchedule{}, fmt.Errorf("find one failed: %v", err)
+		return customer.WorkoutDay{}, fmt.Errorf("find one failed: %v", err)
 	}
 
-	var dst CustomerScheduleDocument
+	var dst CustomerWorkoutDocument
 	err = res.Decode(&dst)
 	if err != nil {
-		return customer.CustomerSchedule{}, fmt.Errorf("decoding failed: %v", err)
+		return customer.WorkoutDay{}, fmt.Errorf("decoding failed: %v", err)
 	}
-	out := customer.UnmarshalFromDatabase(dst.UUID, dst.CustomerUUID, dst.Limit, dst.ScheduleUUIDs)
-	return out, nil
-}
 
-func (c *CustomerQueryHandler) QuerySchedules(ctx context.Context, customerUUID string) ([]customer.CustomerSchedule, error) {
-	return nil, nil
+	date, err := time.Parse(c.cfg.Format, dst.Date)
+	if err != nil {
+		return customer.WorkoutDay{}, fmt.Errorf("parsing date value from document failed: %v", err)
+	}
+	out, err := customer.UnmarshalFromDatabase(dst.UUID, dst.TrainerWorkoutGroupUUID, dst.CustomerUUID, date)
+	if err != nil {
+		return customer.WorkoutDay{}, fmt.Errorf("unmarshal failed: %v", err)
+	}
+	return out, nil
 }

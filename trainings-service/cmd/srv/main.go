@@ -40,11 +40,11 @@ func execute() error {
 	API := rest.NewRouter()
 	API.Route("/api/v1/", func(r chi.Router) {
 		r.Route("/trainer", func(r chi.Router) {
-			r.Post("/schedule", HTTP.CreateSchedule)
-			r.Get("/schedule", HTTP.GetSchedule)
-			r.Get("/schedules", HTTP.GetSchedules)
-			r.Delete("/schedule", HTTP.DeleteSchedule)
-			r.Delete("/schedules", HTTP.DeleteSchedules)
+			r.Post("/group", HTTP.CreateTrainerWorkoutGroup)
+			r.Get("/groups", HTTP.GetTrainerWorkoutGroups)
+			r.Get("/group", HTTP.GetTrainerWorkoutGroup)
+			r.Delete("/group", HTTP.DeleteWorkoutGroup)
+			r.Delete("/groups", HTTP.DeleteWorkoutGroups)
 		})
 	})
 

@@ -1,6 +1,6 @@
 package mongodb
 
-type TrainerScheduleDocument struct {
+type TrainerWorkoutGroupDocument struct {
 	UUID          string   `bson:"_id"`
 	TrainerUUID   string   `bson:"trainer_uuid"`
 	Limit         int      `bson:"limit"`
@@ -10,9 +10,9 @@ type TrainerScheduleDocument struct {
 	Date          string   `bson:"date"`
 }
 
-type CustomerScheduleDocument struct {
-	UUID          string   `bson:"_id"`
-	CustomerUUID  string   `bson:"customer_uuid"`
-	Limit         int      `bson:"limit"`
-	ScheduleUUIDs []string `bson:"schedule_uuids"`
+type CustomerWorkoutDocument struct {
+	UUID                    string `bson:"_id"`
+	CustomerUUID            string `bson:"customer_uuid"`
+	TrainerWorkoutGroupUUID string `bson:"trainer_workout_group_uuid"`
+	Date                    string `bson:"date"`
 }

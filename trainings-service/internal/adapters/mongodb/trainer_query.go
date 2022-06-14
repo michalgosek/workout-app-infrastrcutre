@@ -31,33 +31,33 @@ func NewTrainerQueryHandler(cli *mongo.Client, cfg TrainerQueryHandlerConfig) *T
 	return &t
 }
 
-func (t *TrainerQueryHandler) QueryTrainerSchedule(ctx context.Context, UUID, trainerUUID string) (trainer.TrainerSchedule, error) {
+func (t *TrainerQueryHandler) QueryWorkoutGroup(ctx context.Context, UUID, trainerUUID string) (trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	f := bson.M{"_id": UUID, "trainer_uuid": trainerUUID}
 	res := coll.FindOne(ctx, f)
 	err := res.Err()
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return trainer.TrainerSchedule{}, nil
+		return trainer.WorkoutGroup{}, nil
 	}
 	if err != nil {
-		return trainer.TrainerSchedule{}, fmt.Errorf("find one failed: %v", err)
+		return trainer.WorkoutGroup{}, fmt.Errorf("find one failed: %v", err)
 	}
 
-	var dst TrainerScheduleDocument
-	err = res.Decode(&dst)
+	var doc TrainerWorkoutGroupDocument
+	err = res.Decode(&doc)
 	if err != nil {
-		return trainer.TrainerSchedule{}, fmt.Errorf("decoding failed: %v", err)
+		return trainer.WorkoutGroup{}, fmt.Errorf("decoding failed: %v", err)
 	}
-	date, err := time.Parse(t.cfg.Format, dst.Date)
+	date, err := time.Parse(t.cfg.Format, doc.Date)
 	if err != nil {
-		return trainer.TrainerSchedule{}, fmt.Errorf("parsing date value from document failed: %v", err)
+		return trainer.WorkoutGroup{}, fmt.Errorf("parsing date value from document failed: %v", err)
 	}
-	out := trainer.UnmarshalFromDatabase(dst.UUID, dst.TrainerUUID, dst.Name, dst.Desc, dst.CustomerUUIDs, date, dst.Limit)
+	out, err := trainer.UnmarshalFromDatabase(doc.UUID, doc.TrainerUUID, doc.Name, doc.Desc, doc.CustomerUUIDs, date, doc.Limit)
 	return out, nil
 }
 
-func (t *TrainerQueryHandler) QueryTrainerSchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
+func (t *TrainerQueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -66,19 +66,32 @@ func (t *TrainerQueryHandler) QueryTrainerSchedules(ctx context.Context, trainer
 		return nil, fmt.Errorf("find failed: %v", err)
 	}
 
-	var dst []TrainerScheduleDocument
-	err = cur.All(ctx, &dst)
+	var docs []TrainerWorkoutGroupDocument
+	err = cur.All(ctx, &docs)
 	if err != nil {
 		return nil, fmt.Errorf("decoding failed: %v", err)
 	}
-	var out []trainer.TrainerSchedule
-	for _, d := range dst {
-		date, err := time.Parse(t.cfg.Format, d.Date)
+
+	workouts, err := convertToDomainWorkoutGroups(t.cfg.Format, docs...)
+	if err != nil {
+		return nil, fmt.Errorf("converting docs to domain workout groups failed: %v", err)
+	}
+	return workouts, nil
+}
+
+func convertToDomainWorkoutGroups(format string, docs ...TrainerWorkoutGroupDocument) ([]trainer.WorkoutGroup, error) {
+	var workouts []trainer.WorkoutGroup
+
+	for _, d := range docs {
+		date, err := time.Parse(format, d.Date)
 		if err != nil {
 			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
 		}
-		s := trainer.UnmarshalFromDatabase(d.UUID, d.TrainerUUID, d.Name, d.Desc, d.CustomerUUIDs, date, d.Limit)
-		out = append(out, s)
+		workout, err := trainer.UnmarshalFromDatabase(d.UUID, d.TrainerUUID, d.Name, d.Desc, d.CustomerUUIDs, date, d.Limit)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
+		}
+		workouts = append(workouts, workout)
 	}
-	return out, nil
+	return workouts, nil
 }

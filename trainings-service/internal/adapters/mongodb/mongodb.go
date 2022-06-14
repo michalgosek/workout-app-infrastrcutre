@@ -36,23 +36,23 @@ type MongoDB struct {
 	queries  QueryHandlers
 }
 
-func (m *MongoDB) UpsertTrainerSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error {
-	return m.commands.trainer.UpsertSchedule(ctx, schedule)
+func (m *MongoDB) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
+	return m.commands.trainer.UpsertWorkoutGroup(ctx, schedule)
 }
-func (m *MongoDB) QueryTrainerSchedule(ctx context.Context, UUID, trainerUUID string) (trainer.TrainerSchedule, error) {
-	return m.queries.trainer.QueryTrainerSchedule(ctx, UUID, trainerUUID)
-}
-
-func (m *MongoDB) QueryTrainerSchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error) {
-	return m.queries.trainer.QueryTrainerSchedules(ctx, trainerUUID)
+func (m *MongoDB) QueryWorkoutGroup(ctx context.Context, UUID, trainerUUID string) (trainer.WorkoutGroup, error) {
+	return m.queries.trainer.QueryWorkoutGroup(ctx, UUID, trainerUUID)
 }
 
-func (m *MongoDB) CancelTrainerSchedules(ctx context.Context, trainerUUID string) error {
-	return m.commands.trainer.CancelSchedules(ctx, trainerUUID)
+func (m *MongoDB) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
+	return m.queries.trainer.QueryWorkoutGroups(ctx, trainerUUID)
 }
 
-func (m *MongoDB) CancelTrainerSchedule(ctx context.Context, UUID, trainerUUID string) error {
-	return m.commands.trainer.CancelSchedule(ctx, UUID, trainerUUID)
+func (m *MongoDB) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error {
+	return m.commands.trainer.DeleteWorkoutGroups(ctx, trainerUUID)
+}
+
+func (m *MongoDB) DeleteWorkoutGroup(ctx context.Context, UUID, trainerUUID string) error {
+	return m.commands.trainer.DeleteWorkoutGroup(ctx, UUID, trainerUUID)
 }
 
 func NewMongoDB(cfg Config) (*MongoDB, error) {
