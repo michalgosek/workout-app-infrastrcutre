@@ -13,19 +13,19 @@ func TestShouldAssignOneScheduleToCustomerWithSuccess_Unit(t *testing.T) {
 
 	// given:
 	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const workoutUUID = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const scheduleUUID = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
 	const scheduleLeft = 4
 	const scheduleAssgined = 1
 
 	SUT := GenerateTestcustomerSchedule(customerUUID)
 
 	// when:
-	err := SUT.AssignWorkout(workoutUUID)
+	err := SUT.AssignSchedule(scheduleUUID)
 
 	// then:
 	assert.Nil(err)
 	assert.Equal(SUT.Limit(), scheduleLeft)
-	assert.Equal(SUT.AssignedWorkouts(), scheduleAssgined)
+	assert.Equal(SUT.AssignedSchedules(), scheduleAssgined)
 }
 
 func TestShouldReturnErrorWhenAssignDuplicateScheduleToCustomer_Unit(t *testing.T) {
@@ -33,15 +33,15 @@ func TestShouldReturnErrorWhenAssignDuplicateScheduleToCustomer_Unit(t *testing.
 
 	// given:
 	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const workoutUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	const workoutUUID2 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const scheduleUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const scheduleUUID2 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
 	const schedulesLeft = 4
 
 	SUT := GenerateTestcustomerSchedule(customerUUID)
-	SUT.AssignWorkout(workoutUUID1)
+	SUT.AssignSchedule(scheduleUUID1)
 
 	// when:
-	err := SUT.AssignWorkout(workoutUUID2)
+	err := SUT.AssignSchedule(scheduleUUID2)
 
 	// then:
 	assert.Equal(err, customer.ErrScheduleDuplicate)
@@ -53,21 +53,21 @@ func TestShouldAssignTwoSchedulesToCustomerWithSuccess_Unit(t *testing.T) {
 
 	// given:
 	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const workoutUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
-	const workoutUUID2 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
+	const scheduleUUID1 = "15939cbe-1f08-4e4a-acf5-47b1bc2e4ad3"
+	const scheduleUUID2 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
 	const scheduleAssgined = 2
 	const scheduleLeft = 3
 
 	SUT := GenerateTestcustomerSchedule(customerUUID)
-	SUT.AssignWorkout(workoutUUID1)
+	SUT.AssignSchedule(scheduleUUID1)
 
 	// when:
-	err := SUT.AssignWorkout(workoutUUID2)
+	err := SUT.AssignSchedule(scheduleUUID2)
 
 	// then:
 	assert.Nil(err)
 	assert.Equal(SUT.Limit(), scheduleLeft)
-	assert.Equal(SUT.AssignedWorkouts(), scheduleAssgined)
+	assert.Equal(SUT.AssignedSchedules(), scheduleAssgined)
 }
 
 func TestShouldReturnErrorWhenAssignEmptyScheduleUUIDToCustomer_Unit(t *testing.T) {
@@ -78,7 +78,7 @@ func TestShouldReturnErrorWhenAssignEmptyScheduleUUIDToCustomer_Unit(t *testing.
 	SUT := GenerateTestcustomerSchedule(customerUUID)
 
 	// when:
-	err := SUT.AssignWorkout("")
+	err := SUT.AssignSchedule("")
 
 	// then:
 	assert.ErrorIs(err, customer.ErrEmptyScheduleUUID)
@@ -89,7 +89,7 @@ func TestShouldReturnErrorWhenCustomerScheduleLimitExeeced_Unit(t *testing.T) {
 
 	// given:
 	const customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-	const workoutUUID6 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
+	const scheduleUUID6 = "cb4bcff9-0e30-4d53-bcd7-87110e786b15"
 	const scheduleAssgined = 5
 	const scheduleLeft = 0
 
@@ -97,12 +97,12 @@ func TestShouldReturnErrorWhenCustomerScheduleLimitExeeced_Unit(t *testing.T) {
 	AssignScheduleUUIDsToCustomer(&SUT, 5)
 
 	// when:
-	err := SUT.AssignWorkout(workoutUUID6)
+	err := SUT.AssignSchedule(scheduleUUID6)
 
 	// then:
 	assert.ErrorIs(customer.ErrSchedulesLimitExceeded, err)
 	assert.Equal(scheduleLeft, SUT.Limit())
-	assert.Equal(scheduleAssgined, SUT.AssignedWorkouts())
+	assert.Equal(scheduleAssgined, SUT.AssignedSchedules())
 }
 
 func GenerateTestcustomerSchedule(customerUUID string) customer.CustomerSchedule {
@@ -115,6 +115,6 @@ func GenerateTestcustomerSchedule(customerUUID string) customer.CustomerSchedule
 
 func AssignScheduleUUIDsToCustomer(schedule *customer.CustomerSchedule, n int) {
 	for i := 0; i < n; i++ {
-		schedule.AssignWorkout(uuid.NewString())
+		schedule.AssignSchedule(uuid.NewString())
 	}
 }

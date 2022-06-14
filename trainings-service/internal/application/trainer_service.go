@@ -10,10 +10,10 @@ import (
 
 type TrainerRepository interface {
 	UpsertTrainerSchedule(ctx context.Context, schedule trainer.TrainerSchedule) error
-	QueryTrainerSchedule(ctx context.Context, UUID, trainerUUID string) (trainer.TrainerSchedule, error)
+	QueryTrainerSchedule(ctx context.Context, scheduleUUID, trainerUUID string) (trainer.TrainerSchedule, error)
 	QueryTrainerSchedules(ctx context.Context, trainerUUID string) ([]trainer.TrainerSchedule, error)
 	CancelTrainerSchedules(ctx context.Context, trainerUUID string) error
-	CancelTrainerSchedule(ctx context.Context, UUID, trainerUUID string) error
+	CancelTrainerSchedule(ctx context.Context, scheduleUUID, trainerUUID string) error
 }
 
 type TrainerService struct {

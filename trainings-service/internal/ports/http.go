@@ -156,7 +156,6 @@ func (h *HTTP) DeleteSchedule(w http.ResponseWriter, r *http.Request) {
 		rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing scheduleUUID query param", Code: http.StatusInternalServerError}, http.StatusBadRequest)
 		return
 	}
-
 	err := h.trainer.DeleteSchedule(r.Context(), scheduleUUID, trainerUUID)
 	if err != nil {
 		rest.SendJSONResponse(w, rest.JSONResponse{Message: "Bad request :(", Code: http.StatusBadRequest}, http.StatusBadRequest)

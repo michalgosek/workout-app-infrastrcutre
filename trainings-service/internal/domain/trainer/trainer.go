@@ -128,18 +128,6 @@ func (t *TrainerSchedule) AssignCustomer(UUID string) error {
 	return nil
 }
 
-func UnmarshalFromDatabase(UUID, trainerUUID, name, desc string, customerUUIDs []string, date time.Time, limit int) TrainerSchedule {
-	return TrainerSchedule{
-		uuid:          UUID,
-		trainerUUID:   trainerUUID,
-		limit:         limit,
-		customerUUIDs: customerUUIDs,
-		name:          name,
-		desc:          desc,
-		date:          date,
-	}
-}
-
 func NewSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedule, error) {
 	ok := date.IsZero()
 	if ok {
@@ -167,6 +155,18 @@ func NewSchedule(trainerUUID, name, desc string, date time.Time) (*TrainerSchedu
 		customerUUIDs: []string{},
 	}
 	return &w, nil
+}
+
+func UnmarshalFromDatabase(UUID, trainerUUID, name, desc string, customerUUIDs []string, date time.Time, limit int) TrainerSchedule {
+	return TrainerSchedule{
+		uuid:          UUID,
+		trainerUUID:   trainerUUID,
+		limit:         limit,
+		customerUUIDs: customerUUIDs,
+		name:          name,
+		desc:          desc,
+		date:          date,
+	}
 }
 
 var (
