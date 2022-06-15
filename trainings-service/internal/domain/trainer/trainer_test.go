@@ -1,16 +1,17 @@
 package trainer_test
 
 import (
+	"strings"
+	"testing"
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
-	"strings"
-	"testing"
-	"time"
 )
 
-func TestShouldReturnErrorWhenCustomerLimitExeeced_Unit(t *testing.T) {
+func TestShouldReturnErrorWhenCustomerLimitExceeded_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -19,8 +20,8 @@ func TestShouldReturnErrorWhenCustomerLimitExeeced_Unit(t *testing.T) {
 	const customersLeft = 0
 	const customersAssigned = 10
 
-	SUT := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
-	AssignCustomerToTrainerSchedule(&SUT, 10)
+	SUT := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	AssignCustomerToWorkoutGroup(&SUT, 10)
 
 	// when:
 	err := SUT.AssignCustomer(customerUUID)
@@ -29,12 +30,6 @@ func TestShouldReturnErrorWhenCustomerLimitExeeced_Unit(t *testing.T) {
 	assertions.ErrorIs(trainer.ErrCustomersScheduleLimitExceeded, err)
 	assertions.Equal(customersLeft, SUT.Limit())
 	assertions.Equal(customersAssigned, SUT.AssignedCustomers())
-}
-
-func AssignCustomerToTrainerSchedule(workoutGroup *trainer.WorkoutGroup, n int) {
-	for i := 0; i < n; i++ {
-		workoutGroup.AssignCustomer(uuid.NewString())
-	}
 }
 
 func TestShouldNotReturnErrorWhenScheduleNameIsUnderLimit_Unit(t *testing.T) {
@@ -283,4 +278,13 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsEqualToThreshold_Unit(t *testing
 	// then:
 	assertions.NotNil(workoutGroup)
 	assertions.Nil(err)
+}
+
+func AssignCustomerToWorkoutGroup(workoutGroup *trainer.WorkoutGroup, n int) {
+	for i := 0; i < n; i++ {
+		err := workoutGroup.AssignCustomer(uuid.NewString())
+		if err != nil {
+			panic(err)
+		}
+	}
 }

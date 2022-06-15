@@ -10,7 +10,7 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports/http"
 )
 
 func main() {
@@ -35,16 +35,16 @@ func execute() error {
 	}
 
 	service := application.NewTrainerService(repository)
-	HTTP := ports.NewHTTP(service, cfg.Format)
+	trainerWorkoutGroupsHTTP := http.NewTrainerWorkoutGroupsHTTP(service, cfg.Format)
 
 	API := rest.NewRouter()
 	API.Route("/api/v1/", func(r chi.Router) {
 		r.Route("/trainer", func(r chi.Router) {
-			r.Post("/group", HTTP.CreateTrainerWorkoutGroup)
-			r.Get("/groups", HTTP.GetTrainerWorkoutGroups)
-			r.Get("/group", HTTP.GetTrainerWorkoutGroup)
-			r.Delete("/group", HTTP.DeleteWorkoutGroup)
-			r.Delete("/groups", HTTP.DeleteWorkoutGroups)
+			r.Post("/group", trainerWorkoutGroupsHTTP.CreateTrainerWorkoutGroup)
+			r.Get("/groups", trainerWorkoutGroupsHTTP.GetTrainerWorkoutGroups)
+			r.Get("/group", trainerWorkoutGroupsHTTP.GetTrainerWorkoutGroup)
+			r.Delete("/group", trainerWorkoutGroupsHTTP.DeleteWorkoutGroup)
+			r.Delete("/groups", trainerWorkoutGroupsHTTP.DeleteWorkoutGroups)
 		})
 	})
 

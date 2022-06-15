@@ -3,16 +3,25 @@ package application
 import (
 	"context"
 	"fmt"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"time"
+
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
 
-type TrainerRepository interface {
-	UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error
-	QueryWorkoutGroup(ctx context.Context, UUID, trainerUUID string) (trainer.WorkoutGroup, error)
-	QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error)
+type TrainerCommands interface {
+	UpsertWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error
 	DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error
-	DeleteWorkoutGroup(ctx context.Context, UUID, trainerUUID string) error
+	DeleteWorkoutGroup(ctx context.Context, groupUUID string) error
+}
+
+type TrainerQueries interface {
+	QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error)
+	QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error)
+}
+
+type TrainerRepository interface {
+	TrainerCommands
+	TrainerQueries
 }
 
 type TrainerService struct {
@@ -26,65 +35,75 @@ type TrainerSchedule struct {
 	Date        time.Time
 }
 
-func (t *TrainerService) CreateWorkoutGroup(ctx context.Context, args TrainerSchedule) (string, error) {
-	schedule, err := trainer.NewWorkoutGroup(args.TrainerUUID, args.Name, args.Desc, args.Date)
-	if err != nil {
-		return "", fmt.Errorf("creating trainer workout group failed: %v", err)
-	}
-	err = t.repository.UpsertWorkoutGroup(ctx, *schedule)
-	if err != nil {
-		return "", fmt.Errorf("upsert schedule UUID: %s for trainer UUID: %s failed, reason: %w", schedule.UUID(), args.TrainerUUID, err)
-	}
-	return schedule.UUID(), nil
+type WorkoutRegistration struct {
+	CustomerUUID string
+	TrainerUUID  string
+	GroupUUID    string
 }
 
-func (t *TrainerService) GetWorkoutGroup(ctx context.Context, scheduleUUID, trainerUUID string) (trainer.WorkoutGroup, error) {
-	schedule, err := t.repository.QueryWorkoutGroup(ctx, scheduleUUID, trainerUUID)
+func (t *TrainerService) CreateWorkoutGroup(ctx context.Context, args TrainerSchedule) (string, error) {
+	group, err := trainer.NewWorkoutGroup(args.TrainerUUID, args.Name, args.Desc, args.Date)
+	if err != nil {
+		return "", fmt.Errorf("creating workout group failed - invalid arguments data: %v", err)
+	}
+	err = t.repository.UpsertWorkoutGroup(ctx, *group)
+	if err != nil {
+		return "", fmt.Errorf("upsert group UUID: %s for trainer UUID: %s failed, reason: %w", group.UUID(), args.TrainerUUID, err)
+	}
+	return group.UUID(), nil
+}
+
+func (t *TrainerService) GetWorkoutGroup(ctx context.Context, groupUUID, trainerUUID string) (trainer.WorkoutGroup, error) {
+	group, err := t.repository.QueryWorkoutGroup(ctx, groupUUID)
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("query workout group failed: %v", err)
 	}
-	if schedule.TrainerUUID() != trainerUUID {
+	if group.TrainerUUID() != trainerUUID {
 		return trainer.WorkoutGroup{}, nil
 	}
-	return schedule, nil
+	return group, nil
 }
 
-func (t *TrainerService) AssignCustomer(ctx context.Context, customerUUID, workoutGroupUUID, trainerUUID string) error {
-	schedule, err := t.repository.QueryWorkoutGroup(ctx, workoutGroupUUID, trainerUUID)
+func (t *TrainerService) AssignCustomer(ctx context.Context, args WorkoutRegistration) error {
+	group, err := t.repository.QueryWorkoutGroup(ctx, args.GroupUUID)
 	if err != nil {
 		return err
 	}
-	if schedule.TrainerUUID() != trainerUUID {
+	if group.TrainerUUID() != args.TrainerUUID {
 		return ErrScheduleNotOwner
 	}
-	err = schedule.AssignCustomer(customerUUID)
+	err = group.AssignCustomer(args.CustomerUUID)
 	if err != nil {
-		return fmt.Errorf("assign customer to the schedule failed: %w", err)
+		return fmt.Errorf("assign customer to the group failed: %w", err)
 	}
-	err = t.repository.UpsertWorkoutGroup(ctx, schedule)
+	err = t.repository.UpsertWorkoutGroup(ctx, group)
 	if err != nil {
-		return fmt.Errorf("upsert schedule failed: %w", ErrRepositoryFailure)
+		return fmt.Errorf("upsert group failed: %w", ErrRepositoryFailure)
 	}
 	return nil
 }
 
-func (t *TrainerService) GetWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
-	schedules, err := t.repository.QueryWorkoutGroups(ctx, trainerUUID)
-	if err != nil {
-		return nil, fmt.Errorf("get schedules failed: %v", err)
-	}
-	return schedules, nil
+func (t *TrainerService) UnregisterCustomer(ctx context.Context, args WorkoutRegistration) error {
+	return nil
 }
 
-func (t *TrainerService) DeleteWorkoutGroup(ctx context.Context, scheduleUUID, trainerUUID string) error {
-	schedule, err := t.repository.QueryWorkoutGroup(ctx, scheduleUUID, trainerUUID)
+func (t *TrainerService) GetWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
+	groups, err := t.repository.QueryWorkoutGroups(ctx, trainerUUID)
+	if err != nil {
+		return nil, fmt.Errorf("get groups failed: %v", err)
+	}
+	return groups, nil
+}
+
+func (t *TrainerService) DeleteWorkoutGroup(ctx context.Context, groupUUID, trainerUUID string) error {
+	group, err := t.repository.QueryWorkoutGroup(ctx, groupUUID)
 	if err != nil {
 		return fmt.Errorf("query trainer workout group failed: %v", err)
 	}
-	if schedule.TrainerUUID() != trainerUUID {
+	if group.TrainerUUID() != trainerUUID {
 		return ErrScheduleNotOwner
 	}
-	err = t.repository.DeleteWorkoutGroup(ctx, scheduleUUID, trainerUUID)
+	err = t.repository.DeleteWorkoutGroup(ctx, groupUUID)
 	if err != nil {
 		return fmt.Errorf("delete workout group failed: %v", err)
 	}
@@ -92,12 +111,9 @@ func (t *TrainerService) DeleteWorkoutGroup(ctx context.Context, scheduleUUID, t
 }
 
 func (t *TrainerService) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error {
-	if trainerUUID == "" {
-		return nil
-	}
 	err := t.repository.DeleteWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		return fmt.Errorf("cancel schedules failed: %v", err)
+		return fmt.Errorf("delete workout groups failed: %v", err)
 	}
 	return nil
 }

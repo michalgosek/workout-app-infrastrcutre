@@ -2,11 +2,11 @@ package mongodb_test
 
 import (
 	"context"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"testing"
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -102,14 +102,14 @@ func (m *TrainerTestSuite) TestShouldInsertTrainerWorkoutGroupWhenNotExist() {
 	// given:
 	const trainerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	ctx := context.Background()
-	workoutGroup := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
+	workoutGroup := testutil.NewTrainerWorkoutGroup(trainerUUID)
 	// when:
 	err := m.commandHandler.UpsertWorkoutGroup(ctx, workoutGroup)
 
 	// then:
 	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID(), workoutGroup.TrainerUUID())
+	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID())
 	assertions.Nil(err)
 	assertions.Equal(workoutGroup, actualSchedule)
 }
@@ -121,7 +121,7 @@ func (m *TrainerTestSuite) TestShouldUpdateNameOfExistingTrainerWorkoutGroup() {
 	// given:
 	const trainerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	ctx := context.Background()
-	workoutGroup := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
+	workoutGroup := testutil.NewTrainerWorkoutGroup(trainerUUID)
 
 	_ = m.commandHandler.UpsertWorkoutGroup(ctx, workoutGroup)
 	_ = workoutGroup.UpdateDesc("dummy2")
@@ -132,7 +132,7 @@ func (m *TrainerTestSuite) TestShouldUpdateNameOfExistingTrainerWorkoutGroup() {
 	// then:
 	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID(), workoutGroup.TrainerUUID())
+	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID())
 	assertions.Nil(err)
 	assertions.Equal(workoutGroup, actualSchedule)
 }
@@ -144,17 +144,17 @@ func (m *TrainerTestSuite) TestShouldDeleteTrainerWorkoutGroupWithSuccess() {
 	// given:
 	const trainerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	ctx := context.Background()
-	workoutGroup := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
+	workoutGroup := testutil.NewTrainerWorkoutGroup(trainerUUID)
 
 	_ = m.commandHandler.UpsertWorkoutGroup(ctx, workoutGroup)
 
 	// when:
-	err := m.commandHandler.DeleteWorkoutGroup(ctx, workoutGroup.UUID(), workoutGroup.TrainerUUID())
+	err := m.commandHandler.DeleteWorkoutGroup(ctx, workoutGroup.UUID())
 
 	// then:
 	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID(), workoutGroup.TrainerUUID())
+	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID())
 	assertions.Nil(err)
 	assertions.Empty(actualSchedule)
 }
@@ -166,19 +166,18 @@ func (m *TrainerTestSuite) TestShouldReturnEmptyWorkoutGroupWhenNoExistForSpecif
 	// given:
 	const trainerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	const fakeUUID = "13dd31ee-e131-44e1-8d95-dd6317af81b7"
-	const fakeTrainerUUID = "b71f6ed1-a982-47f2-a3fe-1d32cf3a132f"
 	ctx := context.Background()
-	workoutGroup := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
+	workoutGroup := testutil.NewTrainerWorkoutGroup(trainerUUID)
 
 	_ = m.commandHandler.UpsertWorkoutGroup(ctx, workoutGroup)
 
 	// when:
-	err := m.commandHandler.DeleteWorkoutGroup(ctx, fakeUUID, fakeTrainerUUID)
+	err := m.commandHandler.DeleteWorkoutGroup(ctx, fakeUUID)
 
 	// then:
 	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID(), workoutGroup.TrainerUUID())
+	actualSchedule, err := m.queryHandler.QueryWorkoutGroup(ctx, workoutGroup.UUID())
 	assertions.Nil(err)
 	assertions.Equal(workoutGroup, actualSchedule)
 }
@@ -190,8 +189,8 @@ func (m *TrainerTestSuite) TestShouldDeleteAllTrainerWorkoutGroupsWithSuccess() 
 	// given:
 	const trainerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	ctx := context.Background()
-	first := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
-	second := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
+	first := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	second := testutil.NewTrainerWorkoutGroup(trainerUUID)
 
 	_ = m.commandHandler.UpsertWorkoutGroup(ctx, first)
 	_ = m.commandHandler.UpsertWorkoutGroup(ctx, second)

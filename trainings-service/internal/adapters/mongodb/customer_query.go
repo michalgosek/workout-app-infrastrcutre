@@ -60,3 +60,7 @@ func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, cust
 	}
 	return out, nil
 }
+
+func (c *CustomerQueryHandler) QueryCustomerWorkoutDays(ctx context.Context, customerUUID string) ([]customer.WorkoutDay, error) {
+	return nil, nil
+}

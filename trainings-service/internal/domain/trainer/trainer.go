@@ -191,7 +191,6 @@ var (
 	ErrEmptyWorkoutName        = errors.New("empty workout name")
 	ErrEmptyWorkoutDesc        = errors.New("empty workout desc")
 	ErrEmptyCustomerUUID       = errors.New("empty customer UUID")
-	ErrEmptyCustomerUUIDs      = errors.New("empty customerUUIDs")
 	ErrEmptyWorkoutDate        = errors.New("empty workout date")
 )
 

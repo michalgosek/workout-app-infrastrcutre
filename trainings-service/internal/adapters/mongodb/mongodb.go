@@ -2,7 +2,9 @@ package mongodb
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
@@ -36,11 +38,11 @@ type MongoDB struct {
 	queries  QueryHandlers
 }
 
-func (m *MongoDB) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
-	return m.commands.trainer.UpsertWorkoutGroup(ctx, schedule)
+func (m *MongoDB) UpsertWorkoutGroup(ctx context.Context, workoutGroup trainer.WorkoutGroup) error {
+	return m.commands.trainer.UpsertWorkoutGroup(ctx, workoutGroup)
 }
-func (m *MongoDB) QueryWorkoutGroup(ctx context.Context, UUID, trainerUUID string) (trainer.WorkoutGroup, error) {
-	return m.queries.trainer.QueryWorkoutGroup(ctx, UUID, trainerUUID)
+func (m *MongoDB) QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
+	return m.queries.trainer.QueryWorkoutGroup(ctx, groupUUID)
 }
 
 func (m *MongoDB) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
@@ -51,8 +53,8 @@ func (m *MongoDB) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) e
 	return m.commands.trainer.DeleteWorkoutGroups(ctx, trainerUUID)
 }
 
-func (m *MongoDB) DeleteWorkoutGroup(ctx context.Context, UUID, trainerUUID string) error {
-	return m.commands.trainer.DeleteWorkoutGroup(ctx, UUID, trainerUUID)
+func (m *MongoDB) DeleteWorkoutGroup(ctx context.Context, groupUUID string) error {
+	return m.commands.trainer.DeleteWorkoutGroup(ctx, groupUUID)
 }
 
 func NewMongoDB(cfg Config) (*MongoDB, error) {
@@ -102,4 +104,26 @@ func newMongoClient(addr string, timeout time.Duration) (*mongo.Client, error) {
 		return nil, fmt.Errorf("mongo client ping req failed: %v", err)
 	}
 	return mongoCLI, nil
+}
+
+type document interface {
+	CustomerWorkoutDocument | TrainerWorkoutGroupDocument
+}
+
+type filter interface {
+	bson.M | bson.D
+}
+
+func updateOne[d document, f filter](ctx context.Context, coll *mongo.Collection, filter f, doc d) error {
+	if coll == nil {
+		return errors.New("empty collection")
+	}
+	update := bson.M{"$set": doc}
+	opts := options.Update()
+	opts.SetUpsert(true)
+	_, err := coll.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		return fmt.Errorf("update one failed: %v", err)
+	}
+	return nil
 }

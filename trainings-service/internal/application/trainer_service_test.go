@@ -3,19 +3,19 @@ package application_test
 import (
 	"context"
 	"errors"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"testing"
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
-func TestShouldCreateTrainerScheduleWithSuccess_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldCreateTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
@@ -34,12 +34,12 @@ func TestShouldCreateTrainerScheduleWithSuccess_Unit(t *testing.T) {
 	_, err := SUT.CreateWorkoutGroup(ctx, args)
 
 	// then:
-	assert.Nil(err)
+	assertions.Nil(err)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldReturnErrorWhenTrainerSchedulesRepositoryFailure_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldNotCreateTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
@@ -59,64 +59,85 @@ func TestShouldReturnErrorWhenTrainerSchedulesRepositoryFailure_Unit(t *testing.
 	_, err := SUT.CreateWorkoutGroup(ctx, args)
 
 	// then:
-	assert.ErrorContains(err, err.Error())
+	assertions.ErrorContains(err, err.Error())
 	repository.AssertExpectations(t)
 }
 
-func TestShouldReturnTrainerScheduleWithSuccess_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldGetRequestedTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
 	ctx := context.Background()
 
 	repository := new(mocks.TrainerRepository)
-	expectedSchedule := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
-	repository.EXPECT().QueryWorkoutGroup(ctx, expectedSchedule.UUID(), expectedSchedule.TrainerUUID()).Return(expectedSchedule, nil)
+	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	actualSchedule, err := SUT.GetWorkoutGroup(ctx, expectedSchedule.UUID(), trainerUUID)
+	actualSchedule, err := SUT.GetWorkoutGroup(ctx, workout.UUID(), trainerUUID)
 
 	// then:
-	assert.Nil(err)
-	assert.Equal(expectedSchedule, actualSchedule)
+	assertions.Nil(err)
+	assertions.Equal(workout, actualSchedule)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldReturnEmptyScheduleWhenNotBelongingToTrainer_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldGetEmptyTrainerWorkoutGroupWhenRequestedGroupNotExist_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
-	const providedScheduleUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	const workoutUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 
 	ctx := context.Background()
-	emptySchedule := trainer.WorkoutGroup{}
+	workout := trainer.WorkoutGroup{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	actualSchedule, err := SUT.GetWorkoutGroup(ctx, providedScheduleUUID, trainerUUID)
+	actualSchedule, err := SUT.GetWorkoutGroup(ctx, workoutUUID, trainerUUID)
 
 	// then:
-	assert.Nil(err)
-	assert.Empty(actualSchedule)
+	assertions.Nil(err)
+	assertions.Empty(actualSchedule)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldReturnEmptyTrainerSchedulesWhenNotExistWithSuccess_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldNotGetTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	const groupUUID = "ef547a4e-f0ef-4282-a308-e985cbac2a01"
+	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
+
+	expectedError := errors.New("repository failure")
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QueryWorkoutGroup(ctx, groupUUID).Return(trainer.WorkoutGroup{}, expectedError)
+	SUT := application.NewTrainerService(repository)
+
+	// when:
+	_, err := SUT.GetWorkoutGroup(ctx, groupUUID, trainerUUID)
+
+	// then:
+	assertions.ErrorContains(err, err.Error())
+	repository.AssertExpectations(t)
+}
+
+func TestShouldGetEmptyTrainerWorkoutGroupsWhenNonOfGroupsDoesNotExist_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	ctx := context.Background()
 
 	repository := new(mocks.TrainerRepository)
-	expectedSchedules := []trainer.WorkoutGroup{}
-	repository.EXPECT().QueryWorkoutGroups(ctx, trainerUUID).Return(expectedSchedules, nil)
+	var workouts []trainer.WorkoutGroup
+	repository.EXPECT().QueryWorkoutGroups(ctx, trainerUUID).Return(workouts, nil)
 
 	SUT := application.NewTrainerService(repository)
 
@@ -124,174 +145,186 @@ func TestShouldReturnEmptyTrainerSchedulesWhenNotExistWithSuccess_Unit(t *testin
 	actualSchedule, err := SUT.GetWorkoutGroups(ctx, trainerUUID)
 
 	// then:
-	assert.Nil(err)
-	assert.Empty(expectedSchedules, actualSchedule)
+	assertions.Nil(err)
+	assertions.Empty(workouts, actualSchedule)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldReturnAllTrainerSchedulesWithSuccess_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldGetAllTrainerWorkoutGroupsWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	ctx := context.Background()
 
-	first := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
-	second := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
-	expectedSchedules := []trainer.WorkoutGroup{first, second}
+	first := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	second := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	workouts := []trainer.WorkoutGroup{first, second}
 
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryWorkoutGroups(ctx, trainerUUID).Return(expectedSchedules, nil)
+	repository.EXPECT().QueryWorkoutGroups(ctx, trainerUUID).Return(workouts, nil)
 	SUT := application.NewTrainerService(repository)
 
 	// when:
 	actualSchedule, err := SUT.GetWorkoutGroups(ctx, trainerUUID)
 
 	// then:
-	assert.Nil(err)
-	assert.Equal(expectedSchedules, actualSchedule)
+	assertions.Nil(err)
+	assertions.Equal(workouts, actualSchedule)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldNotAssignCustomerToScheduleNotBelongingToTrainer_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldNotAssignCustomerToWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	const trainerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
-	const providedScheduleUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	const workoutUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 
 	ctx := context.Background()
-	emptySchedule := trainer.WorkoutGroup{}
+	workout := trainer.WorkoutGroup{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.AssignCustomer(ctx, customerUUID, providedScheduleUUID, trainerUUID)
+	err := SUT.AssignCustomer(ctx, application.WorkoutRegistration{
+		CustomerUUID: customerUUID,
+		TrainerUUID:  trainerUUID,
+		GroupUUID:    workoutUUID,
+	})
 
 	// then:
-	assert.ErrorIs(err, application.ErrScheduleNotOwner)
+	assertions.ErrorIs(err, application.ErrScheduleNotOwner)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldNotAssignCustomerToSpecifiedScheduleWhenRepositoryFailure_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldNotAssignCustomerToSpecifiedWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	const trainerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
 
 	ctx := context.Background()
-	schedule := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
-	scheduledWithCustomer := schedule
-	scheduledWithCustomer.AssignCustomer(customerUUID)
+	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	workoutdWithCustomer := workout
+	workoutdWithCustomer.AssignCustomer(customerUUID)
 
 	repository := new(mocks.TrainerRepository)
 	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QueryWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().UpsertWorkoutGroup(ctx, scheduledWithCustomer).Return(expectedErr)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().UpsertWorkoutGroup(ctx, workoutdWithCustomer).Return(expectedErr)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.AssignCustomer(ctx, customerUUID, schedule.UUID(), trainerUUID)
+	err := SUT.AssignCustomer(ctx, application.WorkoutRegistration{
+		CustomerUUID: customerUUID,
+		TrainerUUID:  trainerUUID,
+		GroupUUID:    workout.UUID(),
+	})
 
 	// then:
-	assert.ErrorIs(err, application.ErrRepositoryFailure)
+	assertions.ErrorIs(err, application.ErrRepositoryFailure)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldAssignCustomerToSpecifiedSchedule_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldAssignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	const trainerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
 
 	ctx := context.Background()
-	schedule := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
-	scheduledWithCustomer := schedule
-	scheduledWithCustomer.AssignCustomer(customerUUID)
+	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	workoutWithCustomer := workout
+	_ = workoutWithCustomer.AssignCustomer(customerUUID)
 
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().UpsertWorkoutGroup(ctx, scheduledWithCustomer).Return(nil)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().UpsertWorkoutGroup(ctx, workoutWithCustomer).Return(nil)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.AssignCustomer(ctx, customerUUID, schedule.UUID(), trainerUUID)
+	err := SUT.AssignCustomer(ctx, application.WorkoutRegistration{
+		CustomerUUID: customerUUID,
+		TrainerUUID:  trainerUUID,
+		GroupUUID:    workout.UUID(),
+	})
 
 	// then:
-	assert.Nil(err)
+	assertions.Nil(err)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldNotDeleteScheduleNotOwnedByTrainer_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldNotDeleteWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
-	const providedScheduleUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	const workoutUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 
-	emptySchedule := trainer.WorkoutGroup{}
+	workout := trainer.WorkoutGroup{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, providedScheduleUUID, trainerUUID).Return(emptySchedule, nil)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.DeleteWorkoutGroup(ctx, providedScheduleUUID, trainerUUID)
+	err := SUT.DeleteWorkoutGroup(ctx, workoutUUID, trainerUUID)
 
 	// then:
-	assert.Equal(application.ErrScheduleNotOwner, err)
+	assertions.Equal(application.ErrScheduleNotOwner, err)
 	repository.AssertExpectations(t)
 }
 
-func TestShouldNotDeleteScheduleOwnedByTrainerWhenRepositoryFailure_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldNotDeleteTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 
-	schedule := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
+	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
 	repository := new(mocks.TrainerRepository)
 	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QueryWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().DeleteWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(expectedErr)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().DeleteWorkoutGroup(ctx, workout.UUID()).Return(expectedErr)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.DeleteWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID())
+	err := SUT.DeleteWorkoutGroup(ctx, workout.UUID(), workout.TrainerUUID())
 
 	// then:
-	assert.Contains(err.Error(), expectedErr.Error())
+	assertions.Contains(err.Error(), expectedErr.Error())
 	repository.AssertExpectations(t)
 }
 
-func TestShouldDeleteScheduleOwnedByTrainer_Unit(t *testing.T) {
-	assert := assert.New(t)
+func TestShouldDeleteWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 
-	schedule := testutil.GenerateTrainerWorkoutGroup(trainerUUID)
+	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(schedule, nil)
-	repository.EXPECT().DeleteWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID()).Return(nil)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().DeleteWorkoutGroup(ctx, workout.UUID()).Return(nil)
 
 	SUT := application.NewTrainerService(repository)
 
 	// when:
-	err := SUT.DeleteWorkoutGroup(ctx, schedule.UUID(), schedule.TrainerUUID())
+	err := SUT.DeleteWorkoutGroup(ctx, workout.UUID(), workout.TrainerUUID())
 
 	// then:
-	assert.Nil(err)
+	assertions.Nil(err)
 	repository.AssertExpectations(t)
 }

@@ -2,11 +2,11 @@ package mongodb_test
 
 import (
 	"context"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"testing"
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -36,10 +36,10 @@ func TestCustomerTestSuite_Integration(t *testing.T) {
 	})
 }
 
-func (m *CustomerTestSuite) BeforeTest(string, string) {
-	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.ConnectionTimeout)
+func (c *CustomerTestSuite) BeforeTest(string, string) {
+	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.ConnectionTimeout)
 	defer cancel()
-	mongoCLI, err := mongo.NewClient(options.Client().ApplyURI(m.cfg.Addr))
+	mongoCLI, err := mongo.NewClient(options.Client().ApplyURI(c.cfg.Addr))
 	if err != nil {
 		panic(err)
 	}
@@ -51,88 +51,88 @@ func (m *CustomerTestSuite) BeforeTest(string, string) {
 	if err != nil {
 		panic(err)
 	}
-	m.mongoCLI = mongoCLI
-	m.commandHandler = mongodb.NewCustomerCommandHandler(mongoCLI, mongodb.CustomerCommandHandlerConfig{
-		Collection:     m.cfg.CustomerCollection,
-		Database:       m.cfg.Database,
-		Format:         m.cfg.Format,
-		CommandTimeout: m.cfg.CommandTimeout,
+	c.mongoCLI = mongoCLI
+	c.commandHandler = mongodb.NewCustomerCommandHandler(mongoCLI, mongodb.CustomerCommandHandlerConfig{
+		Collection:     c.cfg.CustomerCollection,
+		Database:       c.cfg.Database,
+		Format:         c.cfg.Format,
+		CommandTimeout: c.cfg.CommandTimeout,
 	})
-	err = m.commandHandler.DropCollection(ctx)
+	err = c.commandHandler.DropCollection(ctx)
 	if err != nil {
 		panic(err)
 	}
 
-	m.queryHandler = mongodb.NewCustomerQueryHandler(mongoCLI, mongodb.CustomerQueryHandlerConfig{
-		Collection:   m.cfg.CustomerCollection,
-		Database:     m.cfg.Database,
-		Format:       m.cfg.Format,
-		QueryTimeout: m.cfg.QueryTimeout,
+	c.queryHandler = mongodb.NewCustomerQueryHandler(mongoCLI, mongodb.CustomerQueryHandlerConfig{
+		Collection:   c.cfg.CustomerCollection,
+		Database:     c.cfg.Database,
+		Format:       c.cfg.Format,
+		QueryTimeout: c.cfg.QueryTimeout,
 	})
 }
 
-func (m *CustomerTestSuite) AfterTest(string, string) {
+func (c *CustomerTestSuite) AfterTest(string, string) {
 	ctx := context.Background()
-	err := m.commandHandler.DropCollection(ctx)
+	err := c.commandHandler.DropCollection(ctx)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (m *CustomerTestSuite) TearDownSuite() {
-	t := m.T()
+func (c *CustomerTestSuite) TearDownSuite() {
+	t := c.T()
 	ctx := context.Background()
-	ctx, cancel := context.WithTimeout(ctx, m.cfg.CommandTimeout)
+	ctx, cancel := context.WithTimeout(ctx, c.cfg.CommandTimeout)
 	defer cancel()
-	db := m.mongoCLI.Database(m.cfg.Database)
+	db := c.mongoCLI.Database(c.cfg.Database)
 	err := db.Drop(ctx)
 	if err != nil {
 		t.Logf("mongoCLI cli dropping db failed: %v", err)
 	}
-	err = m.mongoCLI.Disconnect(ctx)
+	err = c.mongoCLI.Disconnect(ctx)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (m *CustomerTestSuite) TestShouldUpsertCustomerWorkoutDayWhenNotExistWithSuccess() {
-	t := m.T()
+func (c *CustomerTestSuite) TestShouldUpsertCustomerWorkoutDayWhenNotExistWithSuccess() {
+	t := c.T()
 	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	ctx := context.Background()
-	workout := testutil.GenerateNewWorkoutDay(customerUUID)
+	workout := testutil.NewWorkoutDay(customerUUID)
 
 	// when:
-	err := m.commandHandler.UpsertCustomerWorkoutDay(ctx, workout)
+	err := c.commandHandler.UpsertCustomerWorkoutDay(ctx, workout)
 
 	// then:
 	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
 	assertions.Nil(err)
-	assertions.Equal(workout, actualSchedule)
+	assertions.Equal(workout, actualWorkoutDay)
 }
 
-func (m *CustomerTestSuite) TestShouldDeleteCustomerWorkoutDayWithSuccess() {
-	t := m.T()
+func (c *CustomerTestSuite) TestShouldDeleteCustomerWorkoutDayWithSuccess() {
+	t := c.T()
 	assertions := assert.New(t)
 
 	// given:
 	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
 	ctx := context.Background()
-	workout := testutil.GenerateNewWorkoutDay(customerUUID)
+	workout := testutil.NewWorkoutDay(customerUUID)
 
-	_ = m.commandHandler.UpsertCustomerWorkoutDay(ctx, workout)
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, workout)
 
 	// when:
-	err := m.commandHandler.DeleteCustomerWorkoutDay(ctx, customerUUID, workout.UUID())
+	err := c.commandHandler.DeleteCustomerWorkoutDay(ctx, customerUUID, workout.UUID())
 
 	// then:
 	assertions.Nil(err)
 
-	actualSchedule, err := m.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
 	assertions.Nil(err)
-	assertions.Empty(actualSchedule)
+	assertions.Empty(actualWorkoutDay)
 }

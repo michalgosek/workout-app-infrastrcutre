@@ -8,7 +8,6 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type CustomerCommandHandlerConfig struct {
@@ -39,24 +38,20 @@ func (c *CustomerCommandHandler) DropCollection(ctx context.Context) error {
 	return coll.Drop(ctx)
 }
 
-func (c *CustomerCommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, schedule customer.WorkoutDay) error {
+func (c *CustomerCommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error {
 	doc := CustomerWorkoutDocument{
-		UUID:                    schedule.UUID(),
-		CustomerUUID:            schedule.CustomerUUID(),
-		TrainerWorkoutGroupUUID: schedule.TrainerWorkoutGroupUUID(),
-		Date:                    schedule.Date().Format(c.cfg.Format),
+		UUID:                    workout.UUID(),
+		CustomerUUID:            workout.CustomerUUID(),
+		TrainerWorkoutGroupUUID: workout.TrainerWorkoutGroupUUID(),
+		Date:                    workout.Date().Format(c.cfg.Format),
 	}
-	filter := bson.M{"_id": schedule.UUID()}
+	filter := bson.M{"_id": workout.UUID()}
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
-	update := bson.M{
-		"$set": doc,
-	}
+
 	ctx, cancel := context.WithTimeout(ctx, c.cfg.CommandTimeout)
 	defer cancel()
-	opts := options.Update()
-	opts.SetUpsert(true)
-	_, err := coll.UpdateOne(ctx, filter, update, opts)
+	err := updateOne(ctx, coll, filter, doc)
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}

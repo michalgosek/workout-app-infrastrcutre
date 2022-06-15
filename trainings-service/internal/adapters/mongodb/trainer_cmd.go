@@ -8,7 +8,6 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type TrainerCommandHandlerConfig struct {
@@ -52,15 +51,10 @@ func (m *TrainerCommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule
 	filter := bson.M{"_id": schedule.UUID(), "trainer_uuid": schedule.TrainerUUID()}
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
-	update := bson.M{
-		"$set": doc,
-	}
 
 	ctx, cancel := context.WithTimeout(ctx, m.cfg.CommandTimeout)
 	defer cancel()
-	opts := options.Update()
-	opts.SetUpsert(true)
-	_, err := coll.UpdateOne(ctx, filter, update, opts)
+	err := updateOne(ctx, coll, filter, doc)
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}
@@ -78,10 +72,10 @@ func (m *TrainerCommandHandler) DeleteWorkoutGroups(ctx context.Context, trainer
 	return nil
 }
 
-func (m *TrainerCommandHandler) DeleteWorkoutGroup(ctx context.Context, UUID, trainerUUID string) error {
+func (m *TrainerCommandHandler) DeleteWorkoutGroup(ctx context.Context, groupUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
-	f := bson.M{"_id": UUID, "trainer_uuid": trainerUUID}
+	f := bson.M{"_id": groupUUID}
 	_, err := coll.DeleteOne(ctx, f)
 	if err != nil {
 		return fmt.Errorf("delete one failed: %v", err)

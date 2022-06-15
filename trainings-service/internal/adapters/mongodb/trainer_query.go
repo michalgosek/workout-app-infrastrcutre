@@ -31,10 +31,10 @@ func NewTrainerQueryHandler(cli *mongo.Client, cfg TrainerQueryHandlerConfig) *T
 	return &t
 }
 
-func (t *TrainerQueryHandler) QueryWorkoutGroup(ctx context.Context, UUID, trainerUUID string) (trainer.WorkoutGroup, error) {
+func (t *TrainerQueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
-	f := bson.M{"_id": UUID, "trainer_uuid": trainerUUID}
+	f := bson.M{"_id": groupUUID}
 	res := coll.FindOne(ctx, f)
 	err := res.Err()
 	if errors.Is(err, mongo.ErrNoDocuments) {

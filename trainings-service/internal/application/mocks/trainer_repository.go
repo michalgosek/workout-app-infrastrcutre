@@ -22,13 +22,13 @@ func (_m *TrainerRepository) EXPECT() *TrainerRepository_Expecter {
 	return &TrainerRepository_Expecter{mock: &_m.Mock}
 }
 
-// DeleteWorkoutGroup provides a mock function with given fields: ctx, UUID, trainerUUID
-func (_m *TrainerRepository) DeleteWorkoutGroup(ctx context.Context, UUID string, trainerUUID string) error {
-	ret := _m.Called(ctx, UUID, trainerUUID)
+// DeleteWorkoutGroup provides a mock function with given fields: ctx, groupUUID
+func (_m *TrainerRepository) DeleteWorkoutGroup(ctx context.Context, groupUUID string) error {
+	ret := _m.Called(ctx, groupUUID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) error); ok {
-		r0 = rf(ctx, UUID, trainerUUID)
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, groupUUID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -43,15 +43,14 @@ type TrainerRepository_DeleteWorkoutGroup_Call struct {
 
 // DeleteWorkoutGroup is a helper method to define mock.On call
 //  - ctx context.Context
-//  - UUID string
-//  - trainerUUID string
-func (_e *TrainerRepository_Expecter) DeleteWorkoutGroup(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_DeleteWorkoutGroup_Call {
-	return &TrainerRepository_DeleteWorkoutGroup_Call{Call: _e.mock.On("DeleteWorkoutGroup", ctx, UUID, trainerUUID)}
+//  - groupUUID string
+func (_e *TrainerRepository_Expecter) DeleteWorkoutGroup(ctx interface{}, groupUUID interface{}) *TrainerRepository_DeleteWorkoutGroup_Call {
+	return &TrainerRepository_DeleteWorkoutGroup_Call{Call: _e.mock.On("DeleteWorkoutGroup", ctx, groupUUID)}
 }
 
-func (_c *TrainerRepository_DeleteWorkoutGroup_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_DeleteWorkoutGroup_Call {
+func (_c *TrainerRepository_DeleteWorkoutGroup_Call) Run(run func(ctx context.Context, groupUUID string)) *TrainerRepository_DeleteWorkoutGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -99,20 +98,20 @@ func (_c *TrainerRepository_DeleteWorkoutGroups_Call) Return(_a0 error) *Trainer
 	return _c
 }
 
-// QueryWorkoutGroup provides a mock function with given fields: ctx, UUID, trainerUUID
-func (_m *TrainerRepository) QueryWorkoutGroup(ctx context.Context, UUID string, trainerUUID string) (trainer.WorkoutGroup, error) {
-	ret := _m.Called(ctx, UUID, trainerUUID)
+// QueryWorkoutGroup provides a mock function with given fields: ctx, groupUUID
+func (_m *TrainerRepository) QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
+	ret := _m.Called(ctx, groupUUID)
 
 	var r0 trainer.WorkoutGroup
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) trainer.WorkoutGroup); ok {
-		r0 = rf(ctx, UUID, trainerUUID)
+	if rf, ok := ret.Get(0).(func(context.Context, string) trainer.WorkoutGroup); ok {
+		r0 = rf(ctx, groupUUID)
 	} else {
 		r0 = ret.Get(0).(trainer.WorkoutGroup)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, UUID, trainerUUID)
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, groupUUID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -127,15 +126,14 @@ type TrainerRepository_QueryWorkoutGroup_Call struct {
 
 // QueryWorkoutGroup is a helper method to define mock.On call
 //  - ctx context.Context
-//  - UUID string
-//  - trainerUUID string
-func (_e *TrainerRepository_Expecter) QueryWorkoutGroup(ctx interface{}, UUID interface{}, trainerUUID interface{}) *TrainerRepository_QueryWorkoutGroup_Call {
-	return &TrainerRepository_QueryWorkoutGroup_Call{Call: _e.mock.On("QueryWorkoutGroup", ctx, UUID, trainerUUID)}
+//  - groupUUID string
+func (_e *TrainerRepository_Expecter) QueryWorkoutGroup(ctx interface{}, groupUUID interface{}) *TrainerRepository_QueryWorkoutGroup_Call {
+	return &TrainerRepository_QueryWorkoutGroup_Call{Call: _e.mock.On("QueryWorkoutGroup", ctx, groupUUID)}
 }
 
-func (_c *TrainerRepository_QueryWorkoutGroup_Call) Run(run func(ctx context.Context, UUID string, trainerUUID string)) *TrainerRepository_QueryWorkoutGroup_Call {
+func (_c *TrainerRepository_QueryWorkoutGroup_Call) Run(run func(ctx context.Context, groupUUID string)) *TrainerRepository_QueryWorkoutGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(string), args[2].(string))
+		run(args[0].(context.Context), args[1].(string))
 	})
 	return _c
 }
@@ -192,13 +190,13 @@ func (_c *TrainerRepository_QueryWorkoutGroups_Call) Return(_a0 []trainer.Workou
 	return _c
 }
 
-// UpsertWorkoutGroup provides a mock function with given fields: ctx, schedule
-func (_m *TrainerRepository) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
-	ret := _m.Called(ctx, schedule)
+// UpsertWorkoutGroup provides a mock function with given fields: ctx, group
+func (_m *TrainerRepository) UpsertWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error {
+	ret := _m.Called(ctx, group)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, trainer.WorkoutGroup) error); ok {
-		r0 = rf(ctx, schedule)
+		r0 = rf(ctx, group)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -213,12 +211,12 @@ type TrainerRepository_UpsertWorkoutGroup_Call struct {
 
 // UpsertWorkoutGroup is a helper method to define mock.On call
 //  - ctx context.Context
-//  - schedule trainer.WorkoutGroup
-func (_e *TrainerRepository_Expecter) UpsertWorkoutGroup(ctx interface{}, schedule interface{}) *TrainerRepository_UpsertWorkoutGroup_Call {
-	return &TrainerRepository_UpsertWorkoutGroup_Call{Call: _e.mock.On("UpsertWorkoutGroup", ctx, schedule)}
+//  - group trainer.WorkoutGroup
+func (_e *TrainerRepository_Expecter) UpsertWorkoutGroup(ctx interface{}, group interface{}) *TrainerRepository_UpsertWorkoutGroup_Call {
+	return &TrainerRepository_UpsertWorkoutGroup_Call{Call: _e.mock.On("UpsertWorkoutGroup", ctx, group)}
 }
 
-func (_c *TrainerRepository_UpsertWorkoutGroup_Call) Run(run func(ctx context.Context, schedule trainer.WorkoutGroup)) *TrainerRepository_UpsertWorkoutGroup_Call {
+func (_c *TrainerRepository_UpsertWorkoutGroup_Call) Run(run func(ctx context.Context, group trainer.WorkoutGroup)) *TrainerRepository_UpsertWorkoutGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(trainer.WorkoutGroup))
 	})
