@@ -45,13 +45,14 @@ func (c *CustomerCommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, w
 		TrainerWorkoutGroupUUID: workout.TrainerWorkoutGroupUUID(),
 		Date:                    workout.Date().Format(c.cfg.Format),
 	}
-	filter := bson.M{"_id": workout.UUID()}
+
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
-
 	ctx, cancel := context.WithTimeout(ctx, c.cfg.CommandTimeout)
 	defer cancel()
-	err := updateOne(ctx, coll, filter, doc)
+
+	f := bson.M{"_id": workout.UUID()}
+	err := updateOne(ctx, coll, f, doc)
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}
@@ -65,6 +66,17 @@ func (c *CustomerCommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, c
 	_, err := coll.DeleteOne(ctx, f)
 	if err != nil {
 		return fmt.Errorf("delete one failed: %v", err)
+	}
+	return nil
+}
+
+func (c *CustomerCommandHandler) DeleteCustomerWorkoutDays(ctx context.Context, customerUUID string) error {
+	db := c.cli.Database(c.cfg.Database)
+	coll := db.Collection(c.cfg.Collection)
+	f := bson.M{"customer_uuid": customerUUID}
+	_, err := coll.DeleteMany(ctx, f)
+	if err != nil {
+		return fmt.Errorf("delete many failed: %v", err)
 	}
 	return nil
 }

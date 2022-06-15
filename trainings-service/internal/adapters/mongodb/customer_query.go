@@ -62,5 +62,32 @@ func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, cust
 }
 
 func (c *CustomerQueryHandler) QueryCustomerWorkoutDays(ctx context.Context, customerUUID string) ([]customer.WorkoutDay, error) {
-	return nil, nil
+	db := c.cli.Database(c.cfg.Database)
+	coll := db.Collection(c.cfg.Collection)
+	f := bson.M{"customer_uuid": customerUUID}
+
+	cursor, err := coll.Find(ctx, f)
+	if err != nil {
+		return nil, fmt.Errorf("find failed: %v", err)
+	}
+
+	var docs []CustomerWorkoutDocument
+	err = cursor.All(ctx, &docs)
+	if err != nil {
+		return nil, fmt.Errorf("decode failed: %v", err)
+	}
+
+	var days []customer.WorkoutDay
+	for _, d := range docs {
+		date, err := time.Parse(c.cfg.Format, d.Date)
+		if err != nil {
+			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
+		}
+		day, err := customer.UnmarshalFromDatabase(d.UUID, d.TrainerWorkoutGroupUUID, d.CustomerUUID, date)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
+		}
+		days = append(days, day)
+	}
+	return days, nil
 }

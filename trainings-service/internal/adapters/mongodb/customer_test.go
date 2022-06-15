@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -95,7 +96,80 @@ func (c *CustomerTestSuite) TearDownSuite() {
 	}
 }
 
-func (c *CustomerTestSuite) TestShouldUpsertCustomerWorkoutDayWhenNotExistWithSuccess() {
+func (c *CustomerTestSuite) TestShouldReturnEmptyWorkoutDayForQuery() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	const trainerUUID = "e1981243-0ac7-4dee-99c6-a8b7a0b13f95"
+	ctx := context.Background()
+
+	// when:
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, customerUUID, trainerUUID)
+
+	// then:
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDay)
+}
+
+func (c *CustomerTestSuite) TestShouldReturnWorkoutDayForQuery() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	expectedWorkoutDay := testutil.NewWorkoutDay(customerUUID)
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, expectedWorkoutDay)
+
+	// when:
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, customerUUID, expectedWorkoutDay.TrainerWorkoutGroupUUID())
+
+	// then:
+	assertions.Nil(err)
+	assertions.Equal(expectedWorkoutDay, actualWorkoutDay)
+}
+
+func (c *CustomerTestSuite) TestShouldReturnEmptyWorkoutDaysForQuery() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	ctx := context.Background()
+
+	// when:
+	actualWorkoutDays, err := c.queryHandler.QueryCustomerWorkoutDays(ctx, customerUUID)
+
+	// then:
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDays)
+}
+
+func (c *CustomerTestSuite) TestShouldReturnWorkoutDaysForQuery() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	ctx := context.Background()
+	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	first := testutil.NewWorkoutDay(customerUUID)
+	second := testutil.NewWorkoutDay(customerUUID)
+	expectedWorkouts := []customer.WorkoutDay{first, second}
+
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, first)
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, second)
+
+	// when:
+	days, err := c.queryHandler.QueryCustomerWorkoutDays(ctx, customerUUID)
+
+	// then:
+	assertions.Nil(err)
+	assertions.Equal(expectedWorkouts, days)
+}
+
+func (c *CustomerTestSuite) TestShouldUpsertNewWorkoutDayWithSuccess() {
 	t := c.T()
 	assertions := assert.New(t)
 
@@ -115,7 +189,27 @@ func (c *CustomerTestSuite) TestShouldUpsertCustomerWorkoutDayWhenNotExistWithSu
 	assertions.Equal(workout, actualWorkoutDay)
 }
 
-func (c *CustomerTestSuite) TestShouldDeleteCustomerWorkoutDayWithSuccess() {
+func (c *CustomerTestSuite) TestShouldNotReturnErrorWhenDeleteWorkoutDayNonExist() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	ctx := context.Background()
+	workout := testutil.NewWorkoutDay(customerUUID)
+
+	// when:
+	err := c.commandHandler.DeleteCustomerWorkoutDay(ctx, customerUUID, workout.UUID())
+
+	// then:
+	assertions.Nil(err)
+
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDay)
+}
+
+func (c *CustomerTestSuite) TestShouldDeleteWorkoutDayWithSuccess() {
 	t := c.T()
 	assertions := assert.New(t)
 
@@ -135,4 +229,46 @@ func (c *CustomerTestSuite) TestShouldDeleteCustomerWorkoutDayWithSuccess() {
 	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
 	assertions.Nil(err)
 	assertions.Empty(actualWorkoutDay)
+}
+
+func (c *CustomerTestSuite) TestShouldNotReturnErrorWhenDeleteWorkoutDaysNonExist() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	ctx := context.Background()
+	workout := testutil.NewWorkoutDay(customerUUID)
+
+	// when:
+	err := c.commandHandler.DeleteCustomerWorkoutDays(ctx, customerUUID)
+
+	// then:
+	assertions.Nil(err)
+
+	actualWorkoutDays, err := c.queryHandler.QueryCustomerWorkoutDays(ctx, workout.CustomerUUID())
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDays)
+}
+
+func (c *CustomerTestSuite) TestShouldDeleteWorkoutDaysWithSuccess() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	const customerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	ctx := context.Background()
+	workout := testutil.NewWorkoutDay(customerUUID)
+
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, workout)
+
+	// when:
+	err := c.commandHandler.DeleteCustomerWorkoutDays(ctx, customerUUID)
+
+	// then:
+	assertions.Nil(err)
+
+	actualWorkoutDays, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDays)
 }

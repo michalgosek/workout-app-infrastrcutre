@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
@@ -25,11 +26,13 @@ type Config struct {
 }
 
 type CommandHandlers struct {
-	trainer *TrainerCommandHandler
+	trainer  *TrainerCommandHandler
+	customer *CustomerCommandHandler
 }
 
 type QueryHandlers struct {
-	trainer *TrainerQueryHandler
+	trainer  *TrainerQueryHandler
+	customer *CustomerQueryHandler
 }
 
 type MongoDB struct {
@@ -57,6 +60,26 @@ func (m *MongoDB) DeleteWorkoutGroup(ctx context.Context, groupUUID string) erro
 	return m.commands.trainer.DeleteWorkoutGroup(ctx, groupUUID)
 }
 
+func (m *MongoDB) UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error {
+	return m.commands.customer.UpsertCustomerWorkoutDay(ctx, workout)
+}
+
+func (m *MongoDB) QueryCustomerWorkoutDay(ctx context.Context, customerUUID string, trainerWorkoutGroupUUID string) (customer.WorkoutDay, error) {
+	return m.queries.customer.QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkoutGroupUUID)
+}
+
+func (m *MongoDB) QueryCustomerWorkoutDays(ctx context.Context, customerUUID string) ([]customer.WorkoutDay, error) {
+	return m.queries.customer.QueryCustomerWorkoutDays(ctx, customerUUID)
+}
+
+func (m *MongoDB) DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, customerWorkoutDayUUID string) error {
+	return m.commands.customer.DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkoutDayUUID)
+}
+
+func (m *MongoDB) DeleteCustomerWorkoutDays(ctx context.Context, customerUUID string) error {
+	return m.commands.customer.DeleteCustomerWorkoutDays(ctx, customerUUID)
+}
+
 func NewMongoDB(cfg Config) (*MongoDB, error) {
 	mongoCLI, err := newMongoClient(cfg.Addr, cfg.ConnectionTimeout)
 	if err != nil {
@@ -71,10 +94,22 @@ func NewMongoDB(cfg Config) (*MongoDB, error) {
 				Format:         cfg.Format,
 				CommandTimeout: cfg.CommandTimeout,
 			}),
+			customer: NewCustomerCommandHandler(mongoCLI, CustomerCommandHandlerConfig{
+				Collection:     cfg.CustomerCollection,
+				Database:       cfg.Database,
+				Format:         cfg.Format,
+				CommandTimeout: cfg.CommandTimeout,
+			}),
 		},
 		queries: QueryHandlers{
 			trainer: NewTrainerQueryHandler(mongoCLI, TrainerQueryHandlerConfig{
 				Collection:   cfg.TrainerCollection,
+				Database:     cfg.Database,
+				Format:       cfg.Format,
+				QueryTimeout: cfg.CommandTimeout,
+			}),
+			customer: NewCustomerQueryHandler(mongoCLI, CustomerQueryHandlerConfig{
+				Collection:   cfg.CustomerCollection,
 				Database:     cfg.Database,
 				Format:       cfg.Format,
 				QueryTimeout: cfg.CommandTimeout,
