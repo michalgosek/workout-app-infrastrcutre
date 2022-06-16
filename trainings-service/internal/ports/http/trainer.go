@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
+
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
@@ -82,7 +84,7 @@ func (h *TrainerWorkoutGroups) AssignCustomer() http.HandlerFunc {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		err = h.app.Commands.AssignCustomer.Do(r.Context(), command.WorkoutRegistration{
+		err = h.app.Commands.AssignCustomer.Do(r.Context(), command2.WorkoutRegistration{
 			TrainerUUID:  trainerUUID,
 			GroupUUID:    workoutUUID,
 			CustomerUUID: payload.CustomerUUID,

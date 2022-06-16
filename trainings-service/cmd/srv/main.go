@@ -5,6 +5,8 @@ import (
 	"log"
 	"time"
 
+	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
+
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
@@ -42,7 +44,7 @@ func execute() error {
 			CreateTrainerWorkout:  command.NewCreateWorkoutHandler(repository),
 			DeleteTrainerWorkout:  command.NewWorkoutDeleteHandler(repository),
 			DeleteTrainerWorkouts: command.NewWorkoutsDeleteHandler(repository),
-			AssignCustomer:        command.NewAssignCustomerHandler(repository),
+			AssignCustomer:        command2.NewAssignCustomerHandler(repository),
 			UnassignCustomer:      command.NewUnassignCustomerHandler(repository),
 		},
 		Queries: application.Queries{
@@ -63,7 +65,7 @@ func execute() error {
 						r.Get("/", HTTP.GetTrainerWorkoutGroup())
 						r.Delete("/", HTTP.DeleteWorkoutGroup())
 						r.Route("/customers", func(r chi.Router) {
-							r.Post("/", HTTP.AssignCustomer())
+							//r.Post("/", HTTP.AssignCustomer())
 							r.Delete("/{customerUUID}", HTTP.UnassignCustomer())
 						})
 					})
