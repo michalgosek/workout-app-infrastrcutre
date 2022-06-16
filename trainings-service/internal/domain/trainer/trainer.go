@@ -2,7 +2,6 @@ package trainer
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -108,7 +107,7 @@ func (t *WorkoutGroup) UnregisterCustomer(UUID string) {
 
 func (t *WorkoutGroup) AssignCustomer(UUID string) error {
 	if UUID == "" {
-		return fmt.Errorf("%w: into customer workout session", ErrEmptyCustomerUUID)
+		return ErrEmptyCustomerUUID
 	}
 	if t.limit == 0 {
 		return ErrCustomersScheduleLimitExceeded

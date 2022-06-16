@@ -8,7 +8,6 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +53,7 @@ func TestShouldNotDeleteWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
 	err := SUT.Do(ctx, workoutUUID, trainerUUID)
 
 	// then:
-	assertions.Equal(application.ErrScheduleNotOwner, err)
+	assertions.Equal(command.ErrWorkoutGroupNotOwner, err)
 	repository.AssertExpectations(t)
 }
 
@@ -77,6 +76,6 @@ func TestShouldNotDeleteTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing
 	err := SUT.Do(ctx, workout.UUID(), workout.TrainerUUID())
 
 	// then:
-	assertions.Contains(err.Error(), expectedErr.Error())
+	assertions.ErrorIs(err, command.ErrRepositoryFailure)
 	repository.AssertExpectations(t)
 }

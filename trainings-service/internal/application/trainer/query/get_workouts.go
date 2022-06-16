@@ -2,7 +2,8 @@ package query
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
@@ -16,9 +17,12 @@ type GetWorkoutsHandler struct {
 }
 
 func (g *GetWorkoutsHandler) Do(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
+	logger := logrus.WithFields(logrus.Fields{"Component": "GetWorkoutsHandler"})
 	groups, err := g.repository.QueryWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		return nil, fmt.Errorf("get groups failed: %v", err)
+		const s = "query workout groups for trainerUUID: %s failed: %v"
+		logger.Errorf(s, trainerUUID, err)
+		return nil, ErrRepositoryFailure
 	}
 	return groups, nil
 }

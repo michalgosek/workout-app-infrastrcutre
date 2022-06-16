@@ -8,7 +8,6 @@ import (
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -54,6 +53,6 @@ func TestShouldNotCreateTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing
 	})
 
 	// then:
-	assertions.ErrorContains(err, err.Error())
+	assertions.ErrorIs(err, command.ErrRepositoryFailure)
 	repository.AssertExpectations(t)
 }

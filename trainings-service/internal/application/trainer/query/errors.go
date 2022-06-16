@@ -1,8 +1,8 @@
-package command
+package query
 
 import "errors"
 
 var (
-	ErrWorkoutGroupNotOwner = errors.New("schedule not owner")
+	ErrWorkoutGroupNotOwner = errors.New("workout group not owner")
 	ErrRepositoryFailure    = errors.New("repository failure")
 )

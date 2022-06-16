@@ -5,10 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
-
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -27,17 +25,17 @@ func TestShouldNotAssignCustomerToWorkoutGroupNotOwnedByTrainer_Unit(t *testing.
 	repository := new(mocks.TrainerRepository)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
-	SUT := command2.NewAssignCustomerHandler(repository)
+	SUT := command.NewAssignCustomerHandler(repository)
 
 	// when:
-	err := SUT.Do(ctx, command2.WorkoutRegistration{
+	err := SUT.Do(ctx, command.WorkoutRegistration{
 		CustomerUUID: customerUUID,
 		TrainerUUID:  trainerUUID,
 		GroupUUID:    workoutUUID,
 	})
 
 	// then:
-	assertions.Equal(application.ErrScheduleNotOwner, err)
+	assertions.Equal(command.ErrWorkoutGroupNotOwner, err)
 	repository.AssertExpectations(t)
 }
 
@@ -58,17 +56,17 @@ func TestShouldNotAssignCustomerToSpecifiedWorkoutGroupWhenRepositoryFailure_Uni
 	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	repository.EXPECT().UpsertWorkoutGroup(ctx, workoutdWithCustomer).Return(expectedErr)
 
-	SUT := command2.NewAssignCustomerHandler(repository)
+	SUT := command.NewAssignCustomerHandler(repository)
 
 	// when:
-	err := SUT.Do(ctx, command2.WorkoutRegistration{
+	err := SUT.Do(ctx, command.WorkoutRegistration{
 		CustomerUUID: customerUUID,
 		TrainerUUID:  trainerUUID,
 		GroupUUID:    workout.UUID(),
 	})
 
 	// then:
-	assertions.ErrorIs(err, command2.ErrRepositoryFailure)
+	assertions.ErrorIs(err, command.ErrRepositoryFailure)
 	repository.AssertExpectations(t)
 }
 
@@ -88,10 +86,10 @@ func TestShouldAssignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing.
 	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	repository.EXPECT().UpsertWorkoutGroup(ctx, workoutWithCustomer).Return(nil)
 
-	SUT := command2.NewAssignCustomerHandler(repository)
+	SUT := command.NewAssignCustomerHandler(repository)
 
 	// when:
-	err := SUT.Do(ctx, command2.WorkoutRegistration{
+	err := SUT.Do(ctx, command.WorkoutRegistration{
 		CustomerUUID: customerUUID,
 		TrainerUUID:  trainerUUID,
 		GroupUUID:    workout.UUID(),

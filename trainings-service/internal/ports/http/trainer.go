@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
+
 	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 
 	"github.com/go-chi/chi"
@@ -16,7 +18,9 @@ import (
 )
 
 const (
-	InternalMessageErrorMsg = "Internal Message Error"
+	InternalMessageErrorMsg = "Internal Message Error."
+	ResourceNotFoundMsg     = "Resource not found."
+	ServiceUnavailable      = "Service currently unavailable."
 )
 
 type TrainerWorkoutGroups struct {
@@ -78,16 +82,14 @@ func (h *TrainerWorkoutGroups) AssignCustomer() http.HandlerFunc {
 			GroupUUID:    payload.UUID,
 			CustomerUUID: payload.CustomerUUID,
 		})
-		if errors.Is(err, application.ErrScheduleNotOwner) {
-			res := rest.JSONResponse{Message: fmt.Sprintf("workout group created with UUID: %s", payload.UUID)}
-			rest.SendJSONResponse(w, res, http.StatusBadRequest)
+		if errors.Is(err, query.ErrWorkoutGroupNotOwner) {
+			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, application.ErrRepositoryFailure) {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+		if errors.Is(err, query.ErrRepositoryFailure) {
+			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
 			return
 		}
-
 		res := rest.JSONResponse{
 			Message: fmt.Sprintf("Customer UUID: %s assgined to wrokout group UUID: %s", payload.CustomerUUID, payload.UUID),
 		}
@@ -117,6 +119,13 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
 		}
 
 		group, err := h.app.Queries.GetTrainerWorkout.Do(r.Context(), workoutUUID, trainerUUID)
+		if errors.Is(err, query.ErrWorkoutGroupNotOwner) {
+			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, query.ErrRepositoryFailure) {
+			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
+		}
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
@@ -190,6 +199,13 @@ func (h *TrainerWorkoutGroups) DeleteWorkoutGroup() http.HandlerFunc {
 			return
 		}
 		err := h.app.Commands.DeleteTrainerWorkout.Do(r.Context(), workoutUUID, trainerUUID)
+		if errors.Is(err, query.ErrWorkoutGroupNotOwner) {
+			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, query.ErrRepositoryFailure) {
+			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
+		}
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return

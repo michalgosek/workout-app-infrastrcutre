@@ -2,7 +2,8 @@ package command
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
@@ -23,20 +24,26 @@ type AssignCustomerHandler struct {
 }
 
 func (a *AssignCustomerHandler) Do(ctx context.Context, args WorkoutRegistration) error {
+	logger := logrus.WithFields(logrus.Fields{"Component": "AssignCustomerHandler"})
+
 	group, err := a.repository.QueryWorkoutGroup(ctx, args.GroupUUID)
 	if err != nil {
 		return err
 	}
 	if group.TrainerUUID() != args.TrainerUUID {
-		return ErrScheduleNotOwner
+		return ErrWorkoutGroupNotOwner
 	}
 	err = group.AssignCustomer(args.CustomerUUID)
 	if err != nil {
-		return fmt.Errorf("assign customer to the group failed: %w", err)
+		const s = "assign customer UUID: %s to the group UUID: %s failed, reason: %v"
+		logger.Errorf(s, args.CustomerUUID, args.GroupUUID, err)
+		return err
 	}
 	err = a.repository.UpsertWorkoutGroup(ctx, group)
 	if err != nil {
-		return fmt.Errorf("upsert group failed: %w", ErrRepositoryFailure)
+		const s = "upsert customer UUID: %s to workout group UUID: %s failed, reason: %v"
+		logger.Errorf(s, args.CustomerUUID, args.GroupUUID, err)
+		return ErrRepositoryFailure
 	}
 	return nil
 }

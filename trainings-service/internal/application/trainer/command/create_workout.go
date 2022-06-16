@@ -2,8 +2,9 @@ package command
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
@@ -24,14 +25,18 @@ type WorkoutGroup struct {
 }
 
 func (c *CreateWorkoutHandler) Do(ctx context.Context, w WorkoutGroup) (string, error) {
+	logger := logrus.WithFields(logrus.Fields{"Component": "CreateWorkoutHandler"})
 	group, err := trainer.NewWorkoutGroup(w.TrainerUUID, w.Name, w.Desc, w.Date)
 	if err != nil {
+		const s = "creating new workout group: %+v failed, reason: %v"
+		logger.Errorf(s, w, err)
 		return "", err
 	}
 	err = c.repository.UpsertWorkoutGroup(ctx, *group)
 	if err != nil {
-		const msg = "upsert group UUID: %s for trainer UUID: %s failed, reason: %w"
-		return "", fmt.Errorf(msg, group.UUID(), w.TrainerUUID, err)
+		const s = "upsert group UUID: %s for trainer UUID: %s failed, reason: %v"
+		logger.Errorf(s, group.UUID(), w.TrainerUUID, err)
+		return "", ErrRepositoryFailure
 	}
 	return group.UUID(), nil
 }

@@ -7,7 +7,6 @@ import (
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -53,6 +52,29 @@ func TestShouldGetEmptyTrainerWorkoutGroupWhenRequestedGroupNotExist_Unit(t *tes
 
 	// then:
 	assertions.Nil(err)
+	assertions.Empty(actualSchedule)
+	repository.AssertExpectations(t)
+}
+
+func TestShouldReturnErrorWhenWhenRequestedGroupNotOwnedByTrainer_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
+	const secondTrainerUUID = "b6236555-b4f5-4b2a-8c27-87f20ec71961"
+
+	ctx := context.Background()
+	secondTrainerGroup := testutil.NewTrainerWorkoutGroup(secondTrainerUUID)
+	workoutUUID := secondTrainerGroup.UUID()
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(secondTrainerGroup, nil)
+	SUT := query.NewGetWorkoutHandler(repository)
+
+	// when:
+	actualSchedule, err := SUT.Do(ctx, workoutUUID, trainerUUID)
+
+	// then:
+	assertions.Equal(query.ErrWorkoutGroupNotOwner, err)
 	assertions.Empty(actualSchedule)
 	repository.AssertExpectations(t)
 }

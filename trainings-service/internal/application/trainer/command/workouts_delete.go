@@ -2,7 +2,8 @@ package command
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 )
 
 type WorkoutsDeleter interface {
@@ -14,9 +15,12 @@ type WorkoutsDeleteHandler struct {
 }
 
 func (w *WorkoutsDeleteHandler) Do(ctx context.Context, trainerUUID string) error {
+	logger := logrus.WithFields(logrus.Fields{"Component": "WorkoutsDeleteHandler"})
 	err := w.repository.DeleteWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		return fmt.Errorf("delete workout groups failed: %v", err)
+		const s = "delete workout groups for trainerUUID: %s failed, reason: %v"
+		logger.Errorf(s, trainerUUID, err)
+		return ErrRepositoryFailure
 	}
 	return nil
 }

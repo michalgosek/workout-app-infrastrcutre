@@ -2,7 +2,8 @@ package command
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
@@ -17,16 +18,23 @@ type WorkoutDeleteHandler struct {
 }
 
 func (w *WorkoutDeleteHandler) Do(ctx context.Context, groupUUID, trainerUUID string) error {
+	logger := logrus.WithFields(logrus.Fields{"Component": "WorkoutDeleteHandler"})
 	group, err := w.repository.QueryWorkoutGroup(ctx, groupUUID)
 	if err != nil {
-		return fmt.Errorf("query trainer workout group failed: %v", err)
+		const s = "query workout group UUID: %s for trainerUUID: %s failed, reason: %v"
+		logger.Errorf(s, groupUUID, trainerUUID, err)
+		return ErrRepositoryFailure
 	}
 	if group.TrainerUUID() != trainerUUID {
-		return ErrScheduleNotOwner
+		const s = "query workout group UUID: %s does not belong to trainerUUID: %s"
+		logger.Errorf(s, groupUUID, trainerUUID)
+		return ErrWorkoutGroupNotOwner
 	}
 	err = w.repository.DeleteWorkoutGroup(ctx, groupUUID)
 	if err != nil {
-		return fmt.Errorf("delete workout group failed: %v", err)
+		const s = "delete workout group UUID: %s for trainerUUID: %s failed, reason: %v"
+		logger.Errorf(s, groupUUID, trainerUUID, err)
+		return ErrRepositoryFailure
 	}
 	return nil
 }
