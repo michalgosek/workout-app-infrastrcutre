@@ -23,7 +23,7 @@ func TestShouldCreateCustomerWorkoutDayWithSuccess_Unit(t *testing.T) {
 	assertions.Nil(err)
 	assertions.Equal(customerUUID, workout.CustomerUUID())
 	assertions.Equal(date, workout.Date())
-	assertions.Equal(trainerWorkoutGroupUUID, workout.TrainerWorkoutGroupUUID())
+	assertions.Equal(trainerWorkoutGroupUUID, workout.GroupUUID())
 }
 
 func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerUUID_Unit(t *testing.T) {
@@ -53,7 +53,7 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyDate_Unit(t 
 	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
-	assertions.Equal(customer.ErrEmptyWorkoutDate, err)
+	assertions.Equal(customer.ErrEmptyGroupDate, err)
 	assertions.Nil(workout)
 }
 
@@ -69,7 +69,7 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyWorkoutUUID_
 	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
-	assertions.Equal(customer.ErrEmptyTrainerWorkoutGroupUUID, err)
+	assertions.Equal(customer.ErrEmptyGroupUUID, err)
 	assertions.Nil(workout)
 }
 
@@ -87,7 +87,7 @@ func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(trainerWorkoutGroupUUID, workout.TrainerWorkoutGroupUUID())
+	assertions.Equal(trainerWorkoutGroupUUID, workout.GroupUUID())
 	assertions.Equal(customerUUID, workout.CustomerUUID())
 	assertions.Equal(customerWorkoutDayUUID, workout.UUID())
 	assertions.Equal(date, workout.Date())
@@ -106,7 +106,7 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerWorkoutDayUUID_Un
 	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
-	assertions.Equal(customer.ErrEmptyCustomerWorkoutUUID, err)
+	assertions.Equal(customer.ErrEmptyWorkoutDayUUID, err)
 	assertions.Empty(workout)
 }
 
@@ -127,7 +127,7 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerUUID_Unit(t *test
 	assertions.Empty(workout)
 }
 
-func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyWorkoutUUID_Unit(t *testing.T) {
+func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyGroupUUID_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -140,11 +140,11 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyWorkoutUUID_Unit(t *testi
 	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
-	assertions.Equal(customer.ErrEmptyTrainerWorkoutGroupUUID, err)
+	assertions.Equal(customer.ErrEmptyGroupUUID, err)
 	assertions.Empty(workout)
 }
 
-func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyWorkoutDate_Unit(t *testing.T) {
+func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyGroupDate_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -157,6 +157,6 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyWorkoutDate_Unit(t *testi
 	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
-	assertions.Equal(customer.ErrEmptyWorkoutDate, err)
+	assertions.Equal(customer.ErrEmptyGroupDate, err)
 	assertions.Empty(workout)
 }

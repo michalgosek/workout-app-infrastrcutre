@@ -102,6 +102,47 @@ func (h *TrainerWorkoutGroups) AssignCustomer() http.HandlerFunc {
 	}
 }
 
+func (h *TrainerWorkoutGroups) UnassignCustomer() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		workoutUUID := chi.URLParam(r, "workoutUUID")
+		if workoutUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing workoutUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		customerUUID := chi.URLParam(r, "customerUUID")
+		if customerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing customerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		err := h.app.Commands.UnassignCustomer.Do(r.Context(), command.WorkoutUnregister{
+			TrainerUUID:  trainerUUID,
+			GroupUUID:    workoutUUID,
+			CustomerUUID: customerUUID,
+		})
+		if errors.Is(err, command.ErrResourceNotFound) {
+			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, command.ErrWorkoutGroupNotOwner) {
+			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, command.ErrRepositoryFailure) {
+			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
+			return
+		}
+		res := rest.JSONResponse{
+			Message: fmt.Sprintf("Customer UUID: %s unassgined from wrokout group UUID: %s", customerUUID, workoutUUID),
+		}
+		rest.SendJSONResponse(w, res, http.StatusOK)
+	}
+}
+
 func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
 	type HTTPResponseBody struct {
 		UUID          string   `json:"workout_group_uuid"`

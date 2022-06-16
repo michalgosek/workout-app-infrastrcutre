@@ -39,13 +39,19 @@ func (a *UnassignCustomerHandler) Do(ctx context.Context, args WorkoutUnregister
 		logger.Errorf(s, group.UUID(), args.TrainerUUID)
 		return ErrWorkoutGroupNotOwner
 	}
-
 	customerWorkoutDay, err := a.repository.QueryCustomerWorkoutDay(ctx, args.CustomerUUID, args.GroupUUID)
 	if err != nil {
 		const s = "query customer UUID: %s workout day with groupUUID: %s failed, reason: %v"
 		logger.Errorf(s, args.CustomerUUID, args.GroupUUID, err)
 		return ErrRepositoryFailure
 	}
+	var empty customer.WorkoutDay
+	if customerWorkoutDay == empty {
+		const s = "customer UUID: %s workout day with groupUUID: %s not exist"
+		logger.Errorf(s, args.CustomerUUID, args.GroupUUID)
+		return ErrResourceNotFound
+	}
+
 	err = a.repository.DeleteCustomerWorkoutDay(ctx, args.CustomerUUID, customerWorkoutDay.UUID())
 	if err != nil {
 		const s = "delete customer UUID: %s workout day with UUID: %s failed, reason: %v"

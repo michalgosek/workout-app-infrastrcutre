@@ -100,7 +100,6 @@ func (t *WorkoutGroup) UnregisterCustomer(UUID string) {
 		}
 		filtered = append(filtered, u)
 	}
-
 	t.limit++
 	t.customerUUIDs = filtered
 }

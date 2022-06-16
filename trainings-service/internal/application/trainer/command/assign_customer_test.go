@@ -5,6 +5,9 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+	"github.com/stretchr/testify/mock"
+
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
@@ -78,13 +81,19 @@ func TestShouldAssignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing.
 	const trainerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
 
 	ctx := context.Background()
-	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	workoutWithCustomer := workout
+	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
+
+	workoutWithCustomer := trainerWorkout
 	_ = workoutWithCustomer.AssignCustomer(customerUUID)
 
 	repository := new(mocks.CustomerAssigner)
-	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
 	repository.EXPECT().UpsertWorkoutGroup(ctx, workoutWithCustomer).Return(nil)
+	repository.EXPECT().UpsertCustomerWorkoutDay(ctx, mock.Anything).
+		Run(func(ctx context.Context, customerWorkout customer.WorkoutDay) {
+			assertions.Equal(trainerWorkout.UUID(), customerWorkout.GroupUUID())
+			assertions.Equal(trainerWorkout.Date(), customerWorkout.Date())
+		}).Return(nil)
 
 	SUT := command.NewAssignCustomerHandler(repository)
 
@@ -92,7 +101,7 @@ func TestShouldAssignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing.
 	err := SUT.Do(ctx, command.WorkoutRegistration{
 		CustomerUUID: customerUUID,
 		TrainerUUID:  trainerUUID,
-		GroupUUID:    workout.UUID(),
+		GroupUUID:    trainerWorkout.UUID(),
 	})
 
 	// then:

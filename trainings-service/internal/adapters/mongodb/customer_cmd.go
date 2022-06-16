@@ -42,7 +42,7 @@ func (c *CustomerCommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, w
 	doc := CustomerWorkoutDocument{
 		UUID:                    workout.UUID(),
 		CustomerUUID:            workout.CustomerUUID(),
-		TrainerWorkoutGroupUUID: workout.TrainerWorkoutGroupUUID(),
+		TrainerWorkoutGroupUUID: workout.GroupUUID(),
 		Date:                    workout.Date().Format(c.cfg.Format),
 	}
 

@@ -125,7 +125,7 @@ func (c *CustomerTestSuite) TestShouldReturnWorkoutDayForQuery() {
 	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, expectedWorkoutDay)
 
 	// when:
-	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, customerUUID, expectedWorkoutDay.TrainerWorkoutGroupUUID())
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, customerUUID, expectedWorkoutDay.GroupUUID())
 
 	// then:
 	assertions.Nil(err)
@@ -185,7 +185,7 @@ func (c *CustomerTestSuite) TestShouldUpsertNewWorkoutDayWithSuccess() {
 	// then:
 	assertions.Nil(err)
 
-	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.GroupUUID())
 	assertions.Nil(err)
 	assertions.Equal(workout, actualWorkoutDay)
 }
@@ -205,7 +205,7 @@ func (c *CustomerTestSuite) TestShouldNotReturnErrorWhenDeleteWorkoutDayNonExist
 	// then:
 	assertions.Nil(err)
 
-	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.GroupUUID())
 	assertions.Nil(err)
 	assertions.Empty(actualWorkoutDay)
 }
@@ -227,7 +227,7 @@ func (c *CustomerTestSuite) TestShouldDeleteWorkoutDayWithSuccess() {
 	// then:
 	assertions.Nil(err)
 
-	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.GroupUUID())
 	assertions.Nil(err)
 	assertions.Empty(actualWorkoutDay)
 }
@@ -269,7 +269,7 @@ func (c *CustomerTestSuite) TestShouldDeleteWorkoutDaysWithSuccess() {
 	// then:
 	assertions.Nil(err)
 
-	actualWorkoutDays, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.TrainerWorkoutGroupUUID())
+	actualWorkoutDays, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, workout.CustomerUUID(), workout.GroupUUID())
 	assertions.Nil(err)
 	assertions.Empty(actualWorkoutDays)
 }

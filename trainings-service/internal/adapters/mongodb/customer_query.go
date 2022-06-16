@@ -31,10 +31,10 @@ func NewCustomerQueryHandler(cli *mongo.Client, cfg CustomerQueryHandlerConfig) 
 	return &t
 }
 
-func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID, trainerWorkoutGroupUUID string) (customer.WorkoutDay, error) {
+func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID, GroupUUID string) (customer.WorkoutDay, error) {
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
-	f := bson.M{"customer_uuid": customerUUID, "trainer_workout_group_uuid": trainerWorkoutGroupUUID}
+	f := bson.M{"customer_uuid": customerUUID, "trainer_workout_group_uuid": GroupUUID}
 	res := coll.FindOne(ctx, f)
 	err := res.Err()
 	if errors.Is(err, mongo.ErrNoDocuments) {

@@ -23,16 +23,16 @@ func main() {
 
 func execute() error {
 	cfg := mongodb.Config{
-		Addr:              "mongodb://localhost:27017",
-		Database:          "trainings_service_test",
-		TrainerCollection: "trainer_schedules",
-		CommandTimeout:    10 * time.Second,
-		QueryTimeout:      10 * time.Second,
-		ConnectionTimeout: 10 * time.Second,
-		Format:            "02/01/2006 15:04",
+		Addr:               "mongodb://localhost:27017",
+		Database:           "trainings_service_test",
+		TrainerCollection:  "trainer_schedules",
+		CustomerCollection: "customer_schedules",
+		CommandTimeout:     10 * time.Second,
+		QueryTimeout:       10 * time.Second,
+		ConnectionTimeout:  10 * time.Second,
+		Format:             "02/01/2006 15:04",
 	}
 	repository, err := mongodb.NewMongoDB(cfg)
-
 	if err != nil {
 		return fmt.Errorf("creating repository failed: %v", err)
 	}
@@ -43,6 +43,7 @@ func execute() error {
 			DeleteTrainerWorkout:  command.NewWorkoutDeleteHandler(repository),
 			DeleteTrainerWorkouts: command.NewWorkoutsDeleteHandler(repository),
 			AssignCustomer:        command.NewAssignCustomerHandler(repository),
+			UnassignCustomer:      command.NewUnassignCustomerHandler(repository),
 		},
 		Queries: application.Queries{
 			GetTrainerWorkout:  query.NewGetWorkoutHandler(repository),
@@ -61,10 +62,9 @@ func execute() error {
 					r.Route("/{workoutUUID}", func(r chi.Router) {
 						r.Get("/", HTTP.GetTrainerWorkoutGroup())
 						r.Delete("/", HTTP.DeleteWorkoutGroup())
-
 						r.Route("/customers", func(r chi.Router) {
 							r.Post("/", HTTP.AssignCustomer())
-							//r.Delete("/{customerUUID}", HTTP.UnassginCustomer())
+							r.Delete("/{customerUUID}", HTTP.UnassignCustomer())
 						})
 					})
 				})

@@ -8,6 +8,7 @@ import (
 type Commands struct {
 	CreateTrainerWorkout  *command.CreateWorkoutHandler
 	AssignCustomer        *command.AssignCustomerHandler
+	UnassignCustomer      *command.UnassignCustomerHandler
 	DeleteTrainerWorkout  *command.WorkoutDeleteHandler
 	DeleteTrainerWorkouts *command.WorkoutsDeleteHandler
 }
