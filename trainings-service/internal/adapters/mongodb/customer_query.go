@@ -65,14 +65,13 @@ func (c *CustomerQueryHandler) QueryCustomerWorkoutDays(ctx context.Context, cus
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
 	f := bson.M{"customer_uuid": customerUUID}
-
-	cursor, err := coll.Find(ctx, f)
+	cur, err := coll.Find(ctx, f)
 	if err != nil {
 		return nil, fmt.Errorf("find failed: %v", err)
 	}
 
 	var docs []CustomerWorkoutDocument
-	err = cursor.All(ctx, &docs)
+	err = cur.All(ctx, &docs)
 	if err != nil {
 		return nil, fmt.Errorf("decode failed: %v", err)
 	}

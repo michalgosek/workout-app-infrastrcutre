@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	HealthEndpoint  = "/api/v1/health"
-	VersionEndponit = "/api/v1/version"
+	HealthEndpoint = "/api/v1/health"
 )
 
 // NewRouter returns chi.Router with basic middlewares setup, health check route.
@@ -27,12 +26,11 @@ func NewRouter() chi.Router {
 }
 
 type JSONResponse struct {
-	Message string
-	Code    int
+	Message string `json:"message"`
 }
 
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	SendJSONResponse(w, JSONResponse{Message: "OK", Code: http.StatusOK}, http.StatusOK)
+func healthHandler(w http.ResponseWriter, _ *http.Request) {
+	SendJSONResponse(w, JSONResponse{Message: "OK"}, http.StatusOK)
 }
 
 func SendJSONResponse(w http.ResponseWriter, data interface{}, code int) {

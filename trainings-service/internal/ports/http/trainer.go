@@ -1,159 +1,227 @@
 package http
 
 import (
-	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
+	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 
+	"github.com/go-chi/chi"
+
+	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
 
-type TrainerService interface {
-	CreateWorkoutGroup(ctx context.Context, args application.TrainerSchedule) (string, error)
-	GetWorkoutGroup(ctx context.Context, groupUUID, trainerUUID string) (trainer.WorkoutGroup, error)
-	AssignCustomer(ctx context.Context, args application.WorkoutRegistration) error
-	GetWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error)
-	DeleteWorkoutGroup(ctx context.Context, groupUUID, trainerUUID string) error
-	DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error
-}
+const (
+	InternalMessageErrorMsg = "Internal Message Error"
+)
 
 type TrainerWorkoutGroups struct {
-	service TrainerService
-	format  string
+	app    *application.Application
+	format string
 }
 
-func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup(w http.ResponseWriter, r *http.Request) {
-	var payload TrainerWorkoutGroupHTTPRequest
-	dec := json.NewDecoder(r.Body)
-	err := dec.Decode(&payload)
-	if err != nil {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "Internal Server Error", Code: http.StatusInternalServerError}, http.StatusInternalServerError)
-		return
+func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
+	type HTTPRequestBody struct {
+		TrainerUUID string `json:"trainer_uuid"`
+		Name        string `json:"name"`
+		Desc        string `json:"desc"`
+		Date        string `json:"date"`
 	}
-	date, err := time.Parse(h.format, payload.Date)
-	if err != nil {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "Internal Server Error", Code: http.StatusInternalServerError}, http.StatusInternalServerError)
-	}
-	UUID, err := h.service.CreateWorkoutGroup(r.Context(), application.TrainerSchedule{
-		TrainerUUID: payload.TrainerUUID,
-		Name:        payload.Name,
-		Desc:        payload.Desc,
-		Date:        date,
-	})
-	if err != nil {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: err.Error(), Code: http.StatusInternalServerError}, http.StatusInternalServerError)
-		return
-	}
-	res := rest.JSONResponse{
-		Message: fmt.Sprintf("WorkoutSchedule created with UUID: %s", UUID),
-		Code:    http.StatusOK,
-	}
-	rest.SendJSONResponse(w, res, http.StatusOK)
-}
-
-func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup(w http.ResponseWriter, r *http.Request) {
-	workoutGroupUUID := r.URL.Query().Get("workoutGroupUUID")
-	if workoutGroupUUID == "" {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing workoutGroupUUID query param", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	trainerUUID := r.URL.Query().Get("trainerUUID")
-	if trainerUUID == "" {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID query param", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	schedule, err := h.service.GetWorkoutGroup(r.Context(), workoutGroupUUID, trainerUUID)
-	if err != nil {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "Internal Server Error", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	res := TrainerWorkoutGroupHTTPResponse{
-		UUID:          schedule.UUID(),
-		CustomerUUIDs: schedule.CustomerUUIDs(),
-		Name:          schedule.Name(),
-		Desc:          schedule.Desc(),
-		Limit:         schedule.Limit(),
-		Date:          schedule.Date().Format(h.format),
-	}
-	rest.SendJSONResponse(w, res, http.StatusOK)
-}
-
-func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroups(w http.ResponseWriter, r *http.Request) {
-	trainerUUID := r.URL.Query().Get("trainerUUID")
-	if trainerUUID == "" {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID query param", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	schedules, err := h.service.GetWorkoutGroups(r.Context(), trainerUUID)
-	if err != nil {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "Internal Server Error", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	res := newTrainerTrainerWorkoutGroupsHTTPResponse(h.format, trainerUUID, schedules...)
-	rest.SendJSONResponse(w, res, http.StatusOK)
-}
-
-func (h *TrainerWorkoutGroups) DeleteWorkoutGroup(w http.ResponseWriter, r *http.Request) {
-	trainerUUID := r.URL.Query().Get("trainerUUID")
-	if trainerUUID == "" {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID query param", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	workoutGroupUUID := r.URL.Query().Get("workoutGroupUUID")
-	if workoutGroupUUID == "" {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing workoutGroupUUID query param", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	err := h.service.DeleteWorkoutGroup(r.Context(), workoutGroupUUID, trainerUUID)
-	if err != nil {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "Bad request :(", Code: http.StatusBadRequest}, http.StatusBadRequest)
-		return
-	}
-	res := DeleteTrainerWorkoutGroupHTTPResponse{UUID: workoutGroupUUID}
-	rest.SendJSONResponse(w, res, http.StatusOK)
-}
-
-func (h *TrainerWorkoutGroups) DeleteWorkoutGroups(w http.ResponseWriter, r *http.Request) {
-	trainerUUID := r.URL.Query().Get("trainerUUID")
-	if trainerUUID == "" {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID query param", Code: http.StatusInternalServerError}, http.StatusBadRequest)
-		return
-	}
-	err := h.service.DeleteWorkoutGroups(r.Context(), trainerUUID)
-	if err != nil {
-		rest.SendJSONResponse(w, rest.JSONResponse{Message: "Bad request :(", Code: http.StatusBadRequest}, http.StatusBadRequest)
-		return
-	}
-	res := DeleteTrainerWorkoutGroupsHTTPResponse{TrainerUUID: trainerUUID}
-	rest.SendJSONResponse(w, res, http.StatusOK)
-}
-
-func NewTrainerWorkoutGroupsHTTP(service TrainerService, format string) *TrainerWorkoutGroups {
-	return &TrainerWorkoutGroups{
-		service: service,
-		format:  format,
-	}
-}
-
-func newTrainerTrainerWorkoutGroupsHTTPResponse(format, trainerUUID string, groups ...trainer.WorkoutGroup) TrainerWorkoutGroupsHTTPResponse {
-	var trainerWorkoutGroups []TrainerWorkoutGroupHTTPResponse
-	for _, s := range groups {
-		trainerWorkoutGroups = append(trainerWorkoutGroups, TrainerWorkoutGroupHTTPResponse{
-			UUID:          s.UUID(),
-			CustomerUUIDs: s.CustomerUUIDs(),
-			Date:          s.Date().Format(format),
-			Name:          s.Name(),
-			Desc:          s.Desc(),
-			Limit:         s.Limit(),
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload HTTPRequestBody
+		dec := json.NewDecoder(r.Body)
+		err := dec.Decode(&payload)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		date, err := time.Parse(h.format, payload.Date)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		UUID, err := h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command2.WorkoutGroup{
+			TrainerUUID: payload.TrainerUUID,
+			Name:        payload.Name,
+			Desc:        payload.Desc,
+			Date:        date,
 		})
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		res := rest.JSONResponse{Message: fmt.Sprintf("workout group created with UUID: %s", UUID)}
+		rest.SendJSONResponse(w, res, http.StatusCreated)
 	}
-	return TrainerWorkoutGroupsHTTPResponse{
-		WorkoutGroups: trainerWorkoutGroups,
-		TrainerUUID:   trainerUUID,
+}
+
+func (h *TrainerWorkoutGroups) AssignCustomer() http.HandlerFunc {
+	type HTTPRequestBody struct {
+		TrainerUUID  string `json:"trainer_uuid"`
+		UUID         string `json:"workout_group_uuid"`
+		CustomerUUID string `json:"customer_uuid"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		var payload HTTPRequestBody
+		dec := json.NewDecoder(r.Body)
+		err := dec.Decode(&payload)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		err = h.app.Commands.AssignCustomer.Do(r.Context(), command2.WorkoutRegistration{
+			TrainerUUID:  payload.TrainerUUID,
+			GroupUUID:    payload.UUID,
+			CustomerUUID: payload.CustomerUUID,
+		})
+		if errors.Is(err, application.ErrScheduleNotOwner) {
+			res := rest.JSONResponse{Message: fmt.Sprintf("workout group created with UUID: %s", payload.UUID)}
+			rest.SendJSONResponse(w, res, http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, application.ErrRepositoryFailure) {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+
+		res := rest.JSONResponse{
+			Message: fmt.Sprintf("Customer UUID: %s assgined to wrokout group UUID: %s", payload.CustomerUUID, payload.UUID),
+		}
+		rest.SendJSONResponse(w, res, http.StatusOK)
+	}
+}
+
+func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
+	type HTTPResponseBody struct {
+		UUID          string   `json:"workout_group_uuid"`
+		CustomerUUIDs []string `json:"customer_uuids"`
+		Date          string   `json:"date"`
+		Name          string   `json:"name"`
+		Desc          string   `json:"desc"`
+		Limit         int      `json:"limit"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		workoutUUID := chi.URLParam(r, "workoutUUID")
+		if workoutUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing workoutUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+
+		group, err := h.app.Queries.GetTrainerWorkout.Do(r.Context(), workoutUUID, trainerUUID)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		res := HTTPResponseBody{
+			UUID:          group.UUID(),
+			CustomerUUIDs: group.CustomerUUIDs(),
+			Name:          group.Name(),
+			Desc:          group.Desc(),
+			Limit:         group.Limit(),
+			Date:          group.Date().Format(h.format),
+		}
+		rest.SendJSONResponse(w, res, http.StatusOK)
+	}
+}
+
+func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroups() http.HandlerFunc {
+	type WorkoutGroup struct {
+		UUID          string   `json:"workout_group_uuid"`
+		CustomerUUIDs []string `json:"customer_uuids"`
+		Date          string   `json:"date"`
+		Name          string   `json:"name"`
+		Desc          string   `json:"desc"`
+		Limit         int      `json:"limit"`
+	}
+
+	type HTTPResponseBody struct {
+		TrainerUUID   string         `json:"trainer_uuid"`
+		WorkoutGroups []WorkoutGroup `json:"workout_groups"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		groups, err := h.app.Queries.GetTrainerWorkouts.Do(r.Context(), trainerUUID)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+
+		resp := HTTPResponseBody{TrainerUUID: trainerUUID}
+		for _, g := range groups {
+			resp.WorkoutGroups = append(resp.WorkoutGroups, WorkoutGroup{
+				UUID:          g.UUID(),
+				CustomerUUIDs: g.CustomerUUIDs(),
+				Date:          g.Date().Format(h.format),
+				Name:          g.Name(),
+				Desc:          g.Desc(),
+				Limit:         g.Limit(),
+			})
+		}
+		rest.SendJSONResponse(w, resp, http.StatusOK)
+	}
+}
+
+func (h *TrainerWorkoutGroups) DeleteWorkoutGroup() http.HandlerFunc {
+	type HTTPResponseBody struct {
+		UUID string `json:"workout_group_uuid"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		workoutUUID := chi.URLParam(r, "workoutUUID")
+		if workoutUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing workoutUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		err := h.app.Commands.DeleteTrainerWorkout.Do(r.Context(), workoutUUID, trainerUUID)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		res := HTTPResponseBody{UUID: workoutUUID}
+		rest.SendJSONResponse(w, res, http.StatusOK)
+	}
+}
+
+func (h *TrainerWorkoutGroups) DeleteWorkoutGroups() http.HandlerFunc {
+	type HTTPResponseBody struct {
+		TrainerUUID string `json:"trainer_uuid_uuid"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		err := h.app.Commands.DeleteTrainerWorkouts.Do(r.Context(), trainerUUID)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		res := HTTPResponseBody{TrainerUUID: trainerUUID}
+		rest.SendJSONResponse(w, res, http.StatusOK)
+	}
+}
+
+func NewTrainerWorkoutGroupsHTTP(app *application.Application, format string) *TrainerWorkoutGroups {
+	return &TrainerWorkoutGroups{
+		app:    app,
+		format: format,
 	}
 }

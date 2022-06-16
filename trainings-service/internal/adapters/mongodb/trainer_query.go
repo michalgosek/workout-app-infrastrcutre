@@ -81,7 +81,6 @@ func (t *TrainerQueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUI
 
 func convertToDomainWorkoutGroups(format string, docs ...TrainerWorkoutGroupDocument) ([]trainer.WorkoutGroup, error) {
 	var workouts []trainer.WorkoutGroup
-
 	for _, d := range docs {
 		date, err := time.Parse(format, d.Date)
 		if err != nil {
@@ -95,3 +94,14 @@ func convertToDomainWorkoutGroups(format string, docs ...TrainerWorkoutGroupDocu
 	}
 	return workouts, nil
 }
+
+//type documents interface {
+//	[]customer.WorkoutDay | []trainer.WorkoutGroup
+//}
+//
+//type decodeDestinations interface {
+//}
+//
+//func decodeTo[d []documents, dst decodeDestinations](format string, docs d, dst) error {
+//	return nil
+//}

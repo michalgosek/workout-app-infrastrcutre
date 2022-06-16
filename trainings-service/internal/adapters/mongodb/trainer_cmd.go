@@ -48,13 +48,13 @@ func (m *TrainerCommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule
 		Desc:          schedule.Desc(),
 		Date:          schedule.Date().Format(m.cfg.Format),
 	}
-	filter := bson.M{"_id": schedule.UUID(), "trainer_uuid": schedule.TrainerUUID()}
+	f := bson.M{"_id": schedule.UUID(), "trainer_uuid": schedule.TrainerUUID()}
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 
 	ctx, cancel := context.WithTimeout(ctx, m.cfg.CommandTimeout)
 	defer cancel()
-	err := updateOne(ctx, coll, filter, doc)
+	err := updateOne(ctx, coll, f, doc)
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}

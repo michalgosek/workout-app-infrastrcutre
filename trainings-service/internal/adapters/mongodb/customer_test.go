@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
+
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
