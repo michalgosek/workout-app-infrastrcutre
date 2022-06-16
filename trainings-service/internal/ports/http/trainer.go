@@ -7,14 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
-
-	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
-
 	"github.com/go-chi/chi"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
 )
 
 const (
@@ -48,7 +45,7 @@ func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		UUID, err := h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command2.WorkoutGroup{
+		UUID, err := h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command.WorkoutGroup{
 			TrainerUUID: payload.TrainerUUID,
 			Name:        payload.Name,
 			Desc:        payload.Desc,
@@ -65,11 +62,19 @@ func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
 
 func (h *TrainerWorkoutGroups) AssignCustomer() http.HandlerFunc {
 	type HTTPRequestBody struct {
-		TrainerUUID  string `json:"trainer_uuid"`
-		UUID         string `json:"workout_group_uuid"`
 		CustomerUUID string `json:"customer_uuid"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		workoutUUID := chi.URLParam(r, "workoutUUID")
+		if workoutUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing workoutUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
 		var payload HTTPRequestBody
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&payload)
@@ -77,21 +82,21 @@ func (h *TrainerWorkoutGroups) AssignCustomer() http.HandlerFunc {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		err = h.app.Commands.AssignCustomer.Do(r.Context(), command2.WorkoutRegistration{
-			TrainerUUID:  payload.TrainerUUID,
-			GroupUUID:    payload.UUID,
+		err = h.app.Commands.AssignCustomer.Do(r.Context(), command.WorkoutRegistration{
+			TrainerUUID:  trainerUUID,
+			GroupUUID:    workoutUUID,
 			CustomerUUID: payload.CustomerUUID,
 		})
-		if errors.Is(err, query.ErrWorkoutGroupNotOwner) {
+		if errors.Is(err, command.ErrWorkoutGroupNotOwner) {
 			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, query.ErrRepositoryFailure) {
+		if errors.Is(err, command.ErrRepositoryFailure) {
 			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
 			return
 		}
 		res := rest.JSONResponse{
-			Message: fmt.Sprintf("Customer UUID: %s assgined to wrokout group UUID: %s", payload.CustomerUUID, payload.UUID),
+			Message: fmt.Sprintf("Customer UUID: %s assgined to wrokout group UUID: %s", payload.CustomerUUID, workoutUUID),
 		}
 		rest.SendJSONResponse(w, res, http.StatusOK)
 	}
@@ -199,11 +204,11 @@ func (h *TrainerWorkoutGroups) DeleteWorkoutGroup() http.HandlerFunc {
 			return
 		}
 		err := h.app.Commands.DeleteTrainerWorkout.Do(r.Context(), workoutUUID, trainerUUID)
-		if errors.Is(err, query.ErrWorkoutGroupNotOwner) {
+		if errors.Is(err, command.ErrWorkoutGroupNotOwner) {
 			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, query.ErrRepositoryFailure) {
+		if errors.Is(err, command.ErrRepositoryFailure) {
 			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
 		}
 		if err != nil {
@@ -226,6 +231,9 @@ func (h *TrainerWorkoutGroups) DeleteWorkoutGroups() http.HandlerFunc {
 			return
 		}
 		err := h.app.Commands.DeleteTrainerWorkouts.Do(r.Context(), trainerUUID)
+		if errors.Is(err, command.ErrRepositoryFailure) {
+			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
+		}
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return

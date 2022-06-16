@@ -51,30 +51,26 @@ func execute() error {
 	}
 	HTTP := http.NewTrainerWorkoutGroupsHTTP(&app, cfg.Format)
 	API := rest.NewRouter()
-
 	API.Route("/api/v1", func(r chi.Router) {
 		r.Route("/trainers", func(r chi.Router) {
 			r.Route("/{trainerUUID}", func(r chi.Router) {
 				r.Route("/workouts", func(r chi.Router) {
 					r.Get("/", HTTP.GetTrainerWorkoutGroups())
-					r.Get("/{workoutUUID}", HTTP.GetTrainerWorkoutGroup())
 					r.Post("/", HTTP.CreateTrainerWorkoutGroup())
 					r.Delete("/", HTTP.DeleteWorkoutGroups())
-					r.Delete("/{workoutUUID}", HTTP.DeleteWorkoutGroup())
+					r.Route("/{workoutUUID}", func(r chi.Router) {
+						r.Get("/", HTTP.GetTrainerWorkoutGroup())
+						r.Delete("/", HTTP.DeleteWorkoutGroup())
+
+						r.Route("/customers", func(r chi.Router) {
+							r.Post("/", HTTP.AssignCustomer())
+							//r.Delete("/{customerUUID}", HTTP.UnassginCustomer())
+						})
+					})
 				})
 			})
 		})
 	})
-
-	//r.Route("/customers", func(r chi.Router) {
-	//	r.Route("/{customerId}", func(r chi.Router) {
-	//		r.Route("/workouts", func(r chi.Router) {
-	//			r.Get("/")
-	//		})
-	//
-	//	})
-	//
-	//})
 
 	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
 	srv := server.NewHTTP(API, serverCfg)

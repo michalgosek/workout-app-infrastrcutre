@@ -32,7 +32,7 @@ func TestShouldReturnErrorWhenCustomerLimitExceeded_Unit(t *testing.T) {
 	assertions.Equal(customersAssigned, SUT.AssignedCustomers())
 }
 
-func TestShouldNotReturnErrorWhenScheduleNameIsUnderLimit_Unit(t *testing.T) {
+func TestShouldNotReturnErrorWhenWorkoutGroupNameIsUnderLimit_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	const trainerUUID = "1b0af14e-5aa9-4b80-968f-03d93f46805e"
@@ -51,7 +51,7 @@ func TestShouldNotReturnErrorWhenScheduleNameIsUnderLimit_Unit(t *testing.T) {
 
 }
 
-func TestShouldReturnErrorWhenScheduleNameIsOverLimit_Unit(t *testing.T) {
+func TestShouldReturnErrorWhenWorkoutGroupNameIsOverLimit_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	const trainerUUID = "1b0af14e-5aa9-4b80-968f-03d93f46805e"
@@ -68,7 +68,7 @@ func TestShouldReturnErrorWhenScheduleNameIsOverLimit_Unit(t *testing.T) {
 	assertions.Equal(trainer.ErrScheduleNameExceeded, err)
 }
 
-func TestShouldNotReturnErrorWhenScheduleNameIsEqualLimit_Unit(t *testing.T) {
+func TestShouldNotReturnErrorWhenWorkoutGroupNameIsEqualLimit_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	const trainerUUID = "1b0af14e-5aa9-4b80-968f-03d93f46805e"
@@ -85,7 +85,7 @@ func TestShouldNotReturnErrorWhenScheduleNameIsEqualLimit_Unit(t *testing.T) {
 	assertions.Nil(err)
 }
 
-func TestShouldRegisterCustomerToScheduleWithSucces(t *testing.T) {
+func TestShouldRegisterCustomerToWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -105,7 +105,7 @@ func TestShouldRegisterCustomerToScheduleWithSucces(t *testing.T) {
 	assertions.Equal(customersLeft, SUT.Limit())
 }
 
-func TestShouldUnregisterCustomerFromScheduleWithSucces(t *testing.T) {
+func TestShouldUnregisterCustomerFromWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:

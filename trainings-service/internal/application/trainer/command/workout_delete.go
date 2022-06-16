@@ -3,9 +3,8 @@ package command
 import (
 	"context"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
+	"github.com/sirupsen/logrus"
 )
 
 type WorkoutDeleter interface {
@@ -26,7 +25,7 @@ func (w *WorkoutDeleteHandler) Do(ctx context.Context, groupUUID, trainerUUID st
 		return ErrRepositoryFailure
 	}
 	if group.TrainerUUID() != trainerUUID {
-		const s = "query workout group UUID: %s does not belong to trainerUUID: %s"
+		const s = "workout group UUID: %s does not belong to trainerUUID: %s"
 		logger.Errorf(s, groupUUID, trainerUUID)
 		return ErrWorkoutGroupNotOwner
 	}

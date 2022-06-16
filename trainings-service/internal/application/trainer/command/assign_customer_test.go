@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -22,7 +22,7 @@ func TestShouldNotAssignCustomerToWorkoutGroupNotOwnedByTrainer_Unit(t *testing.
 
 	ctx := context.Background()
 	workout := trainer.WorkoutGroup{}
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.CustomerAssigner)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
 	SUT := command.NewAssignCustomerHandler(repository)
@@ -51,7 +51,7 @@ func TestShouldNotAssignCustomerToSpecifiedWorkoutGroupWhenRepositoryFailure_Uni
 	workoutdWithCustomer := workout
 	workoutdWithCustomer.AssignCustomer(customerUUID)
 
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.CustomerAssigner)
 	expectedErr := errors.New("repository failure")
 	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	repository.EXPECT().UpsertWorkoutGroup(ctx, workoutdWithCustomer).Return(expectedErr)
@@ -82,7 +82,7 @@ func TestShouldAssignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing.
 	workoutWithCustomer := workout
 	_ = workoutWithCustomer.AssignCustomer(customerUUID)
 
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.CustomerAssigner)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	repository.EXPECT().UpsertWorkoutGroup(ctx, workoutWithCustomer).Return(nil)
 

@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,7 +18,7 @@ func TestShouldDeleteWorkoutsGroupsWithSuccess_Unit(t *testing.T) {
 	ctx := context.Background()
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutsDeleter)
 	repository.EXPECT().DeleteWorkoutGroups(ctx, trainerUUID).Return(nil)
 
 	SUT := command.NewWorkoutsDeleteHandler(repository)
@@ -37,7 +37,7 @@ func TestShouldNotDeleteTrainerWorkoutsGroupWhenRepositoryFailure_Unit(t *testin
 	// given:
 	ctx := context.Background()
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutsDeleter)
 	expectedErr := errors.New("repository failure")
 	repository.EXPECT().DeleteWorkoutGroups(ctx, trainerUUID).Return(expectedErr)
 	SUT := command.NewWorkoutsDeleteHandler(repository)

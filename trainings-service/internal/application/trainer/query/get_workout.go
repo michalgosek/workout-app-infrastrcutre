@@ -3,9 +3,8 @@ package query
 import (
 	"context"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
+	"github.com/sirupsen/logrus"
 )
 
 type WorkoutGetter interface {

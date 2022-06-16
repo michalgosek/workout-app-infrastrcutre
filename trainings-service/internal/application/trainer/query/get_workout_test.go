@@ -5,8 +5,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -19,7 +19,7 @@ func TestShouldGetRequestedTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
 	ctx := context.Background()
 
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutGetter)
 	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	SUT := query.NewGetWorkoutHandler(repository)
@@ -42,7 +42,7 @@ func TestShouldGetEmptyTrainerWorkoutGroupWhenRequestedGroupNotExist_Unit(t *tes
 
 	ctx := context.Background()
 	workout := trainer.WorkoutGroup{}
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutGetter)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
 	SUT := query.NewGetWorkoutHandler(repository)
@@ -66,7 +66,7 @@ func TestShouldReturnErrorWhenWhenRequestedGroupNotOwnedByTrainer_Unit(t *testin
 	ctx := context.Background()
 	secondTrainerGroup := testutil.NewTrainerWorkoutGroup(secondTrainerUUID)
 	workoutUUID := secondTrainerGroup.UUID()
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutGetter)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(secondTrainerGroup, nil)
 	SUT := query.NewGetWorkoutHandler(repository)
 
@@ -88,7 +88,7 @@ func TestShouldNotGetTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T)
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
 
 	expectedError := errors.New("repository failure")
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutGetter)
 	repository.EXPECT().QueryWorkoutGroup(ctx, groupUUID).Return(trainer.WorkoutGroup{}, expectedError)
 	SUT := query.NewGetWorkoutHandler(repository)
 

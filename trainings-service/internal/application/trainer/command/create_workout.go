@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
+	"github.com/sirupsen/logrus"
 )
 
 type WorkoutUpserter interface {
@@ -32,6 +31,7 @@ func (c *CreateWorkoutHandler) Do(ctx context.Context, w WorkoutGroup) (string, 
 		logger.Errorf(s, w, err)
 		return "", err
 	}
+
 	err = c.repository.UpsertWorkoutGroup(ctx, *group)
 	if err != nil {
 		const s = "upsert group UUID: %s for trainer UUID: %s failed, reason: %v"

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/mocks"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -17,7 +17,7 @@ func TestShouldCreateTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutUpserter)
 	repository.EXPECT().UpsertWorkoutGroup(ctx, mock.Anything).Return(nil)
 	SUT := command.NewCreateWorkoutHandler(repository)
 
@@ -40,7 +40,7 @@ func TestShouldNotCreateTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing
 	// given:
 	ctx := context.Background()
 	expectedError := errors.New("repository failure")
-	repository := new(mocks.TrainerRepository)
+	repository := new(mocks.WorkoutUpserter)
 	repository.EXPECT().UpsertWorkoutGroup(ctx, mock.Anything).Return(expectedError)
 	SUT := command.NewCreateWorkoutHandler(repository)
 
