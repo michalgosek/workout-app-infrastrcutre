@@ -53,8 +53,8 @@ func (t *QueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID string) 
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("parsing date value from document failed: %v", err)
 	}
-	out, err := trainer.UnmarshalFromDatabase(doc.UUID, doc.TrainerUUID, doc.Name, doc.Desc, doc.CustomerUUIDs, date, doc.Limit)
-	return out, nil
+	group, err := trainer.UnmarshalFromDatabase(doc.UUID, doc.TrainerUUID, doc.Name, doc.Desc, doc.CustomerUUIDs, date, doc.Limit)
+	return group, nil
 }
 
 func (t *QueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
@@ -72,9 +72,25 @@ func (t *QueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUID strin
 		return nil, fmt.Errorf("decoding failed: %v", err)
 	}
 
-	workouts, err := convertToDomainWorkoutGroups(t.cfg.Format, docs...)
+	groups, err := convertDocumentsToWorkoutGroups(t.cfg.Format, docs...)
 	if err != nil {
 		return nil, fmt.Errorf("converting docs to domain workout groups failed: %v", err)
 	}
-	return workouts, nil
+	return groups, nil
+}
+
+func convertDocumentsToWorkoutGroups(format string, docs ...WorkoutGroupDocument) ([]trainer.WorkoutGroup, error) {
+	var groups []trainer.WorkoutGroup
+	for _, d := range docs {
+		date, err := time.Parse(format, d.Date)
+		if err != nil {
+			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
+		}
+		workout, err := trainer.UnmarshalFromDatabase(d.UUID, d.TrainerUUID, d.Name, d.Desc, d.CustomerUUIDs, date, d.Limit)
+		if err != nil {
+			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
+		}
+		groups = append(groups, workout)
+	}
+	return groups, nil
 }

@@ -60,16 +60,13 @@ func (c *CommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, workout c
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}
-	if err != nil {
-		return fmt.Errorf("update one failed: %v", err)
-	}
 	return nil
 }
 
-func (c *CommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, customerWorkoutDayUUID string) error {
+func (c *CommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, workoutDayUUID string) error {
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
-	f := bson.M{"_id": customerWorkoutDayUUID, "customer_uuid": customerUUID}
+	f := bson.M{"_id": workoutDayUUID, "customer_uuid": customerUUID}
 	_, err := coll.DeleteOne(ctx, f)
 	if err != nil {
 		return fmt.Errorf("delete one failed: %v", err)

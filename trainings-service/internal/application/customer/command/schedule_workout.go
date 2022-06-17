@@ -28,17 +28,15 @@ func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutScheduleDetail
 	logger := logrus.WithFields(logrus.Fields{"Component": "ScheduleWorkoutHandler"})
 	group, err := s.repository.QueryWorkoutGroup(ctx, w.GroupUUID)
 	if err != nil {
-		const s = "query workout group UUID: %s failed, reason: %v"
-		logger.Errorf(s, w.GroupUUID, err)
+		logger.Errorf("query workout group UUID: %s failed, reason: %v", w.GroupUUID, err)
 		return ErrRepositoryFailure
 	}
 	if group.UUID() != w.GroupUUID {
-		const s = "group UUID: %s does not exist"
-		logger.Errorf(s, w.GroupUUID)
+		logger.Errorf("group UUID: %s does not exist", w.GroupUUID)
 		return ErrResourceNotFound
 	}
-
 	group.AssignCustomer(w.CustomerUUID)
+
 	workoutDay, err := customer.NewWorkoutDay(w.CustomerUUID, group.UUID(), group.Date())
 	if err != nil {
 		const s = "creating workout day for customer UUID: %s, group UUID: %s, date: %s failed, reason: %v"
@@ -48,14 +46,12 @@ func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutScheduleDetail
 
 	err = s.repository.UpsertWorkoutGroup(ctx, group)
 	if err != nil {
-		const s = "upsert workout group UUID: %s failed, reason: %v"
-		logger.Errorf(s, w.GroupUUID, err)
+		logger.Errorf("upsert workout group UUID: %s failed, reason: %v", w.GroupUUID, err)
 		return ErrRepositoryFailure
 	}
 	err = s.repository.UpsertCustomerWorkoutDay(ctx, *workoutDay)
 	if err != nil {
-		const s = "upsert customer workout day UUID: %s failed, reason: %v"
-		logger.Errorf(s, workoutDay.UUID(), err)
+		logger.Errorf("upsert customer workout day UUID: %s failed, reason: %v", workoutDay.UUID(), err)
 		return ErrRepositoryFailure
 	}
 	return nil

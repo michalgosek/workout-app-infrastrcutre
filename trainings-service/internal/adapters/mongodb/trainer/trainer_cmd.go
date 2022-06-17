@@ -63,9 +63,6 @@ func (m *CommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule traine
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}
-	if err != nil {
-		return fmt.Errorf("update one failed: %v", err)
-	}
 	return nil
 }
 
