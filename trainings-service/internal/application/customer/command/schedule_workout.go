@@ -2,10 +2,8 @@ package command
 
 import (
 	"context"
-	"errors"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,19 +12,14 @@ type WorkoutScheduleDetails struct {
 	GroupUUID    string
 }
 
-type ScheduleWorkoutHandlerRepository interface {
-	QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error)
-	UpsertWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error
-	UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error
-}
-
 type ScheduleWorkoutHandler struct {
-	repository ScheduleWorkoutHandlerRepository
+	trainerRepository  TrainerRepository
+	customerRepository CustomerRepository
 }
 
 func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutScheduleDetails) error {
 	logger := logrus.WithFields(logrus.Fields{"Component": "ScheduleWorkoutHandler"})
-	group, err := s.repository.QueryWorkoutGroup(ctx, w.GroupUUID)
+	group, err := s.trainerRepository.QueryTrainerWorkoutGroup(ctx, w.GroupUUID)
 	if err != nil {
 		logger.Errorf("query workout group UUID: %s failed, reason: %v", w.GroupUUID, err)
 		return ErrRepositoryFailure
@@ -44,12 +37,12 @@ func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutScheduleDetail
 		return err
 	}
 
-	err = s.repository.UpsertWorkoutGroup(ctx, group)
+	err = s.trainerRepository.UpsertTrainerWorkoutGroup(ctx, group)
 	if err != nil {
 		logger.Errorf("upsert workout group UUID: %s failed, reason: %v", w.GroupUUID, err)
 		return ErrRepositoryFailure
 	}
-	err = s.repository.UpsertCustomerWorkoutDay(ctx, *workoutDay)
+	err = s.customerRepository.UpsertCustomerWorkoutDay(ctx, *workoutDay)
 	if err != nil {
 		logger.Errorf("upsert customer workout day UUID: %s failed, reason: %v", workoutDay.UUID(), err)
 		return ErrRepositoryFailure
@@ -57,16 +50,15 @@ func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutScheduleDetail
 	return nil
 }
 
-func NewScheduleWorkoutHandler(c ScheduleWorkoutHandlerRepository) *ScheduleWorkoutHandler {
+func NewScheduleWorkoutHandler(c CustomerRepository, t TrainerRepository) *ScheduleWorkoutHandler {
 	if c == nil {
-		panic("nil repository")
+		panic("nil customer repository")
+	}
+	if t == nil {
+		panic("nil trainer repository")
 	}
 	return &ScheduleWorkoutHandler{
-		repository: c,
+		customerRepository: c,
+		trainerRepository:  t,
 	}
 }
-
-var (
-	ErrRepositoryFailure = errors.New("repository failure")
-	ErrResourceNotFound  = errors.New("resource not found")
-)

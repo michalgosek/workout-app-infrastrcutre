@@ -16,9 +16,10 @@ func TestShouldCancelWorkoutDayWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	repository := new(mocks.CancelWorkoutHandlerRepository)
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
 	ctx := context.Background()
-	SUT := command.NewCancelWorkoutHandler(repository)
+	SUT := command.NewCancelWorkoutHandler(customerRepository, trainerRepository)
 
 	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
 	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
@@ -28,9 +29,9 @@ func TestShouldCancelWorkoutDayWithSuccess_Unit(t *testing.T) {
 	trainerWorkoutWithoutCustomer := trainerWorkout
 	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
 
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(nil)
-	repository.EXPECT().UpsertWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(nil)
+	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(nil)
 
 	// when:
 	err := SUT.Do(ctx, command.CancelWorkoutDetails{
@@ -40,21 +41,24 @@ func TestShouldCancelWorkoutDayWithSuccess_Unit(t *testing.T) {
 
 	// then:
 	assertions.Nil(err)
-	repository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
 }
 
 func TestCancelWorkoutHandlerShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	repository := new(mocks.CancelWorkoutHandlerRepository)
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
+
 	ctx := context.Background()
-	SUT := command.NewCancelWorkoutHandler(repository)
+	SUT := command.NewCancelWorkoutHandler(customerRepository, trainerRepository)
 
 	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
 	const groupUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
 
-	repository.EXPECT().QueryWorkoutGroup(ctx, groupUUID).Return(trainer.WorkoutGroup{}, errors.New("err"))
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, groupUUID).Return(trainer.WorkoutGroup{}, errors.New("err"))
 
 	// when:
 	err := SUT.Do(ctx, command.CancelWorkoutDetails{
@@ -64,16 +68,18 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(
 
 	// then:
 	assertions.Equal(command.ErrRepositoryFailure, err)
-	repository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
 }
 
 func TestCancelWorkoutHandlerShouldReturnErrorWhenDeleteCustomerWorkoutDayFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	repository := new(mocks.CancelWorkoutHandlerRepository)
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
 	ctx := context.Background()
-	SUT := command.NewCancelWorkoutHandler(repository)
+	SUT := command.NewCancelWorkoutHandler(customerRepository, trainerRepository)
 
 	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
 	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
@@ -83,8 +89,8 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenDeleteCustomerWorkoutDayFailur
 	trainerWorkoutWithoutCustomer := trainerWorkout
 	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
 
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(errors.New("err"))
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(errors.New("err"))
 
 	// when:
 	err := SUT.Do(ctx, command.CancelWorkoutDetails{
@@ -94,16 +100,18 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenDeleteCustomerWorkoutDayFailur
 
 	// then:
 	assertions.Equal(command.ErrRepositoryFailure, err)
-	repository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
 }
 
 func TestCancelWorkoutHandlerShouldReturnErrorWhenUpsertWorkoutGroupFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	repository := new(mocks.CancelWorkoutHandlerRepository)
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
 	ctx := context.Background()
-	SUT := command.NewCancelWorkoutHandler(repository)
+	SUT := command.NewCancelWorkoutHandler(customerRepository, trainerRepository)
 
 	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
 	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
@@ -113,9 +121,9 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenUpsertWorkoutGroupFailure_Unit
 	trainerWorkoutWithoutCustomer := trainerWorkout
 	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
 
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(nil)
-	repository.EXPECT().UpsertWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(errors.New("err"))
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(nil)
+	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(errors.New("err"))
 
 	// when:
 	err := SUT.Do(ctx, command.CancelWorkoutDetails{
@@ -125,5 +133,6 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenUpsertWorkoutGroupFailure_Unit
 
 	// then:
 	assertions.Equal(command.ErrRepositoryFailure, err)
-	repository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
 }

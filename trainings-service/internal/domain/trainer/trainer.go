@@ -16,15 +16,20 @@ import (
 type WorkoutGroup struct {
 	uuid          string
 	trainerUUID   string
+	trainerName   string
 	limit         int
 	customerUUIDs []string
-	name          string
-	desc          string
+	groupName     string
+	groupDesc     string
 	date          time.Time
 }
 
-func (t *WorkoutGroup) Name() string {
-	return t.name
+func (t *WorkoutGroup) GroupName() string {
+	return t.groupName
+}
+
+func (t *WorkoutGroup) TrainerName() string {
+	return t.trainerName
 }
 
 func (t *WorkoutGroup) UUID() string {
@@ -43,8 +48,8 @@ func (t *WorkoutGroup) Date() time.Time {
 	return t.date
 }
 
-func (t *WorkoutGroup) Desc() string {
-	return t.desc
+func (t *WorkoutGroup) GroupDescription() string {
+	return t.groupDesc
 }
 
 func (t *WorkoutGroup) CustomerUUIDs() []string {
@@ -68,23 +73,23 @@ func isProposedNameNotExceeded(name string) bool {
 	return len(name) > 15
 }
 
-func (t *WorkoutGroup) UpdateDesc(s string) error {
+func (t *WorkoutGroup) UpdateGroupDescription(s string) error {
 	if isProposedDescriptionNotExceeded(s) {
 		return ErrScheduleDescriptionExceeded
 	}
-	t.desc = s
+	t.groupDesc = s
 	return nil
 }
 
-func (t *WorkoutGroup) UpdateName(s string) error {
+func (t *WorkoutGroup) UpdateGroupName(s string) error {
 	if isProposedNameNotExceeded(s) {
 		return ErrScheduleNameExceeded
 	}
-	t.name = s
+	t.groupName = s
 	return nil
 }
 
-func (t *WorkoutGroup) UpdateDate(d time.Time) error {
+func (t *WorkoutGroup) UpdateGroupDate(d time.Time) error {
 	if isProposedTimeNotExceeded(d) {
 		return ErrScheduleDateViolation
 	}
@@ -126,7 +131,7 @@ func (t *WorkoutGroup) AssignCustomer(UUID string) error {
 	return nil
 }
 
-func NewWorkoutGroup(trainerUUID, name, desc string, date time.Time) (*WorkoutGroup, error) {
+func NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc string, date time.Time) (*WorkoutGroup, error) {
 	ok := date.IsZero()
 	if ok {
 		return nil, ErrScheduleDateViolation
@@ -135,19 +140,23 @@ func NewWorkoutGroup(trainerUUID, name, desc string, date time.Time) (*WorkoutGr
 	if !ok {
 		return nil, ErrScheduleDateViolation
 	}
-	ok = isProposedDescriptionNotExceeded(desc)
+	ok = isProposedDescriptionNotExceeded(groupDesc)
 	if ok {
 		return nil, ErrScheduleDescriptionExceeded
 	}
-	ok = isProposedNameNotExceeded(name)
+	ok = isProposedNameNotExceeded(groupName)
 	if ok {
 		return nil, ErrScheduleNameExceeded
+	}
+	if trainerName == "" {
+		return nil, ErrEmptyTrainerName
 	}
 	w := WorkoutGroup{
 		uuid:          uuid.NewString(),
 		trainerUUID:   trainerUUID,
-		name:          name,
-		desc:          desc,
+		trainerName:   trainerName,
+		groupName:     groupName,
+		groupDesc:     groupDesc,
 		limit:         10,
 		date:          date,
 		customerUUIDs: []string{},
@@ -155,29 +164,33 @@ func NewWorkoutGroup(trainerUUID, name, desc string, date time.Time) (*WorkoutGr
 	return &w, nil
 }
 
-func UnmarshalFromDatabase(groupUUID, trainerUUID, name, desc string, customerUUIDs []string, date time.Time, limit int) (WorkoutGroup, error) {
+func UnmarshalFromDatabase(groupUUID, trainerUUID, trainerName, groupName, groupDesc string, customerUUIDs []string, date time.Time, limit int) (WorkoutGroup, error) {
 	if groupUUID == "" {
 		return WorkoutGroup{}, ErrEmptyWorkoutGroupUUID
 	}
 	if trainerUUID == "" {
 		return WorkoutGroup{}, ErrEmptyWorkoutTrainerUUID
 	}
-	if name == "" {
-		return WorkoutGroup{}, ErrEmptyWorkoutName
+	if trainerName == "" {
+		return WorkoutGroup{}, ErrEmptyTrainerName
 	}
-	if desc == "" {
-		return WorkoutGroup{}, ErrEmptyWorkoutDesc
+	if groupName == "" {
+		return WorkoutGroup{}, ErrEmptyWorkoutGroupName
+	}
+	if groupDesc == "" {
+		return WorkoutGroup{}, ErrEmptyWorkoutGroupDesc
 	}
 	if date.IsZero() {
-		return WorkoutGroup{}, ErrEmptyWorkoutDate
+		return WorkoutGroup{}, ErrEmptyWorkoutGroupDate
 	}
 	w := WorkoutGroup{
 		uuid:          groupUUID,
 		trainerUUID:   trainerUUID,
 		limit:         limit,
 		customerUUIDs: customerUUIDs,
-		name:          name,
-		desc:          desc,
+		groupName:     groupName,
+		trainerName:   trainerName,
+		groupDesc:     groupDesc,
 		date:          date,
 	}
 	return w, nil
@@ -186,10 +199,11 @@ func UnmarshalFromDatabase(groupUUID, trainerUUID, name, desc string, customerUU
 var (
 	ErrEmptyWorkoutGroupUUID   = errors.New("empty workout group UUID")
 	ErrEmptyWorkoutTrainerUUID = errors.New("empty trainer UUID")
-	ErrEmptyWorkoutName        = errors.New("empty workout name")
-	ErrEmptyWorkoutDesc        = errors.New("empty workout desc")
+	ErrEmptyWorkoutGroupName   = errors.New("empty workout name")
+	ErrEmptyTrainerName        = errors.New("empty trainer name")
+	ErrEmptyWorkoutGroupDesc   = errors.New("empty workout desc")
 	ErrEmptyCustomerUUID       = errors.New("empty customer UUID")
-	ErrEmptyWorkoutDate        = errors.New("empty workout date")
+	ErrEmptyWorkoutGroupDate   = errors.New("empty workout date")
 )
 
 var (

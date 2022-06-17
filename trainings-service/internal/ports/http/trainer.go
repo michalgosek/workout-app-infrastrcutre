@@ -28,8 +28,9 @@ type TrainerWorkoutGroups struct {
 func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
 	type HTTPRequestBody struct {
 		TrainerUUID string `json:"trainer_uuid"`
-		Name        string `json:"name"`
-		Desc        string `json:"desc"`
+		TrainerName string `json:"trainer_name"`
+		GroupName   string `json:"group_name"`
+		GroupDesc   string `json:"group_desc"`
 		Date        string `json:"date"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -47,8 +48,9 @@ func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
 		}
 		UUID, err := h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command.WorkoutGroupDetails{
 			TrainerUUID: payload.TrainerUUID,
-			Name:        payload.Name,
-			Desc:        payload.Desc,
+			GroupName:   payload.GroupName,
+			GroupDesc:   payload.GroupDesc,
+			TrainerName: payload.TrainerName,
 			Date:        date,
 		})
 		if err != nil {
@@ -106,8 +108,8 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
 		UUID          string   `json:"workout_group_uuid"`
 		CustomerUUIDs []string `json:"customer_uuids"`
 		Date          string   `json:"date"`
-		Name          string   `json:"name"`
-		Desc          string   `json:"desc"`
+		GroupName     string   `json:"group_name"`
+		GroupDesc     string   `json:"group_desc"`
 		Limit         int      `json:"limit"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -137,8 +139,8 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
 		res := HTTPResponseBody{
 			UUID:          group.UUID(),
 			CustomerUUIDs: group.CustomerUUIDs(),
-			Name:          group.Name(),
-			Desc:          group.Desc(),
+			GroupName:     group.GroupName(),
+			GroupDesc:     group.GroupDescription(),
 			Limit:         group.Limit(),
 			Date:          group.Date().Format(h.format),
 		}
@@ -151,8 +153,8 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroups() http.HandlerFunc {
 		UUID          string   `json:"workout_group_uuid"`
 		CustomerUUIDs []string `json:"customer_uuids"`
 		Date          string   `json:"date"`
-		Name          string   `json:"name"`
-		Desc          string   `json:"desc"`
+		GroupName     string   `json:"name"`
+		GroupDesc     string   `json:"desc"`
 		Limit         int      `json:"limit"`
 	}
 
@@ -178,8 +180,8 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroups() http.HandlerFunc {
 				UUID:          g.UUID(),
 				CustomerUUIDs: g.CustomerUUIDs(),
 				Date:          g.Date().Format(h.format),
-				Name:          g.Name(),
-				Desc:          g.Desc(),
+				GroupName:     g.GroupName(),
+				GroupDesc:     g.GroupDescription(),
 				Limit:         g.Limit(),
 			})
 		}

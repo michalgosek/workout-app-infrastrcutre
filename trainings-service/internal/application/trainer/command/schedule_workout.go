@@ -8,44 +8,39 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type ScheduleWorkoutHandlerRepository interface {
-	UpsertWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error
-}
-
 type ScheduleWorkoutHandler struct {
-	repository ScheduleWorkoutHandlerRepository
+	repository TrainerRepository
 }
 
 type WorkoutGroupDetails struct {
 	TrainerUUID string
-	Name        string
-	Desc        string
+	TrainerName string
+	GroupName   string
+	GroupDesc   string
 	Date        time.Time
 }
 
 func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutGroupDetails) (string, error) {
-	logger := logrus.WithFields(logrus.Fields{"Component": "CreateWorkoutHandler"})
-	group, err := trainer.NewWorkoutGroup(w.TrainerUUID, w.Name, w.Desc, w.Date)
+	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "CreateWorkoutHandler"})
+	group, err := trainer.NewWorkoutGroup(w.TrainerUUID, w.TrainerName, w.GroupName, w.GroupDesc, w.Date)
 	if err != nil {
-		const s = "creating new workout group: %+v failed, reason: %v"
-		logger.Errorf(s, w, err)
+		logger.Errorf("creating new workout group: %+v failed, reason: %v", w, err)
 		return "", err
 	}
 
-	err = s.repository.UpsertWorkoutGroup(ctx, *group)
+	err = s.repository.UpsertTrainerWorkoutGroup(ctx, *group)
 	if err != nil {
-		const s = "upsert group UUID: %s for trainer UUID: %s failed, reason: %v"
-		logger.Errorf(s, group.UUID(), w.TrainerUUID, err)
+		logger.Errorf("upsert group UUID: %s for trainer UUID: %s failed, reason: %v", group.UUID(), w.TrainerUUID, err)
 		return "", ErrRepositoryFailure
 	}
 	return group.UUID(), nil
 }
 
-func NewScheduleWorkoutHandler(r ScheduleWorkoutHandlerRepository) *ScheduleWorkoutHandler {
-	if r == nil {
-		panic("nil repository")
+func NewScheduleWorkoutHandler(t TrainerRepository) *ScheduleWorkoutHandler {
+	if t == nil {
+		panic("nil trainer repository")
 	}
 	return &ScheduleWorkoutHandler{
-		repository: r,
+		repository: t,
 	}
 }

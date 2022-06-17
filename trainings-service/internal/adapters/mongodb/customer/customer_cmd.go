@@ -40,11 +40,11 @@ func (c *CommandHandler) DropCollection(ctx context.Context) error {
 }
 
 func (c *CommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error {
-	doc := WorkoutDocument{
-		UUID:                    workout.UUID(),
-		CustomerUUID:            workout.CustomerUUID(),
-		TrainerWorkoutGroupUUID: workout.GroupUUID(),
-		Date:                    workout.Date().Format(c.cfg.Format),
+	doc := WorkoutDayDocument{
+		UUID:         workout.UUID(),
+		CustomerUUID: workout.CustomerUUID(),
+		GroupUUID:    workout.GroupUUID(),
+		Date:         workout.Date().Format(c.cfg.Format),
 	}
 
 	db := c.cli.Database(c.cfg.Database)

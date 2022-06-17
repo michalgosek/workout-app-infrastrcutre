@@ -19,9 +19,9 @@ func TestShouldGetRequestedTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
 	ctx := context.Background()
 
-	repository := new(mocks.WorkoutGroupHandlerRepository)
+	repository := new(mocks.TrainerRepository)
 	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	SUT := query.NewWorkoutGroupHandler(repository)
 
 	// when:
@@ -42,8 +42,8 @@ func TestShouldGetEmptyTrainerWorkoutGroupWhenRequestedGroupNotExist_Unit(t *tes
 
 	ctx := context.Background()
 	workout := trainer.WorkoutGroup{}
-	repository := new(mocks.WorkoutGroupHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
 	SUT := query.NewWorkoutGroupHandler(repository)
 
@@ -66,8 +66,8 @@ func TestShouldReturnErrorWhenWhenRequestedGroupNotOwnedByTrainer_Unit(t *testin
 	ctx := context.Background()
 	secondTrainerGroup := testutil.NewTrainerWorkoutGroup(secondTrainerUUID)
 	workoutUUID := secondTrainerGroup.UUID()
-	repository := new(mocks.WorkoutGroupHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(secondTrainerGroup, nil)
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutUUID).Return(secondTrainerGroup, nil)
 	SUT := query.NewWorkoutGroupHandler(repository)
 
 	// when:
@@ -88,8 +88,8 @@ func TestShouldNotGetTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T)
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
 
 	expectedError := errors.New("repository failure")
-	repository := new(mocks.WorkoutGroupHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, groupUUID).Return(trainer.WorkoutGroup{}, expectedError)
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, groupUUID).Return(trainer.WorkoutGroup{}, expectedError)
 	SUT := query.NewWorkoutGroupHandler(repository)
 
 	// when:

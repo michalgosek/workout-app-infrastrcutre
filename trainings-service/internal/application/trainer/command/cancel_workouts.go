@@ -6,30 +6,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CancelWorkoutsHandlerRepository interface {
-	DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error
-}
-
 type CancelWorkoutsHandler struct {
-	repository CancelWorkoutsHandlerRepository
+	repository TrainerRepository
 }
 
 func (c *CancelWorkoutsHandler) Do(ctx context.Context, trainerUUID string) error {
-	logger := logrus.WithFields(logrus.Fields{"Component": "WorkoutsDeleteHandler"})
-	err := c.repository.DeleteWorkoutGroups(ctx, trainerUUID)
+	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "WorkoutsDeleteHandler"})
+	err := c.repository.DeleteTrainerWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		const s = "delete workout groups for trainerUUID: %s failed, reason: %v"
-		logger.Errorf(s, trainerUUID, err)
+		logger.Errorf("delete workout groups for trainerUUID: %s failed, reason: %v", trainerUUID, err)
 		return ErrRepositoryFailure
 	}
 	return nil
 }
 
-func NewCancelWorkoutsHandler(w CancelWorkoutsHandlerRepository) *CancelWorkoutsHandler {
-	if w == nil {
-		panic("nil repository")
+func NewCancelWorkoutsHandler(t TrainerRepository) *CancelWorkoutsHandler {
+	if t == nil {
+		panic("nil trainer repository")
 	}
 	return &CancelWorkoutsHandler{
-		repository: w,
+		repository: t,
 	}
 }

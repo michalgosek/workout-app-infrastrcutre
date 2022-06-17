@@ -7,39 +7,33 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutGroupHandlerRepository interface {
-	QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error)
-}
-
 type WorkoutGroupHandler struct {
-	repository WorkoutGroupHandlerRepository
+	repository TrainerRepository
 }
 
 func (t *WorkoutGroupHandler) Do(ctx context.Context, groupUUID, trainerUUID string) (trainer.WorkoutGroup, error) {
-	logger := logrus.WithFields(logrus.Fields{"Component": "WorkoutGroupHandler"})
+	logger := logrus.WithFields(logrus.Fields{"Trainer-QRY": "WorkoutGroupHandler"})
 
-	group, err := t.repository.QueryWorkoutGroup(ctx, groupUUID)
+	group, err := t.repository.QueryTrainerWorkoutGroup(ctx, groupUUID)
 	if err != nil {
-		const s = "query workout groupUUID: %s for trainerUUID: %s failed, reason: %v"
-		logger.Errorf(s, groupUUID, trainerUUID, err)
+		logger.Errorf("query workout groupUUID: %s for trainerUUID: %s failed, reason: %v", groupUUID, trainerUUID, err)
 		return trainer.WorkoutGroup{}, ErrRepositoryFailure
 	}
 	if group.UUID() == "" {
 		return trainer.WorkoutGroup{}, nil
 	}
 	if group.TrainerUUID() != trainerUUID {
-		const s = "query workout group UUID: %s does not belong to trainerUUID: %s"
-		logger.Errorf(s, groupUUID, trainerUUID)
+		logger.Errorf("query workout group UUID: %s does not belong to trainerUUID: %s", groupUUID, trainerUUID)
 		return trainer.WorkoutGroup{}, ErrWorkoutGroupNotOwner
 	}
 	return group, nil
 }
 
-func NewWorkoutGroupHandler(w WorkoutGroupHandlerRepository) *WorkoutGroupHandler {
-	if w == nil {
-		panic("nil repository")
+func NewWorkoutGroupHandler(t TrainerRepository) *WorkoutGroupHandler {
+	if t == nil {
+		panic("nil trainer repository")
 	}
 	return &WorkoutGroupHandler{
-		repository: w,
+		repository: t,
 	}
 }

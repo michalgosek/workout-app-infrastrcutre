@@ -39,15 +39,16 @@ func (m *CommandHandler) DropCollection(ctx context.Context) error {
 	return coll.Drop(ctx)
 }
 
-func (m *CommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
+func (m *CommandHandler) UpsertTrainerWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error {
 	doc := WorkoutGroupDocument{
-		UUID:          schedule.UUID(),
-		TrainerUUID:   schedule.TrainerUUID(),
-		Limit:         schedule.Limit(),
-		CustomerUUIDs: schedule.CustomerUUIDs(),
-		Name:          schedule.Name(),
-		Desc:          schedule.Desc(),
-		Date:          schedule.Date().Format(m.cfg.Format),
+		UUID:          group.UUID(),
+		TrainerUUID:   group.TrainerUUID(),
+		TrainerName:   group.TrainerName(),
+		Limit:         group.Limit(),
+		CustomerUUIDs: group.CustomerUUIDs(),
+		WorkoutName:   group.GroupName(),
+		WorkoutDesc:   group.GroupDescription(),
+		Date:          group.Date().Format(m.cfg.Format),
 	}
 
 	db := m.cli.Database(m.cfg.Database)
@@ -58,7 +59,7 @@ func (m *CommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule traine
 	update := bson.M{"$set": doc}
 	opts := options.Update()
 	opts.SetUpsert(true)
-	f := bson.M{"_id": schedule.UUID(), "trainer_uuid": schedule.TrainerUUID()}
+	f := bson.M{"_id": group.UUID(), "trainer_uuid": group.TrainerUUID()}
 	_, err := coll.UpdateOne(ctx, f, update, opts)
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
@@ -66,7 +67,7 @@ func (m *CommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule traine
 	return nil
 }
 
-func (m *CommandHandler) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error {
+func (m *CommandHandler) DeleteTrainerWorkoutGroups(ctx context.Context, trainerUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -77,7 +78,7 @@ func (m *CommandHandler) DeleteWorkoutGroups(ctx context.Context, trainerUUID st
 	return nil
 }
 
-func (m *CommandHandler) DeleteWorkoutGroup(ctx context.Context, groupUUID string) error {
+func (m *CommandHandler) DeleteTrainerWorkoutGroup(ctx context.Context, groupUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"_id": groupUUID}

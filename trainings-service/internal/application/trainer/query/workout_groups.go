@@ -7,30 +7,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutGroupsHandlerRepository interface {
-	QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error)
-}
-
 type WorkoutGroupsHandler struct {
-	repository WorkoutGroupsHandlerRepository
+	repository TrainerRepository
 }
 
 func (w *WorkoutGroupsHandler) Do(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
-	logger := logrus.WithFields(logrus.Fields{"Component": "GetWorkoutsHandler"})
-	groups, err := w.repository.QueryWorkoutGroups(ctx, trainerUUID)
+	logger := logrus.WithFields(logrus.Fields{"Trainer-QRY": "GetWorkoutsHandler"})
+	groups, err := w.repository.QueryTrainerWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		const s = "query workout groups for trainerUUID: %s failed: %v"
-		logger.Errorf(s, trainerUUID, err)
+		logger.Errorf("query workout groups for trainerUUID: %s failed: %v", trainerUUID, err)
 		return nil, ErrRepositoryFailure
 	}
 	return groups, nil
 }
 
-func NewWorkoutGroupsHandler(w WorkoutGroupsHandlerRepository) *WorkoutGroupsHandler {
-	if w == nil {
-		panic("nil repository")
+func NewWorkoutGroupsHandler(t TrainerRepository) *WorkoutGroupsHandler {
+	if t == nil {
+		panic("nil trainer repository")
 	}
 	return &WorkoutGroupsHandler{
-		repository: w,
+		repository: t,
 	}
 }

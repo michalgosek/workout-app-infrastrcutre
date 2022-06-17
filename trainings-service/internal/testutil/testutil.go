@@ -15,9 +15,10 @@ func getStaticTime() time.Time {
 
 func NewTrainerWorkoutGroup(trainerUUID string) trainer.WorkoutGroup {
 	ts := getStaticTime()
-	name := "dummy"
-	desc := "dummy"
-	schedule, err := trainer.NewWorkoutGroup(trainerUUID, name, desc, ts)
+	groupName := "dummy"
+	groupDesc := "dummy"
+	trainerName := "John Doe"
+	schedule, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, ts)
 	if err != nil {
 		panic(err)
 	}

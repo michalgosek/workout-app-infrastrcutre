@@ -31,7 +31,7 @@ func NewQueryHandler(cli *mongo.Client, cfg QueryHandlerConfig) *QueryHandler {
 	return &t
 }
 
-func (t *QueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
+func (t *QueryHandler) QueryTrainerWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	f := bson.M{"_id": groupUUID}
@@ -53,11 +53,20 @@ func (t *QueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID string) 
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("parsing date value from document failed: %v", err)
 	}
-	group, err := trainer.UnmarshalFromDatabase(doc.UUID, doc.TrainerUUID, doc.Name, doc.Desc, doc.CustomerUUIDs, date, doc.Limit)
+	group, err := trainer.UnmarshalFromDatabase(
+		doc.UUID,
+		doc.TrainerUUID,
+		doc.TrainerName,
+		doc.WorkoutName,
+		doc.WorkoutDesc,
+		doc.CustomerUUIDs,
+		date,
+		doc.Limit,
+	)
 	return group, nil
 }
 
-func (t *QueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
+func (t *QueryHandler) QueryTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -86,11 +95,20 @@ func convertDocumentsToWorkoutGroups(format string, docs ...WorkoutGroupDocument
 		if err != nil {
 			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
 		}
-		workout, err := trainer.UnmarshalFromDatabase(d.UUID, d.TrainerUUID, d.Name, d.Desc, d.CustomerUUIDs, date, d.Limit)
+		group, err := trainer.UnmarshalFromDatabase(
+			d.UUID,
+			d.TrainerUUID,
+			d.TrainerName,
+			d.WorkoutName,
+			d.WorkoutDesc,
+			d.CustomerUUIDs,
+			date,
+			d.Limit,
+		)
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
 		}
-		groups = append(groups, workout)
+		groups = append(groups, group)
 	}
 	return groups, nil
 }

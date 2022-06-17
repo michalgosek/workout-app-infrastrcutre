@@ -26,13 +26,15 @@ func TestShouldUnassignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testin
 	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, trainerWorkout.UUID(), trainerWorkout.Date())
 
 	ctx := context.Background()
-	repository := new(mocks.UnassignCustomerHandlerRepository)
-	repository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(*customerWorkout, nil)
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(nil)
-	repository.EXPECT().UpsertWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(nil)
+	customerRepository := new(mocks.CustomerRepository)
+	trainerRepository := new(mocks.TrainerRepository)
 
-	SUT := command.NewUnassignCustomerHandler(repository)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(*customerWorkout, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(nil)
+	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(nil)
+
+	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	// when:
 	err := SUT.Do(ctx, command.WorkoutUnregister{
@@ -43,7 +45,8 @@ func TestShouldUnassignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testin
 
 	// then:
 	assertions.Nil(err)
-	repository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
 }
 
 func TestShouldReturnErrorWhenGroupNotOwnedByTrainer_Unit(t *testing.T) {
@@ -59,9 +62,11 @@ func TestShouldReturnErrorWhenGroupNotOwnedByTrainer_Unit(t *testing.T) {
 	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, secondTrainerWorkout.UUID(), secondTrainerWorkout.Date())
 
 	ctx := context.Background()
-	repository := new(mocks.UnassignCustomerHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, secondTrainerWorkout.UUID()).Return(secondTrainerWorkout, nil)
-	SUT := command.NewUnassignCustomerHandler(repository)
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
+
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, secondTrainerWorkout.UUID()).Return(secondTrainerWorkout, nil)
+	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	// when:
 	err := SUT.Do(ctx, command.WorkoutUnregister{
@@ -72,11 +77,11 @@ func TestShouldReturnErrorWhenGroupNotOwnedByTrainer_Unit(t *testing.T) {
 
 	// then:
 	assertions.Equal(err, command.ErrWorkoutGroupNotOwner)
-	repository.AssertExpectations(t)
-
+	trainerRepository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
 }
 
-func TestShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(t *testing.T) {
+func TestShouldReturnErrorWhenQueryTrainerWorkoutGroupFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -87,10 +92,11 @@ func TestShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(t *testing.T) {
 	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, trainerWorkout.UUID(), trainerWorkout.Date())
 
 	ctx := context.Background()
-	repository := new(mocks.UnassignCustomerHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, errors.New("error"))
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
 
-	SUT := command.NewUnassignCustomerHandler(repository)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, errors.New("error"))
+	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	// when:
 	err := SUT.Do(ctx, command.WorkoutUnregister{
@@ -101,7 +107,8 @@ func TestShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(t *testing.T) {
 
 	// then:
 	assertions.ErrorIs(err, command.ErrRepositoryFailure)
-	repository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
 }
 
 func TestShouldReturnErrorWhenQueryCustomerWorkoutDayFailure_Unit(t *testing.T) {
@@ -115,11 +122,13 @@ func TestShouldReturnErrorWhenQueryCustomerWorkoutDayFailure_Unit(t *testing.T) 
 	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, trainerWorkout.UUID(), trainerWorkout.Date())
 
 	ctx := context.Background()
-	repository := new(mocks.UnassignCustomerHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, errors.New("error"))
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
 
-	SUT := command.NewUnassignCustomerHandler(repository)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, errors.New("error"))
+
+	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	// when:
 	err := SUT.Do(ctx, command.WorkoutUnregister{
@@ -130,7 +139,8 @@ func TestShouldReturnErrorWhenQueryCustomerWorkoutDayFailure_Unit(t *testing.T) 
 
 	// then:
 	assertions.ErrorIs(err, command.ErrRepositoryFailure)
-	repository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
 }
 
 func TestShouldReturnErrorWhenCustomerWorkoutDayNotExist_Unit(t *testing.T) {
@@ -147,10 +157,12 @@ func TestShouldReturnErrorWhenCustomerWorkoutDayNotExist_Unit(t *testing.T) {
 	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, trainerWorkout.UUID(), trainerWorkout.Date())
 
 	ctx := context.Background()
-	repository := new(mocks.UnassignCustomerHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, nil)
-	SUT := command.NewUnassignCustomerHandler(repository)
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
+
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, nil)
+	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	// when:
 	err := SUT.Do(ctx, command.WorkoutUnregister{
@@ -161,7 +173,8 @@ func TestShouldReturnErrorWhenCustomerWorkoutDayNotExist_Unit(t *testing.T) {
 
 	// then:
 	assertions.Equal(err, command.ErrResourceNotFound)
-	repository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
 }
 
 func TestShouldReturnErrorWheDeleteCustomerWorkoutDayFailure_Unit(t *testing.T) {
@@ -175,12 +188,14 @@ func TestShouldReturnErrorWheDeleteCustomerWorkoutDayFailure_Unit(t *testing.T) 
 	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, trainerWorkout.UUID(), trainerWorkout.Date())
 
 	ctx := context.Background()
-	repository := new(mocks.UnassignCustomerHandlerRepository)
-	repository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(*customerWorkout, nil)
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(errors.New("error"))
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
 
-	SUT := command.NewUnassignCustomerHandler(repository)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(*customerWorkout, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(errors.New("error"))
+
+	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	// when:
 	err := SUT.Do(ctx, command.WorkoutUnregister{
@@ -191,7 +206,8 @@ func TestShouldReturnErrorWheDeleteCustomerWorkoutDayFailure_Unit(t *testing.T) 
 
 	// then:
 	assertions.ErrorIs(err, command.ErrRepositoryFailure)
-	repository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
 }
 
 func TestShouldReturnErrorWheUpsertWorkoutGroupFailure_Unit(t *testing.T) {
@@ -208,13 +224,15 @@ func TestShouldReturnErrorWheUpsertWorkoutGroupFailure_Unit(t *testing.T) {
 	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, trainerWorkout.UUID(), trainerWorkout.Date())
 
 	ctx := context.Background()
-	repository := new(mocks.UnassignCustomerHandlerRepository)
-	repository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(*customerWorkout, nil)
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	repository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(nil)
-	repository.EXPECT().UpsertWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(errors.New("error"))
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
 
-	SUT := command.NewUnassignCustomerHandler(repository)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(*customerWorkout, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(nil)
+	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(errors.New("error"))
+
+	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	// when:
 	err := SUT.Do(ctx, command.WorkoutUnregister{
@@ -225,5 +243,6 @@ func TestShouldReturnErrorWheUpsertWorkoutGroupFailure_Unit(t *testing.T) {
 
 	// then:
 	assertions.ErrorIs(err, command.ErrRepositoryFailure)
-	repository.AssertExpectations(t)
+	trainerRepository.AssertExpectations(t)
+	customerRepository.AssertExpectations(t)
 }

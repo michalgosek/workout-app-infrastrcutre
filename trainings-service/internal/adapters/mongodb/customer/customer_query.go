@@ -44,7 +44,7 @@ func (c *QueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID
 		return customer.WorkoutDay{}, fmt.Errorf("find one failed: %v", err)
 	}
 
-	var dst WorkoutDocument
+	var dst WorkoutDayDocument
 	err = res.Decode(&dst)
 	if err != nil {
 		return customer.WorkoutDay{}, fmt.Errorf("decoding failed: %v", err)
@@ -54,7 +54,7 @@ func (c *QueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID
 	if err != nil {
 		return customer.WorkoutDay{}, fmt.Errorf("parsing date value from document failed: %v", err)
 	}
-	out, err := customer.UnmarshalFromDatabase(dst.UUID, dst.TrainerWorkoutGroupUUID, dst.CustomerUUID, date)
+	out, err := customer.UnmarshalFromDatabase(dst.UUID, dst.GroupUUID, dst.CustomerUUID, date)
 	if err != nil {
 		return customer.WorkoutDay{}, fmt.Errorf("unmarshal failed: %v", err)
 	}
@@ -70,7 +70,7 @@ func (c *QueryHandler) QueryCustomerWorkoutDays(ctx context.Context, customerUUI
 		return nil, fmt.Errorf("find failed: %v", err)
 	}
 
-	var docs []WorkoutDocument
+	var docs []WorkoutDayDocument
 	err = cur.All(ctx, &docs)
 	if err != nil {
 		return nil, fmt.Errorf("decode failed: %v", err)
@@ -80,14 +80,14 @@ func (c *QueryHandler) QueryCustomerWorkoutDays(ctx context.Context, customerUUI
 	return days, nil
 }
 
-func convertDocumentsToWorkoutDays(format string, docs ...WorkoutDocument) ([]customer.WorkoutDay, error) {
+func convertDocumentsToWorkoutDays(format string, docs ...WorkoutDayDocument) ([]customer.WorkoutDay, error) {
 	var days []customer.WorkoutDay
 	for _, d := range docs {
 		date, err := time.Parse(format, d.Date)
 		if err != nil {
 			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
 		}
-		day, err := customer.UnmarshalFromDatabase(d.UUID, d.TrainerWorkoutGroupUUID, d.CustomerUUID, date)
+		day, err := customer.UnmarshalFromDatabase(d.UUID, d.GroupUUID, d.CustomerUUID, date)
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
 		}

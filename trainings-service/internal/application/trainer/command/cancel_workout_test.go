@@ -20,9 +20,9 @@ func TestShouldCancelWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 
 	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository := new(mocks.CancelWorkoutHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
-	repository.EXPECT().DeleteWorkoutGroup(ctx, workout.UUID()).Return(nil)
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, workout.UUID()).Return(nil)
 
 	SUT := command.NewCancelWorkoutHandler(repository)
 
@@ -43,8 +43,8 @@ func TestShouldNotCancelWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
 	const workoutUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 
 	workout := trainer.WorkoutGroup{}
-	repository := new(mocks.CancelWorkoutHandlerRepository)
-	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
+	repository := new(mocks.TrainerRepository)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
 	SUT := command.NewCancelWorkoutHandler(repository)
 
@@ -64,10 +64,10 @@ func TestShouldNotCancelTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 
 	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository := new(mocks.CancelWorkoutHandlerRepository)
+	repository := new(mocks.TrainerRepository)
 	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
-	repository.EXPECT().DeleteWorkoutGroup(ctx, workout.UUID()).Return(expectedErr)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, workout.UUID()).Return(expectedErr)
 
 	SUT := command.NewCancelWorkoutHandler(repository)
 
