@@ -1,12 +1,11 @@
-package mongodb_test
+package trainer_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
-
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -15,17 +14,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+type Config struct {
+	Addr              string
+	Database          string
+	TrainerCollection string
+	CommandTimeout    time.Duration
+	QueryTimeout      time.Duration
+	ConnectionTimeout time.Duration
+	Format            string
+}
+
 type TrainerTestSuite struct {
 	suite.Suite
-	commandHandler *mongodb.TrainerCommandHandler
-	queryHandler   *mongodb.TrainerQueryHandler
-	cfg            mongodb.Config
+	commandHandler *trainer.CommandHandler
+	queryHandler   *trainer.QueryHandler
+	cfg            Config
 	mongoCLI       *mongo.Client
 }
 
 func TestTrainerTestSuite_Integration(t *testing.T) {
 	suite.Run(t, &TrainerTestSuite{
-		cfg: mongodb.Config{
+		cfg: Config{
 			Addr:              "mongodb://localhost:27017",
 			Database:          "trainings_service_test",
 			TrainerCollection: "trainer_schedules",
@@ -53,7 +62,7 @@ func (m *TrainerTestSuite) BeforeTest(string, string) {
 		panic(err)
 	}
 	m.mongoCLI = mongoCLI
-	m.commandHandler = mongodb.NewTrainerCommandHandler(mongoCLI, mongodb.TrainerCommandHandlerConfig{
+	m.commandHandler = trainer.NewCommandHandler(mongoCLI, trainer.CommandHandlerConfig{
 		Collection:     m.cfg.TrainerCollection,
 		Database:       m.cfg.Database,
 		Format:         m.cfg.Format,
@@ -64,7 +73,7 @@ func (m *TrainerTestSuite) BeforeTest(string, string) {
 		panic(err)
 	}
 
-	m.queryHandler = mongodb.NewTrainerQueryHandler(mongoCLI, mongodb.TrainerQueryHandlerConfig{
+	m.queryHandler = trainer.NewQueryHandler(mongoCLI, trainer.QueryHandlerConfig{
 		Collection:   m.cfg.TrainerCollection,
 		Database:     m.cfg.Database,
 		Format:       m.cfg.Format,

@@ -147,7 +147,7 @@ func TestShouldNotReturnErrorWhenTextLengthIsUnderLimit_Unit(t *testing.T) {
 }
 
 func TestShouldReturnErrorWhenTextLengthIsOverLimit_Unit(t *testing.T) {
-	assert := assert.New(t)
+	assertions := assert.New(t)
 
 	// given:
 	const trainerUUID = "1b0af14e-5aa9-4b80-968f-03d93f46805e"
@@ -161,8 +161,8 @@ func TestShouldReturnErrorWhenTextLengthIsOverLimit_Unit(t *testing.T) {
 	err := SUT.UpdateDesc(invalidDesc)
 
 	// then:
-	assert.ErrorIs(err, trainer.ErrScheduleDescriptionExceeded)
-	assert.Equal(desc, SUT.Desc())
+	assertions.ErrorIs(err, trainer.ErrScheduleDescriptionExceeded)
+	assertions.Equal(desc, SUT.Desc())
 }
 
 func TestShouldReturnErrorWhenTextLengthEqualsLimit_Unit(t *testing.T) {
@@ -278,6 +278,35 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsEqualToThreshold_Unit(t *testing
 	// then:
 	assertions.NotNil(workoutGroup)
 	assertions.Nil(err)
+}
+
+func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const groupUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+	const name = "dummy_name"
+	const desc = "dummy_desc"
+	const customerUUID = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+	date := time.Now().Add(24 * time.Hour)
+
+	expectedWorkoutGroup, _ := trainer.NewWorkoutGroup(groupUUID, name, desc, date)
+	expectedWorkoutGroup.AssignCustomer(customerUUID)
+
+	// when:
+	workoutGroup, err := trainer.UnmarshalFromDatabase(
+		expectedWorkoutGroup.UUID(),
+		expectedWorkoutGroup.TrainerUUID(),
+		expectedWorkoutGroup.Name(),
+		expectedWorkoutGroup.Desc(),
+		expectedWorkoutGroup.CustomerUUIDs(),
+		expectedWorkoutGroup.Date(),
+		expectedWorkoutGroup.Limit(),
+	)
+
+	// then:
+	assertions.Nil(err)
+	assertions.Equal(*expectedWorkoutGroup, workoutGroup)
 }
 
 func AssignCustomerToWorkoutGroup(workoutGroup *trainer.WorkoutGroup, n int) {

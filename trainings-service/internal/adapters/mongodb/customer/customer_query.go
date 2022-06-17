@@ -1,4 +1,4 @@
-package mongodb
+package customer
 
 import (
 	"context"
@@ -11,27 +11,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type CustomerQueryHandlerConfig struct {
+type QueryHandlerConfig struct {
 	Collection   string
 	Database     string
 	Format       string
 	QueryTimeout time.Duration
 }
 
-type CustomerQueryHandler struct {
+type QueryHandler struct {
 	cli *mongo.Client
-	cfg CustomerQueryHandlerConfig
+	cfg QueryHandlerConfig
 }
 
-func NewCustomerQueryHandler(cli *mongo.Client, cfg CustomerQueryHandlerConfig) *CustomerQueryHandler {
-	t := CustomerQueryHandler{
+func NewQueryHandler(cli *mongo.Client, cfg QueryHandlerConfig) *QueryHandler {
+	t := QueryHandler{
 		cli: cli,
 		cfg: cfg,
 	}
 	return &t
 }
 
-func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID, GroupUUID string) (customer.WorkoutDay, error) {
+func (c *QueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID, GroupUUID string) (customer.WorkoutDay, error) {
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
 	f := bson.M{"customer_uuid": customerUUID, "trainer_workout_group_uuid": GroupUUID}
@@ -44,7 +44,7 @@ func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, cust
 		return customer.WorkoutDay{}, fmt.Errorf("find one failed: %v", err)
 	}
 
-	var dst CustomerWorkoutDocument
+	var dst WorkoutDocument
 	err = res.Decode(&dst)
 	if err != nil {
 		return customer.WorkoutDay{}, fmt.Errorf("decoding failed: %v", err)
@@ -61,7 +61,7 @@ func (c *CustomerQueryHandler) QueryCustomerWorkoutDay(ctx context.Context, cust
 	return out, nil
 }
 
-func (c *CustomerQueryHandler) QueryCustomerWorkoutDays(ctx context.Context, customerUUID string) ([]customer.WorkoutDay, error) {
+func (c *QueryHandler) QueryCustomerWorkoutDays(ctx context.Context, customerUUID string) ([]customer.WorkoutDay, error) {
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
 	f := bson.M{"customer_uuid": customerUUID}
@@ -70,15 +70,20 @@ func (c *CustomerQueryHandler) QueryCustomerWorkoutDays(ctx context.Context, cus
 		return nil, fmt.Errorf("find failed: %v", err)
 	}
 
-	var docs []CustomerWorkoutDocument
+	var docs []WorkoutDocument
 	err = cur.All(ctx, &docs)
 	if err != nil {
 		return nil, fmt.Errorf("decode failed: %v", err)
 	}
 
+	days, err := convertDocumentsToWorkoutDays(c.cfg.Format, docs...)
+	return days, nil
+}
+
+func convertDocumentsToWorkoutDays(format string, docs ...WorkoutDocument) ([]customer.WorkoutDay, error) {
 	var days []customer.WorkoutDay
 	for _, d := range docs {
-		date, err := time.Parse(c.cfg.Format, d.Date)
+		date, err := time.Parse(format, d.Date)
 		if err != nil {
 			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
 		}

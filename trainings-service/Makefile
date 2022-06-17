@@ -12,7 +12,7 @@ binary:
 	@go build -o ${BINARY} ${CURRENT_DIR}/cmd/srv 
 
 test:
-	@go test ./... -cover -count=1 
+	@go test ./... -cover -count=1 -timeout 10s
 
 test-unit:
 	@go test ./... -run Unit -v -race -count=1

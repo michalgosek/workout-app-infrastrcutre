@@ -19,11 +19,11 @@ func TestShouldGetEmptyTrainerWorkoutGroupsWhenNonOfGroupsDoesNotExist_Unit(t *t
 	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	ctx := context.Background()
 
-	repository := new(mocks.WorkoutGroupsGetter)
+	repository := new(mocks.WorkoutGroupsHandlerRepository)
 	var workouts []trainer.WorkoutGroup
 	repository.EXPECT().QueryWorkoutGroups(ctx, trainerUUID).Return(workouts, nil)
 
-	SUT := query.NewGetWorkoutsHandler(repository)
+	SUT := query.NewWorkoutGroupsHandler(repository)
 
 	// when:
 	actualSchedule, err := SUT.Do(ctx, trainerUUID)
@@ -42,9 +42,9 @@ func TestShouldNotGetTrainerWorkoutGroupsWhenRepositoryFailure_Unit(t *testing.T
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
 
 	expectedError := errors.New("repository failure")
-	repository := new(mocks.WorkoutGroupsGetter)
+	repository := new(mocks.WorkoutGroupsHandlerRepository)
 	repository.EXPECT().QueryWorkoutGroups(ctx, trainerUUID).Return(nil, expectedError)
-	SUT := query.NewGetWorkoutsHandler(repository)
+	SUT := query.NewWorkoutGroupsHandler(repository)
 
 	// when:
 	_, err := SUT.Do(ctx, trainerUUID)
@@ -66,9 +66,9 @@ func TestShouldGetAllTrainerWorkoutGroupsWithSuccess_Unit(t *testing.T) {
 	second := testutil.NewTrainerWorkoutGroup(trainerUUID)
 	workouts := []trainer.WorkoutGroup{first, second}
 
-	repository := new(mocks.WorkoutGroupsGetter)
+	repository := new(mocks.WorkoutGroupsHandlerRepository)
 	repository.EXPECT().QueryWorkoutGroups(ctx, trainerUUID).Return(workouts, nil)
-	SUT := query.NewGetWorkoutsHandler(repository)
+	SUT := query.NewWorkoutGroupsHandler(repository)
 
 	// when:
 	actualSchedule, err := SUT.Do(ctx, trainerUUID)

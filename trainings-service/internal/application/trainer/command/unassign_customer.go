@@ -8,15 +8,15 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CustomerUnregister interface {
+type UnassignCustomerHandlerRepository interface {
 	UpsertWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error
 	QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error)
-	QueryCustomerWorkoutDay(ctx context.Context, customerUUID, trainerWorkoutGroupUUID string) (customer.WorkoutDay, error)
-	DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, customerWorkoutDayUUID string) error
+	QueryCustomerWorkoutDay(ctx context.Context, customerUUID, groupUUID string) (customer.WorkoutDay, error)
+	DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, workoutDayUUID string) error
 }
 
 type UnassignCustomerHandler struct {
-	repository CustomerUnregister
+	repository UnassignCustomerHandlerRepository
 }
 
 type WorkoutUnregister struct {
@@ -69,7 +69,7 @@ func (a *UnassignCustomerHandler) Do(ctx context.Context, args WorkoutUnregister
 	return nil
 }
 
-func NewUnassignCustomerHandler(c CustomerUnregister) *UnassignCustomerHandler {
+func NewUnassignCustomerHandler(c UnassignCustomerHandlerRepository) *UnassignCustomerHandler {
 	if c == nil {
 		panic("nil repository")
 	}

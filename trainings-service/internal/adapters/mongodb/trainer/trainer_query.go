@@ -1,4 +1,4 @@
-package mongodb
+package trainer
 
 import (
 	"context"
@@ -11,27 +11,27 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type TrainerQueryHandlerConfig struct {
+type QueryHandlerConfig struct {
 	Collection   string
 	Database     string
 	Format       string
 	QueryTimeout time.Duration
 }
 
-type TrainerQueryHandler struct {
+type QueryHandler struct {
 	cli *mongo.Client
-	cfg TrainerQueryHandlerConfig
+	cfg QueryHandlerConfig
 }
 
-func NewTrainerQueryHandler(cli *mongo.Client, cfg TrainerQueryHandlerConfig) *TrainerQueryHandler {
-	t := TrainerQueryHandler{
+func NewQueryHandler(cli *mongo.Client, cfg QueryHandlerConfig) *QueryHandler {
+	t := QueryHandler{
 		cli: cli,
 		cfg: cfg,
 	}
 	return &t
 }
 
-func (t *TrainerQueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
+func (t *QueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	f := bson.M{"_id": groupUUID}
@@ -44,7 +44,7 @@ func (t *TrainerQueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID s
 		return trainer.WorkoutGroup{}, fmt.Errorf("find one failed: %v", err)
 	}
 
-	var doc TrainerWorkoutGroupDocument
+	var doc WorkoutGroupDocument
 	err = res.Decode(&doc)
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("decoding failed: %v", err)
@@ -57,7 +57,7 @@ func (t *TrainerQueryHandler) QueryWorkoutGroup(ctx context.Context, groupUUID s
 	return out, nil
 }
 
-func (t *TrainerQueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
+func (t *QueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -66,7 +66,7 @@ func (t *TrainerQueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUI
 		return nil, fmt.Errorf("find failed: %v", err)
 	}
 
-	var docs []TrainerWorkoutGroupDocument
+	var docs []WorkoutGroupDocument
 	err = cur.All(ctx, &docs)
 	if err != nil {
 		return nil, fmt.Errorf("decoding failed: %v", err)
@@ -78,30 +78,3 @@ func (t *TrainerQueryHandler) QueryWorkoutGroups(ctx context.Context, trainerUUI
 	}
 	return workouts, nil
 }
-
-func convertToDomainWorkoutGroups(format string, docs ...TrainerWorkoutGroupDocument) ([]trainer.WorkoutGroup, error) {
-	var workouts []trainer.WorkoutGroup
-	for _, d := range docs {
-		date, err := time.Parse(format, d.Date)
-		if err != nil {
-			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
-		}
-		workout, err := trainer.UnmarshalFromDatabase(d.UUID, d.TrainerUUID, d.Name, d.Desc, d.CustomerUUIDs, date, d.Limit)
-		if err != nil {
-			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
-		}
-		workouts = append(workouts, workout)
-	}
-	return workouts, nil
-}
-
-//type documents interface {
-//	[]customer.WorkoutDay | []trainer.WorkoutGroup
-//}
-//
-//type decodeDestinations interface {
-//}
-//
-//func decodeTo[d []documents, dst decodeDestinations](format string, docs d, dst) error {
-//	return nil
-//}

@@ -1,4 +1,4 @@
-package mongodb
+package customer
 
 import (
 	"context"
@@ -8,29 +8,30 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type CustomerCommandHandlerConfig struct {
+type CommandHandlerConfig struct {
 	Collection     string
 	Database       string
 	Format         string
 	CommandTimeout time.Duration
 }
 
-type CustomerCommandHandler struct {
-	cfg CustomerCommandHandlerConfig
+type CommandHandler struct {
+	cfg CommandHandlerConfig
 	cli *mongo.Client
 }
 
-func NewCustomerCommandHandler(cli *mongo.Client, cfg CustomerCommandHandlerConfig) *CustomerCommandHandler {
-	t := CustomerCommandHandler{
+func NewCommandHandler(cli *mongo.Client, cfg CommandHandlerConfig) *CommandHandler {
+	t := CommandHandler{
 		cli: cli,
 		cfg: cfg,
 	}
 	return &t
 }
 
-func (c *CustomerCommandHandler) DropCollection(ctx context.Context) error {
+func (c *CommandHandler) DropCollection(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, c.cfg.CommandTimeout)
 	defer cancel()
 	db := c.cli.Database(c.cfg.Database)
@@ -38,8 +39,8 @@ func (c *CustomerCommandHandler) DropCollection(ctx context.Context) error {
 	return coll.Drop(ctx)
 }
 
-func (c *CustomerCommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error {
-	doc := CustomerWorkoutDocument{
+func (c *CommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error {
+	doc := WorkoutDocument{
 		UUID:                    workout.UUID(),
 		CustomerUUID:            workout.CustomerUUID(),
 		TrainerWorkoutGroupUUID: workout.GroupUUID(),
@@ -52,14 +53,20 @@ func (c *CustomerCommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, w
 	defer cancel()
 
 	f := bson.M{"_id": workout.UUID()}
-	err := updateOne(ctx, coll, f, doc)
+	update := bson.M{"$set": doc}
+	opts := options.Update()
+	opts.SetUpsert(true)
+	_, err := coll.UpdateOne(ctx, f, update, opts)
+	if err != nil {
+		return fmt.Errorf("update one failed: %v", err)
+	}
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}
 	return nil
 }
 
-func (c *CustomerCommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, customerWorkoutDayUUID string) error {
+func (c *CommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, customerWorkoutDayUUID string) error {
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
 	f := bson.M{"_id": customerWorkoutDayUUID, "customer_uuid": customerUUID}
@@ -70,7 +77,7 @@ func (c *CustomerCommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, c
 	return nil
 }
 
-func (c *CustomerCommandHandler) DeleteCustomerWorkoutDays(ctx context.Context, customerUUID string) error {
+func (c *CommandHandler) DeleteCustomerWorkoutDays(ctx context.Context, customerUUID string) error {
 	db := c.cli.Database(c.cfg.Database)
 	coll := db.Collection(c.cfg.Collection)
 	f := bson.M{"customer_uuid": customerUUID}

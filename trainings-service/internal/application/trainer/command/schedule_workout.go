@@ -8,22 +8,22 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutUpserter interface {
+type ScheduleWorkoutHandlerRepository interface {
 	UpsertWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error
 }
 
-type CreateWorkoutHandler struct {
-	repository WorkoutUpserter
+type ScheduleWorkoutHandler struct {
+	repository ScheduleWorkoutHandlerRepository
 }
 
-type WorkoutGroup struct {
+type WorkoutGroupDetails struct {
 	TrainerUUID string
 	Name        string
 	Desc        string
 	Date        time.Time
 }
 
-func (c *CreateWorkoutHandler) Do(ctx context.Context, w WorkoutGroup) (string, error) {
+func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutGroupDetails) (string, error) {
 	logger := logrus.WithFields(logrus.Fields{"Component": "CreateWorkoutHandler"})
 	group, err := trainer.NewWorkoutGroup(w.TrainerUUID, w.Name, w.Desc, w.Date)
 	if err != nil {
@@ -32,7 +32,7 @@ func (c *CreateWorkoutHandler) Do(ctx context.Context, w WorkoutGroup) (string, 
 		return "", err
 	}
 
-	err = c.repository.UpsertWorkoutGroup(ctx, *group)
+	err = s.repository.UpsertWorkoutGroup(ctx, *group)
 	if err != nil {
 		const s = "upsert group UUID: %s for trainer UUID: %s failed, reason: %v"
 		logger.Errorf(s, group.UUID(), w.TrainerUUID, err)
@@ -41,11 +41,11 @@ func (c *CreateWorkoutHandler) Do(ctx context.Context, w WorkoutGroup) (string, 
 	return group.UUID(), nil
 }
 
-func NewCreateWorkoutHandler(r WorkoutUpserter) *CreateWorkoutHandler {
+func NewScheduleWorkoutHandler(r ScheduleWorkoutHandlerRepository) *ScheduleWorkoutHandler {
 	if r == nil {
 		panic("nil repository")
 	}
-	return &CreateWorkoutHandler{
+	return &ScheduleWorkoutHandler{
 		repository: r,
 	}
 }

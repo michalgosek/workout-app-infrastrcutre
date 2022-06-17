@@ -1,12 +1,11 @@
-package mongodb_test
+package customer_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
-
+	mcustomer "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -16,17 +15,28 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
+type Config struct {
+	Addr               string
+	Database           string
+	TrainerCollection  string
+	CustomerCollection string
+	CommandTimeout     time.Duration
+	QueryTimeout       time.Duration
+	ConnectionTimeout  time.Duration
+	Format             string
+}
+
 type CustomerTestSuite struct {
 	suite.Suite
-	commandHandler *mongodb.CustomerCommandHandler
-	queryHandler   *mongodb.CustomerQueryHandler
-	cfg            mongodb.Config
+	commandHandler *mcustomer.CommandHandler
+	queryHandler   *mcustomer.QueryHandler
+	cfg            Config
 	mongoCLI       *mongo.Client
 }
 
 func TestCustomerTestSuite_Integration(t *testing.T) {
 	suite.Run(t, &CustomerTestSuite{
-		cfg: mongodb.Config{
+		cfg: Config{
 			Addr:               "mongodb://localhost:27017",
 			Database:           "trainings_service_test",
 			CustomerCollection: "customer_schedules",
@@ -54,7 +64,7 @@ func (c *CustomerTestSuite) BeforeTest(string, string) {
 		panic(err)
 	}
 	c.mongoCLI = mongoCLI
-	c.commandHandler = mongodb.NewCustomerCommandHandler(mongoCLI, mongodb.CustomerCommandHandlerConfig{
+	c.commandHandler = mcustomer.NewCommandHandler(mongoCLI, mcustomer.CommandHandlerConfig{
 		Collection:     c.cfg.CustomerCollection,
 		Database:       c.cfg.Database,
 		Format:         c.cfg.Format,
@@ -65,7 +75,7 @@ func (c *CustomerTestSuite) BeforeTest(string, string) {
 		panic(err)
 	}
 
-	c.queryHandler = mongodb.NewCustomerQueryHandler(mongoCLI, mongodb.CustomerQueryHandlerConfig{
+	c.queryHandler = mcustomer.NewQueryHandler(mongoCLI, mcustomer.QueryHandlerConfig{
 		Collection:   c.cfg.CustomerCollection,
 		Database:     c.cfg.Database,
 		Format:       c.cfg.Format,

@@ -155,8 +155,8 @@ func NewWorkoutGroup(trainerUUID, name, desc string, date time.Time) (*WorkoutGr
 	return &w, nil
 }
 
-func UnmarshalFromDatabase(workoutGroupUUID, trainerUUID, name, desc string, customerUUIDs []string, date time.Time, limit int) (WorkoutGroup, error) {
-	if workoutGroupUUID == "" {
+func UnmarshalFromDatabase(groupUUID, trainerUUID, name, desc string, customerUUIDs []string, date time.Time, limit int) (WorkoutGroup, error) {
+	if groupUUID == "" {
 		return WorkoutGroup{}, ErrEmptyWorkoutGroupUUID
 	}
 	if trainerUUID == "" {
@@ -172,7 +172,7 @@ func UnmarshalFromDatabase(workoutGroupUUID, trainerUUID, name, desc string, cus
 		return WorkoutGroup{}, ErrEmptyWorkoutDate
 	}
 	w := WorkoutGroup{
-		uuid:          workoutGroupUUID,
+		uuid:          groupUUID,
 		trainerUUID:   trainerUUID,
 		limit:         limit,
 		customerUUIDs: customerUUIDs,

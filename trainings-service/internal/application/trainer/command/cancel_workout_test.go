@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestShouldDeleteWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
+func TestShouldCancelWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -20,11 +20,11 @@ func TestShouldDeleteWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 
 	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository := new(mocks.WorkoutDeleter)
+	repository := new(mocks.CancelWorkoutHandlerRepository)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	repository.EXPECT().DeleteWorkoutGroup(ctx, workout.UUID()).Return(nil)
 
-	SUT := command.NewWorkoutDeleteHandler(repository)
+	SUT := command.NewCancelWorkoutHandler(repository)
 
 	// when:
 	err := SUT.Do(ctx, workout.UUID(), workout.TrainerUUID())
@@ -34,7 +34,7 @@ func TestShouldDeleteWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
 	repository.AssertExpectations(t)
 }
 
-func TestShouldNotDeleteWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
+func TestShouldNotCancelWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -43,10 +43,10 @@ func TestShouldNotDeleteWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
 	const workoutUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 
 	workout := trainer.WorkoutGroup{}
-	repository := new(mocks.WorkoutDeleter)
+	repository := new(mocks.CancelWorkoutHandlerRepository)
 	repository.EXPECT().QueryWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
 
-	SUT := command.NewWorkoutDeleteHandler(repository)
+	SUT := command.NewCancelWorkoutHandler(repository)
 
 	// when:
 	err := SUT.Do(ctx, workoutUUID, trainerUUID)
@@ -56,7 +56,7 @@ func TestShouldNotDeleteWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
 	repository.AssertExpectations(t)
 }
 
-func TestShouldNotDeleteTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
+func TestShouldNotCancelTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -64,12 +64,12 @@ func TestShouldNotDeleteTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 
 	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository := new(mocks.WorkoutDeleter)
+	repository := new(mocks.CancelWorkoutHandlerRepository)
 	expectedErr := errors.New("repository failure")
 	repository.EXPECT().QueryWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
 	repository.EXPECT().DeleteWorkoutGroup(ctx, workout.UUID()).Return(expectedErr)
 
-	SUT := command.NewWorkoutDeleteHandler(repository)
+	SUT := command.NewCancelWorkoutHandler(repository)
 
 	// when:
 	err := SUT.Do(ctx, workout.UUID(), workout.TrainerUUID())

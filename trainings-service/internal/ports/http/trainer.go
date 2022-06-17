@@ -7,8 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
-
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
@@ -47,7 +45,7 @@ func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		UUID, err := h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command.WorkoutGroup{
+		UUID, err := h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command.WorkoutGroupDetails{
 			TrainerUUID: payload.TrainerUUID,
 			Name:        payload.Name,
 			Desc:        payload.Desc,
@@ -59,48 +57,6 @@ func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
 		}
 		res := rest.JSONResponse{Message: fmt.Sprintf("workout group created with UUID: %s", UUID)}
 		rest.SendJSONResponse(w, res, http.StatusCreated)
-	}
-}
-
-func (h *TrainerWorkoutGroups) AssignCustomer() http.HandlerFunc {
-	type HTTPRequestBody struct {
-		CustomerUUID string `json:"customer_uuid"`
-	}
-	return func(w http.ResponseWriter, r *http.Request) {
-		workoutUUID := chi.URLParam(r, "workoutUUID")
-		if workoutUUID == "" {
-			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing workoutUUID in path"}, http.StatusBadRequest)
-			return
-		}
-		trainerUUID := chi.URLParam(r, "trainerUUID")
-		if trainerUUID == "" {
-			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
-			return
-		}
-		var payload HTTPRequestBody
-		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&payload)
-		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
-			return
-		}
-		err = h.app.Commands.AssignCustomer.Do(r.Context(), command2.WorkoutRegistration{
-			TrainerUUID:  trainerUUID,
-			GroupUUID:    workoutUUID,
-			CustomerUUID: payload.CustomerUUID,
-		})
-		if errors.Is(err, command.ErrWorkoutGroupNotOwner) {
-			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
-			return
-		}
-		if errors.Is(err, command.ErrRepositoryFailure) {
-			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
-			return
-		}
-		res := rest.JSONResponse{
-			Message: fmt.Sprintf("Customer UUID: %s assgined to wrokout group UUID: %s", payload.CustomerUUID, workoutUUID),
-		}
-		rest.SendJSONResponse(w, res, http.StatusOK)
 	}
 }
 

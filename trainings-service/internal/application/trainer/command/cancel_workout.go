@@ -7,18 +7,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutDeleter interface {
+type CancelWorkoutHandlerRepository interface {
 	QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error)
 	DeleteWorkoutGroup(ctx context.Context, groupUUID string) error
 }
 
-type WorkoutDeleteHandler struct {
-	repository WorkoutDeleter
+type CancelWorkoutHandler struct {
+	repository CancelWorkoutHandlerRepository
 }
 
-func (w *WorkoutDeleteHandler) Do(ctx context.Context, groupUUID, trainerUUID string) error {
+func (c *CancelWorkoutHandler) Do(ctx context.Context, groupUUID, trainerUUID string) error {
 	logger := logrus.WithFields(logrus.Fields{"Component": "WorkoutDeleteHandler"})
-	group, err := w.repository.QueryWorkoutGroup(ctx, groupUUID)
+	group, err := c.repository.QueryWorkoutGroup(ctx, groupUUID)
 	if err != nil {
 		const s = "query workout group UUID: %s for trainerUUID: %s failed, reason: %v"
 		logger.Errorf(s, groupUUID, trainerUUID, err)
@@ -29,7 +29,7 @@ func (w *WorkoutDeleteHandler) Do(ctx context.Context, groupUUID, trainerUUID st
 		logger.Errorf(s, groupUUID, trainerUUID)
 		return ErrWorkoutGroupNotOwner
 	}
-	err = w.repository.DeleteWorkoutGroup(ctx, groupUUID)
+	err = c.repository.DeleteWorkoutGroup(ctx, groupUUID)
 	if err != nil {
 		const s = "delete workout group UUID: %s for trainerUUID: %s failed, reason: %v"
 		logger.Errorf(s, groupUUID, trainerUUID, err)
@@ -38,11 +38,11 @@ func (w *WorkoutDeleteHandler) Do(ctx context.Context, groupUUID, trainerUUID st
 	return nil
 }
 
-func NewWorkoutDeleteHandler(w WorkoutDeleter) *WorkoutDeleteHandler {
+func NewCancelWorkoutHandler(w CancelWorkoutHandlerRepository) *CancelWorkoutHandler {
 	if w == nil {
 		panic("nil repository")
 	}
-	return &WorkoutDeleteHandler{
+	return &CancelWorkoutHandler{
 		repository: w,
 	}
 }

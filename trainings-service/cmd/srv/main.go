@@ -5,8 +5,6 @@ import (
 	"log"
 	"time"
 
-	command2 "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
-
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
@@ -41,15 +39,14 @@ func execute() error {
 
 	app := application.Application{
 		Commands: application.Commands{
-			CreateTrainerWorkout:  command.NewCreateWorkoutHandler(repository),
-			DeleteTrainerWorkout:  command.NewWorkoutDeleteHandler(repository),
-			DeleteTrainerWorkouts: command.NewWorkoutsDeleteHandler(repository),
-			AssignCustomer:        command2.NewAssignCustomerHandler(repository),
+			CreateTrainerWorkout:  command.NewScheduleWorkoutHandler(repository),
+			DeleteTrainerWorkout:  command.NewCancelWorkoutHandler(repository),
+			DeleteTrainerWorkouts: command.NewCancelWorkoutsHandler(repository),
 			UnassignCustomer:      command.NewUnassignCustomerHandler(repository),
 		},
 		Queries: application.Queries{
-			GetTrainerWorkout:  query.NewGetWorkoutHandler(repository),
-			GetTrainerWorkouts: query.NewGetWorkoutsHandler(repository),
+			GetTrainerWorkout:  query.NewWorkoutGroupHandler(repository),
+			GetTrainerWorkouts: query.NewWorkoutGroupsHandler(repository),
 		},
 	}
 	HTTP := http.NewTrainerWorkoutGroupsHTTP(&app, cfg.Format)

@@ -2,12 +2,12 @@ package mongodb
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
-	"go.mongodb.org/mongo-driver/bson"
 	"time"
 
+	mcustomer "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/customer"
+	mtrainer "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/trainer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -26,13 +26,13 @@ type Config struct {
 }
 
 type CommandHandlers struct {
-	trainer  *TrainerCommandHandler
-	customer *CustomerCommandHandler
+	trainer  *mtrainer.CommandHandler
+	customer *mcustomer.CommandHandler
 }
 
 type QueryHandlers struct {
-	trainer  *TrainerQueryHandler
-	customer *CustomerQueryHandler
+	trainer  *mtrainer.QueryHandler
+	customer *mcustomer.QueryHandler
 }
 
 type MongoDB struct {
@@ -88,13 +88,13 @@ func NewMongoDB(cfg Config) (*MongoDB, error) {
 	m := MongoDB{
 		cfg: cfg,
 		commands: CommandHandlers{
-			trainer: NewTrainerCommandHandler(mongoCLI, TrainerCommandHandlerConfig{
+			trainer: mtrainer.NewCommandHandler(mongoCLI, mtrainer.CommandHandlerConfig{
 				Collection:     cfg.TrainerCollection,
 				Database:       cfg.Database,
 				Format:         cfg.Format,
 				CommandTimeout: cfg.CommandTimeout,
 			}),
-			customer: NewCustomerCommandHandler(mongoCLI, CustomerCommandHandlerConfig{
+			customer: mcustomer.NewCommandHandler(mongoCLI, mcustomer.CommandHandlerConfig{
 				Collection:     cfg.CustomerCollection,
 				Database:       cfg.Database,
 				Format:         cfg.Format,
@@ -102,13 +102,13 @@ func NewMongoDB(cfg Config) (*MongoDB, error) {
 			}),
 		},
 		queries: QueryHandlers{
-			trainer: NewTrainerQueryHandler(mongoCLI, TrainerQueryHandlerConfig{
+			trainer: mtrainer.NewQueryHandler(mongoCLI, mtrainer.QueryHandlerConfig{
 				Collection:   cfg.TrainerCollection,
 				Database:     cfg.Database,
 				Format:       cfg.Format,
 				QueryTimeout: cfg.CommandTimeout,
 			}),
-			customer: NewCustomerQueryHandler(mongoCLI, CustomerQueryHandlerConfig{
+			customer: mcustomer.NewQueryHandler(mongoCLI, mcustomer.QueryHandlerConfig{
 				Collection:   cfg.CustomerCollection,
 				Database:     cfg.Database,
 				Format:       cfg.Format,
@@ -139,26 +139,4 @@ func newMongoClient(addr string, timeout time.Duration) (*mongo.Client, error) {
 		return nil, fmt.Errorf("mongo client ping req failed: %v", err)
 	}
 	return mongoCLI, nil
-}
-
-type document interface {
-	CustomerWorkoutDocument | TrainerWorkoutGroupDocument
-}
-
-type filter interface {
-	bson.M | bson.D
-}
-
-func updateOne[d document, f filter](ctx context.Context, coll *mongo.Collection, filter f, doc d) error {
-	if coll == nil {
-		return errors.New("empty collection")
-	}
-	update := bson.M{"$set": doc}
-	opts := options.Update()
-	opts.SetUpsert(true)
-	_, err := coll.UpdateOne(ctx, filter, update, opts)
-	if err != nil {
-		return fmt.Errorf("update one failed: %v", err)
-	}
-	return nil
 }

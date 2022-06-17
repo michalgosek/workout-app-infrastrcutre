@@ -7,16 +7,16 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutGetter interface {
+type WorkoutGroupHandlerRepository interface {
 	QueryWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error)
 }
 
-type GetWorkoutHandler struct {
-	repository WorkoutGetter
+type WorkoutGroupHandler struct {
+	repository WorkoutGroupHandlerRepository
 }
 
-func (t *GetWorkoutHandler) Do(ctx context.Context, groupUUID, trainerUUID string) (trainer.WorkoutGroup, error) {
-	logger := logrus.WithFields(logrus.Fields{"Component": "GetWorkoutHandler"})
+func (t *WorkoutGroupHandler) Do(ctx context.Context, groupUUID, trainerUUID string) (trainer.WorkoutGroup, error) {
+	logger := logrus.WithFields(logrus.Fields{"Component": "WorkoutGroupHandler"})
 
 	group, err := t.repository.QueryWorkoutGroup(ctx, groupUUID)
 	if err != nil {
@@ -35,11 +35,11 @@ func (t *GetWorkoutHandler) Do(ctx context.Context, groupUUID, trainerUUID strin
 	return group, nil
 }
 
-func NewGetWorkoutHandler(w WorkoutGetter) *GetWorkoutHandler {
+func NewWorkoutGroupHandler(w WorkoutGroupHandlerRepository) *WorkoutGroupHandler {
 	if w == nil {
 		panic("nil repository")
 	}
-	return &GetWorkoutHandler{
+	return &WorkoutGroupHandler{
 		repository: w,
 	}
 }

@@ -1,4 +1,4 @@
-package mongodb
+package trainer
 
 import (
 	"context"
@@ -8,29 +8,30 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type TrainerCommandHandlerConfig struct {
+type CommandHandlerConfig struct {
 	Collection     string
 	Database       string
 	Format         string
 	CommandTimeout time.Duration
 }
 
-type TrainerCommandHandler struct {
+type CommandHandler struct {
 	cli *mongo.Client
-	cfg TrainerCommandHandlerConfig
+	cfg CommandHandlerConfig
 }
 
-func NewTrainerCommandHandler(cli *mongo.Client, cfg TrainerCommandHandlerConfig) *TrainerCommandHandler {
-	t := TrainerCommandHandler{
+func NewCommandHandler(cli *mongo.Client, cfg CommandHandlerConfig) *CommandHandler {
+	t := CommandHandler{
 		cli: cli,
 		cfg: cfg,
 	}
 	return &t
 }
 
-func (m *TrainerCommandHandler) DropCollection(ctx context.Context) error {
+func (m *CommandHandler) DropCollection(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, m.cfg.CommandTimeout)
 	defer cancel()
 	db := m.cli.Database(m.cfg.Database)
@@ -38,8 +39,8 @@ func (m *TrainerCommandHandler) DropCollection(ctx context.Context) error {
 	return coll.Drop(ctx)
 }
 
-func (m *TrainerCommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
-	doc := TrainerWorkoutGroupDocument{
+func (m *CommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule trainer.WorkoutGroup) error {
+	doc := WorkoutGroupDocument{
 		UUID:          schedule.UUID(),
 		TrainerUUID:   schedule.TrainerUUID(),
 		Limit:         schedule.Limit(),
@@ -48,20 +49,27 @@ func (m *TrainerCommandHandler) UpsertWorkoutGroup(ctx context.Context, schedule
 		Desc:          schedule.Desc(),
 		Date:          schedule.Date().Format(m.cfg.Format),
 	}
-	f := bson.M{"_id": schedule.UUID(), "trainer_uuid": schedule.TrainerUUID()}
+
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 
 	ctx, cancel := context.WithTimeout(ctx, m.cfg.CommandTimeout)
 	defer cancel()
-	err := updateOne(ctx, coll, f, doc)
+	update := bson.M{"$set": doc}
+	opts := options.Update()
+	opts.SetUpsert(true)
+	f := bson.M{"_id": schedule.UUID(), "trainer_uuid": schedule.TrainerUUID()}
+	_, err := coll.UpdateOne(ctx, f, update, opts)
+	if err != nil {
+		return fmt.Errorf("update one failed: %v", err)
+	}
 	if err != nil {
 		return fmt.Errorf("update one failed: %v", err)
 	}
 	return nil
 }
 
-func (m *TrainerCommandHandler) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error {
+func (m *CommandHandler) DeleteWorkoutGroups(ctx context.Context, trainerUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"trainer_uuid": trainerUUID}
@@ -72,7 +80,7 @@ func (m *TrainerCommandHandler) DeleteWorkoutGroups(ctx context.Context, trainer
 	return nil
 }
 
-func (m *TrainerCommandHandler) DeleteWorkoutGroup(ctx context.Context, groupUUID string) error {
+func (m *CommandHandler) DeleteWorkoutGroup(ctx context.Context, groupUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"_id": groupUUID}
