@@ -1,13 +1,15 @@
 package trainer_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+
 	"github.com/google/uuid"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,16 +17,22 @@ func TestShouldReturnErrorWhenCustomerLimitExceeded_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	const trainerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
 	const customerUUID = "5b6bd420-2b8a-444f-869a-ea12957ef8c1"
 	const customersLeft = 0
+	const customerName = "John Doe"
 	const customersAssigned = 10
+	const trainerUUID = "1b0af14e-5aa9-4b80-968f-03d93f46805e"
+	const groupName = "dummy"
+	const groupDesc = "dummy"
+	const trainerName = "John Doe"
 
-	SUT := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	AssignCustomerToWorkoutGroup(&SUT, 10)
+	date := time.Now().Add(24 * time.Hour)
+	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
+	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
+	_ = AssignCustomerToWorkoutGroup(SUT, 10)
 
 	// when:
-	err := SUT.AssignCustomer(customerUUID)
+	err := SUT.AssignCustomer(details)
 
 	// then:
 	assertions.ErrorIs(trainer.ErrCustomersScheduleLimitExceeded, err)
@@ -38,18 +46,18 @@ func TestShouldNotReturnErrorWhenWorkoutGroupNameIsUnderLimit_Unit(t *testing.T)
 	const trainerUUID = "1b0af14e-5aa9-4b80-968f-03d93f46805e"
 	const groupName = "dummy"
 	const groupDesc = "dummy"
-	const newName = "dummy1"
+	const updateName = "dummy1"
 	const trainerName = "John Doe"
+
 	date := time.Now().Add(24 * time.Hour)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
 
 	// when:
-	err := SUT.UpdateGroupName(newName)
+	err := SUT.UpdateName(updateName)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(newName, SUT.GroupName())
-
+	assertions.Equal(updateName, SUT.Name())
 }
 
 func TestShouldReturnErrorWhenWorkoutGroupNameIsOverLimit_Unit(t *testing.T) {
@@ -59,12 +67,13 @@ func TestShouldReturnErrorWhenWorkoutGroupNameIsOverLimit_Unit(t *testing.T) {
 	const groupName = "dummy"
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
-	newName := strings.Repeat("s", 16)
+
+	updatedDesc := strings.Repeat("s", 16)
 	date := time.Now().Add(24 * time.Hour)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
 
 	// when:
-	err := SUT.UpdateGroupName(newName)
+	err := SUT.UpdateName(updatedDesc)
 
 	// then:
 	assertions.Equal(trainer.ErrScheduleNameExceeded, err)
@@ -77,12 +86,13 @@ func TestShouldNotReturnErrorWhenWorkoutGroupNameIsEqualLimit_Unit(t *testing.T)
 	const groupName = "dummy"
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
+
 	newName := strings.Repeat("s", 15)
 	date := time.Now().Add(24 * time.Hour)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, groupName, groupDesc, trainerName, date)
 
 	// when:
-	err := SUT.UpdateGroupName(newName)
+	err := SUT.UpdateName(newName)
 
 	// then:
 	assertions.Nil(err)
@@ -98,11 +108,14 @@ func TestShouldRegisterCustomerToWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	const groupName = "dummy"
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
+	const customerName = "Jerry Smith"
+
 	date := time.Now().Add(24 * time.Hour)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
+	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
 
 	// when:
-	err := SUT.AssignCustomer(customerUUID)
+	err := SUT.AssignCustomer(details)
 
 	// then:
 	assertions.Nil(err)
@@ -116,16 +129,18 @@ func TestShouldUnregisterCustomerFromWorkoutGroupWithSuccess_Unit(t *testing.T) 
 	const trainerUUID = "1b0af14e-5aa9-4b80-968f-03d93f46805e"
 	const customerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 	const customersLeft = 10
+	const customerName = "Jerry Smith"
 	const groupName = "dummy"
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
+
 	date := time.Now().Add(24 * time.Hour)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
-
-	SUT.AssignCustomer(customerUUID)
+	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
+	_ = SUT.AssignCustomer(details)
 
 	// when:
-	SUT.UnregisterCustomer(customerUUID)
+	SUT.UnregisterCustomer(details.UUID())
 
 	// then:
 	assertions.Empty(SUT.AssignedCustomers())
@@ -141,15 +156,16 @@ func TestShouldNotReturnErrorWhenTextLengthIsUnderLimit_Unit(t *testing.T) {
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
 	const newDesc = "dummy1"
+
 	date := time.Now().Add(24 * time.Hour)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
 
 	// when:
-	err := SUT.UpdateGroupDescription(newDesc)
+	err := SUT.UpdateDescription(newDesc)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(newDesc, SUT.GroupDescription())
+	assertions.Equal(newDesc, SUT.Description())
 }
 
 func TestShouldReturnErrorWhenTextLengthIsOverLimit_Unit(t *testing.T) {
@@ -160,16 +176,17 @@ func TestShouldReturnErrorWhenTextLengthIsOverLimit_Unit(t *testing.T) {
 	const groupName = "dummy"
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
+
 	date := time.Now().Add(24 * time.Hour)
 	invalidDesc := strings.Repeat("a", 101)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
 
 	// when:
-	err := SUT.UpdateGroupDescription(invalidDesc)
+	err := SUT.UpdateDescription(invalidDesc)
 
 	// then:
 	assertions.ErrorIs(err, trainer.ErrScheduleDescriptionExceeded)
-	assertions.Equal(groupDesc, SUT.GroupDescription())
+	assertions.Equal(groupDesc, SUT.Description())
 }
 
 func TestShouldReturnErrorWhenTextLengthEqualsLimit_Unit(t *testing.T) {
@@ -180,16 +197,17 @@ func TestShouldReturnErrorWhenTextLengthEqualsLimit_Unit(t *testing.T) {
 	const groupName = "dummy"
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
+
 	date := time.Now().Add(24 * time.Hour)
 	expectedDesc := strings.Repeat("a", 100)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
 
 	// when:
-	err := SUT.UpdateGroupDescription(expectedDesc)
+	err := SUT.UpdateDescription(expectedDesc)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(expectedDesc, SUT.GroupDescription())
+	assertions.Equal(expectedDesc, SUT.Description())
 }
 
 func TestShouldReturnErrorWhenSpecifiedTimeIsOneMinEarlierFromNow_Unit(t *testing.T) {
@@ -205,11 +223,11 @@ func TestShouldReturnErrorWhenSpecifiedTimeIsOneMinEarlierFromNow_Unit(t *testin
 	hourEarlier := time.Now().Add(threshold - 1*time.Hour)
 
 	// when:
-	workoutGroup, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, hourEarlier)
+	SUT, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, hourEarlier)
 
 	// then:
 	assertions.Equal(trainer.ErrScheduleDateViolation, err)
-	assertions.Nil(workoutGroup)
+	assertions.Nil(SUT)
 }
 
 func TestShouldNotReturnErrorWhenSpecifiedTimeIsOneMinLaterFromThreshold_Unit(t *testing.T) {
@@ -220,14 +238,15 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsOneMinLaterFromThreshold_Unit(t 
 	const groupName = "dummy"
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
+
 	threshold := 3 * time.Hour
 	minLater := time.Now().Add(threshold + time.Hour)
 
 	// when:
-	workoutGroup, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, minLater)
+	SUT, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, minLater)
 
 	// then:
-	assertions.NotNil(workoutGroup)
+	assertions.NotNil(SUT)
 	assertions.Nil(err)
 }
 
@@ -243,10 +262,10 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsOneSecondLaterFromThreshold_Unit
 	minLater := time.Now().Add(threshold + time.Second)
 
 	// when:
-	workoutGroup, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, minLater)
+	SUT, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, minLater)
 
 	// then:
-	assertions.NotNil(workoutGroup)
+	assertions.NotNil(SUT)
 	assertions.Nil(err)
 }
 
@@ -262,10 +281,10 @@ func TestShouldReturnTrueWhenSpecifiedTimeIsDayAfterThanCurrentThreshold_Unit(t 
 	nextDay := now.Add(24 * time.Hour)
 
 	// when:
-	workoutGroup, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, nextDay)
+	SUT, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, nextDay)
 
 	// then:
-	assertions.NotNil(workoutGroup)
+	assertions.NotNil(SUT)
 	assertions.Nil(err)
 }
 
@@ -286,10 +305,10 @@ func TestShouldNotReturnErrorWhenSpecifiedTimeIsEqualToThreshold_Unit(t *testing
 	timeUnderLimit := now.Add(threshold)
 
 	// when:
-	workoutGroup, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, timeUnderLimit)
+	SUT, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, timeUnderLimit)
 
 	// then:
-	assertions.NotNil(workoutGroup)
+	assertions.NotNil(SUT)
 	assertions.Nil(err)
 }
 
@@ -302,26 +321,29 @@ func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
 	const groupDesc = "dummy"
 	const trainerName = "John Doe"
 	const customerUUID = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+	const customerName = "Jerry Smith"
 	date := time.Now().Add(24 * time.Hour)
 
 	expectedWorkoutGroup, _ := trainer.NewWorkoutGroup(groupUUID, trainerName, groupName, groupDesc, date)
-	expectedWorkoutGroup.AssignCustomer(customerUUID)
+	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
+	expectedWorkoutGroup.AssignCustomer(details)
 
 	// when:
-	workoutGroup, err := trainer.UnmarshalFromDatabase(
-		expectedWorkoutGroup.UUID(),
-		expectedWorkoutGroup.TrainerUUID(),
-		expectedWorkoutGroup.TrainerName(),
-		expectedWorkoutGroup.GroupName(),
-		expectedWorkoutGroup.GroupDescription(),
-		expectedWorkoutGroup.CustomerUUIDs(),
-		expectedWorkoutGroup.Date(),
-		expectedWorkoutGroup.Limit(),
-	)
+	SUT, err := trainer.UnmarshalWorkoutGroupFromDatabase(
+		trainer.WorkoutGroupDetails{
+			UUID:        expectedWorkoutGroup.UUID(),
+			TrainerUUID: expectedWorkoutGroup.TrainerUUID(),
+			TrainerName: expectedWorkoutGroup.TrainerName(),
+			Name:        expectedWorkoutGroup.Name(),
+			Description: expectedWorkoutGroup.Description(),
+			Date:        expectedWorkoutGroup.Date(),
+			Limit:       expectedWorkoutGroup.Limit(),
+		},
+		expectedWorkoutGroup.CustomerDetails())
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(*expectedWorkoutGroup, workoutGroup)
+	assertions.Equal(*expectedWorkoutGroup, SUT)
 }
 
 func TestShouldNotReturnErrorWhenSpecifiedTrainerNameIsEmpty_Unit(t *testing.T) {
@@ -336,18 +358,24 @@ func TestShouldNotReturnErrorWhenSpecifiedTrainerNameIsEmpty_Unit(t *testing.T) 
 	minLater := time.Now().Add(24 * time.Hour)
 
 	// when:
-	workoutGroup, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, minLater)
+	SUT, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, minLater)
 
 	// then:
 	assertions.Equal(trainer.ErrEmptyTrainerName, err)
-	assertions.Nil(workoutGroup)
+	assertions.Nil(SUT)
 }
 
-func AssignCustomerToWorkoutGroup(workoutGroup *trainer.WorkoutGroup, n int) {
+func AssignCustomerToWorkoutGroup(workoutGroup *trainer.WorkoutGroup, n int) error {
 	for i := 0; i < n; i++ {
-		err := workoutGroup.AssignCustomer(uuid.NewString())
+		name := fmt.Sprintf("Person%d", i+1)
+		details, err := customer.NewCustomerDetails(uuid.NewString(), name)
 		if err != nil {
-			panic(err)
+			return err
+		}
+		err = workoutGroup.AssignCustomer(details)
+		if err != nil {
+			return err
 		}
 	}
+	return nil
 }

@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
 
 type CustomerWorkoutDay struct {
@@ -26,14 +25,28 @@ type WorkoutDayHandler struct {
 	repository WorkoutDayHandlerRepository
 }
 
-type WorkoutDayDetails struct {
+type WorkoutDay struct {
 	CustomerUUID string
 	GroupUUID    string
 }
 
-func (w *WorkoutDayHandler) Do(ctx context.Context, d WorkoutDayDetails) (CustomerWorkoutDay, error) {
-
-	return CustomerWorkoutDay{}, nil
+func (w *WorkoutDayHandler) Do(ctx context.Context, d WorkoutDay) (CustomerWorkoutDay, error) {
+	group, err := w.repository.QueryWorkoutGroup(ctx, d.GroupUUID)
+	if err != nil {
+		return CustomerWorkoutDay{}, err
+	}
+	day, err := w.repository.QueryCustomerWorkoutDay(ctx, d.CustomerUUID, group.UUID())
+	if err != nil {
+		return CustomerWorkoutDay{}, err
+	}
+	out := CustomerWorkoutDay{
+		Date:         day.Date(),
+		Trainer:      group.TrainerName(),
+		WorkoutName:  group.Name(),
+		WorkoutDesc:  group.Description(),
+		Participants: group.AssignedCustomers(),
+	}
+	return out, nil
 }
 
 func NewWorkoutDayHandler(r WorkoutDayHandlerRepository) *WorkoutDayHandler {

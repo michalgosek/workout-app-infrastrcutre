@@ -12,7 +12,7 @@ type ScheduleWorkoutHandler struct {
 	repository TrainerRepository
 }
 
-type WorkoutGroupDetails struct {
+type ScheduleWorkout struct {
 	TrainerUUID string
 	TrainerName string
 	GroupName   string
@@ -20,20 +20,19 @@ type WorkoutGroupDetails struct {
 	Date        time.Time
 }
 
-func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutGroupDetails) (string, error) {
+func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w ScheduleWorkout) error {
 	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "CreateWorkoutHandler"})
 	group, err := trainer.NewWorkoutGroup(w.TrainerUUID, w.TrainerName, w.GroupName, w.GroupDesc, w.Date)
 	if err != nil {
 		logger.Errorf("creating new workout group: %+v failed, reason: %v", w, err)
-		return "", err
+		return err
 	}
-
 	err = s.repository.UpsertTrainerWorkoutGroup(ctx, *group)
 	if err != nil {
 		logger.Errorf("upsert group UUID: %s for trainer UUID: %s failed, reason: %v", group.UUID(), w.TrainerUUID, err)
-		return "", ErrRepositoryFailure
+		return ErrRepositoryFailure
 	}
-	return group.UUID(), nil
+	return nil
 }
 
 func NewScheduleWorkoutHandler(t TrainerRepository) *ScheduleWorkoutHandler {

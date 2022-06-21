@@ -13,32 +13,33 @@ type UnassignCustomerHandler struct {
 	customerRepository CustomerRepository
 }
 
-type WorkoutUnregister struct {
+type UnassignCustomer struct {
 	CustomerUUID string
 	GroupUUID    string
 	TrainerUUID  string
 }
 
-func (a *UnassignCustomerHandler) Do(ctx context.Context, args WorkoutUnregister) error {
-	group, err := a.getWorkoutGroup(ctx, args)
+func (a *UnassignCustomerHandler) Do(ctx context.Context, c UnassignCustomer) error {
+	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "UnregisterCustomerHandler"})
+	group, err := a.getWorkoutGroup(ctx, c.GroupUUID, c.TrainerUUID)
+	if err != nil {
+		logger.Errorf("query workout group UUID: %s for trainerUUID: %s failed, reason: %v", c.GroupUUID, c.TrainerUUID, err)
+		return err
+	}
+	err = a.updateCustomerStatus(ctx, c.CustomerUUID, c.GroupUUID)
 	if err != nil {
 		return err
 	}
-	err = a.updateCustomerStatus(ctx, args)
-	if err != nil {
-		return err
-	}
-	err = a.updateTrainerStatus(ctx, args, group)
+	err = a.updateTrainerStatus(ctx, c.CustomerUUID, group)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (a *UnassignCustomerHandler) updateTrainerStatus(ctx context.Context, args WorkoutUnregister, group trainer.WorkoutGroup) error {
+func (a *UnassignCustomerHandler) updateTrainerStatus(ctx context.Context, customerUUID string, group trainer.WorkoutGroup) error {
 	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "UnregisterCustomerHandler", "Method": "updateTrainerStatus"})
-
-	group.UnregisterCustomer(args.CustomerUUID)
+	group.UnregisterCustomer(customerUUID)
 	err := a.trainerRepository.UpsertTrainerWorkoutGroup(ctx, group)
 	if err != nil {
 		logger.Errorf("upsert workout group UUID: %s workout day failed reason: %v", group.UUID(), err)
@@ -47,35 +48,35 @@ func (a *UnassignCustomerHandler) updateTrainerStatus(ctx context.Context, args 
 	return nil
 }
 
-func (a *UnassignCustomerHandler) updateCustomerStatus(ctx context.Context, args WorkoutUnregister) error {
+func (a *UnassignCustomerHandler) updateCustomerStatus(ctx context.Context, customerUUID, groupUUID string) error {
 	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "UnregisterCustomerHandler", "Method": "updateCustomerStatus"})
-	customerWorkoutDay, err := a.customerRepository.QueryCustomerWorkoutDay(ctx, args.CustomerUUID, args.GroupUUID)
+	customerWorkoutDay, err := a.customerRepository.QueryCustomerWorkoutDay(ctx, customerUUID, groupUUID)
 	if err != nil {
-		logger.Errorf("query customer UUID: %s workout day with groupUUID: %s failed, reason: %v", args.CustomerUUID, args.GroupUUID, err)
+		logger.Errorf("query customer UUID: %s workout day with groupUUID: %s failed, reason: %v", customerUUID, groupUUID, err)
 		return ErrRepositoryFailure
 	}
 	var empty customer.WorkoutDay
 	if customerWorkoutDay == empty {
-		logger.Errorf("customer UUID: %s workout day with groupUUID: %s not exist", args.CustomerUUID, args.GroupUUID)
+		logger.Errorf("customer UUID: %s workout day with groupUUID: %s not exist", customerUUID, groupUUID)
 		return ErrResourceNotFound
 	}
-	err = a.customerRepository.DeleteCustomerWorkoutDay(ctx, args.CustomerUUID, customerWorkoutDay.UUID())
+	err = a.customerRepository.DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkoutDay.UUID())
 	if err != nil {
-		logger.Errorf("delete customer UUID: %s workout day with UUID: %s failed, reason: %v", args.CustomerUUID, customerWorkoutDay.UUID(), err)
+		logger.Errorf("delete customer UUID: %s workout day with UUID: %s failed, reason: %v", customerUUID, customerWorkoutDay.UUID(), err)
 		return ErrRepositoryFailure
 	}
 	return nil
 }
 
-func (a *UnassignCustomerHandler) getWorkoutGroup(ctx context.Context, args WorkoutUnregister) (trainer.WorkoutGroup, error) {
+func (a *UnassignCustomerHandler) getWorkoutGroup(ctx context.Context, groupUUID, trainerUUID string) (trainer.WorkoutGroup, error) {
 	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "UnregisterCustomerHandler-updateCustomerStatus", "Method": "getWorkoutGroup"})
-	group, err := a.trainerRepository.QueryTrainerWorkoutGroup(ctx, args.GroupUUID)
+	group, err := a.trainerRepository.QueryTrainerWorkoutGroup(ctx, groupUUID)
 	if err != nil {
-		logger.Errorf("query workout group UUID: %s for trainerUUID: %s failed, reason: %v", args.GroupUUID, args.TrainerUUID, err)
+		logger.Errorf("query workout group UUID: %s for trainerUUID: %s failed, reason: %v", groupUUID, trainerUUID, err)
 		return trainer.WorkoutGroup{}, ErrRepositoryFailure
 	}
-	if group.TrainerUUID() != args.TrainerUUID {
-		logger.Errorf("workout group UUID: %s does not belong to trainerUUID: %s", group.UUID(), args.TrainerUUID)
+	if group.TrainerUUID() != trainerUUID {
+		logger.Errorf("workout group UUID: %s does not belong to trainerUUID: %s", group.UUID(), trainerUUID)
 		return trainer.WorkoutGroup{}, ErrWorkoutGroupNotOwner
 	}
 	return group, nil

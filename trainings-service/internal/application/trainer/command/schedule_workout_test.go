@@ -22,7 +22,7 @@ func TestShouldScheduleWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	SUT := command.NewScheduleWorkoutHandler(repository)
 
 	// when:
-	_, err := SUT.Do(ctx, command.WorkoutGroupDetails{
+	err := SUT.Do(ctx, command.ScheduleWorkout{
 		TrainerUUID: "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a",
 		TrainerName: "John Doe",
 		GroupName:   "dummy",
@@ -46,7 +46,7 @@ func TestShouldNotScheduleWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
 	SUT := command.NewScheduleWorkoutHandler(repository)
 
 	// when:
-	_, err := SUT.Do(ctx, command.WorkoutGroupDetails{
+	err := SUT.Do(ctx, command.ScheduleWorkout{
 		TrainerUUID: "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a",
 		TrainerName: "John Doe",
 		GroupName:   "dummy",

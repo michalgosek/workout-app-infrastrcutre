@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+
 	"github.com/google/uuid"
 )
 
@@ -14,18 +16,18 @@ import (
 // * Name cannot be length than 15 chars
 
 type WorkoutGroup struct {
-	uuid          string
-	trainerUUID   string
-	trainerName   string
-	limit         int
-	customerUUIDs []string
-	groupName     string
-	groupDesc     string
-	date          time.Time
+	uuid            string
+	trainerUUID     string
+	trainerName     string
+	limit           int
+	customerDetails []customer.Details
+	name            string
+	description     string
+	date            time.Time
 }
 
-func (t *WorkoutGroup) GroupName() string {
-	return t.groupName
+func (t *WorkoutGroup) Name() string {
+	return t.name
 }
 
 func (t *WorkoutGroup) TrainerName() string {
@@ -48,16 +50,16 @@ func (t *WorkoutGroup) Date() time.Time {
 	return t.date
 }
 
-func (t *WorkoutGroup) GroupDescription() string {
-	return t.groupDesc
+func (t *WorkoutGroup) Description() string {
+	return t.description
 }
 
-func (t *WorkoutGroup) CustomerUUIDs() []string {
-	return t.customerUUIDs
+func (t *WorkoutGroup) CustomerDetails() []customer.Details {
+	return t.customerDetails
 }
 
 func (t *WorkoutGroup) AssignedCustomers() int {
-	return len(t.customerUUIDs)
+	return len(t.customerDetails)
 }
 
 func isProposedTimeNotExceeded(date time.Time) bool {
@@ -73,19 +75,19 @@ func isProposedNameNotExceeded(name string) bool {
 	return len(name) > 15
 }
 
-func (t *WorkoutGroup) UpdateGroupDescription(s string) error {
+func (t *WorkoutGroup) UpdateDescription(s string) error {
 	if isProposedDescriptionNotExceeded(s) {
 		return ErrScheduleDescriptionExceeded
 	}
-	t.groupDesc = s
+	t.description = s
 	return nil
 }
 
-func (t *WorkoutGroup) UpdateGroupName(s string) error {
+func (t *WorkoutGroup) UpdateName(s string) error {
 	if isProposedNameNotExceeded(s) {
 		return ErrScheduleNameExceeded
 	}
-	t.groupName = s
+	t.name = s
 	return nil
 }
 
@@ -98,35 +100,35 @@ func (t *WorkoutGroup) UpdateGroupDate(d time.Time) error {
 }
 
 func (t *WorkoutGroup) UnregisterCustomer(UUID string) {
-	var filtered []string
-	for _, u := range t.customerUUIDs {
-		if u == UUID {
+	var filtered []customer.Details
+	for _, c := range t.CustomerDetails() {
+		if c.UUID() == UUID {
 			continue
 		}
-		filtered = append(filtered, u)
+		filtered = append(filtered, c)
 	}
 	t.limit++
-	t.customerUUIDs = filtered
+	t.customerDetails = filtered
 }
 
-func (t *WorkoutGroup) AssignCustomer(UUID string) error {
-	if UUID == "" {
-		return ErrEmptyCustomerUUID
+func (t *WorkoutGroup) AssignCustomer(c customer.Details) error {
+	if c.UUID() == "" {
+		return customer.ErrEmptyCustomerUUID
 	}
 	if t.limit == 0 {
 		return ErrCustomersScheduleLimitExceeded
 	}
-	if len(t.customerUUIDs) == 0 {
-		t.customerUUIDs = append(t.customerUUIDs, UUID)
+	if len(t.customerDetails) == 0 {
+		t.customerDetails = append(t.customerDetails, c)
 		t.limit--
 		return nil
 	}
-	for _, u := range t.customerUUIDs {
-		if u == UUID {
+	for _, d := range t.customerDetails {
+		if d.UUID() == c.UUID() {
 			return ErrDuplicateCustomerUUID
 		}
 	}
-	t.customerUUIDs = append(t.customerUUIDs, UUID)
+	t.customerDetails = append(t.customerDetails, c)
 	t.limit--
 	return nil
 }
@@ -152,48 +154,57 @@ func NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc string, date
 		return nil, ErrEmptyTrainerName
 	}
 	w := WorkoutGroup{
-		uuid:          uuid.NewString(),
-		trainerUUID:   trainerUUID,
-		trainerName:   trainerName,
-		groupName:     groupName,
-		groupDesc:     groupDesc,
-		limit:         10,
-		date:          date,
-		customerUUIDs: []string{},
+		uuid:        uuid.NewString(),
+		trainerUUID: trainerUUID,
+		trainerName: trainerName,
+		name:        groupName,
+		description: groupDesc,
+		limit:       10,
+		date:        date,
 	}
 	return &w, nil
 }
 
-func UnmarshalFromDatabase(groupUUID, trainerUUID, trainerName, groupName, groupDesc string, customerUUIDs []string, date time.Time, limit int) (WorkoutGroup, error) {
-	if groupUUID == "" {
+type WorkoutGroupDetails struct {
+	UUID        string
+	TrainerUUID string
+	TrainerName string
+	Name        string
+	Description string
+	Date        time.Time
+	Limit       int
+}
+
+func UnmarshalWorkoutGroupFromDatabase(w WorkoutGroupDetails, customerDetails []customer.Details) (WorkoutGroup, error) {
+	if w.UUID == "" {
 		return WorkoutGroup{}, ErrEmptyWorkoutGroupUUID
 	}
-	if trainerUUID == "" {
-		return WorkoutGroup{}, ErrEmptyWorkoutTrainerUUID
-	}
-	if trainerName == "" {
-		return WorkoutGroup{}, ErrEmptyTrainerName
-	}
-	if groupName == "" {
+	if w.Name == "" {
 		return WorkoutGroup{}, ErrEmptyWorkoutGroupName
 	}
-	if groupDesc == "" {
+	if w.Description == "" {
 		return WorkoutGroup{}, ErrEmptyWorkoutGroupDesc
 	}
-	if date.IsZero() {
+	if w.Date.IsZero() {
 		return WorkoutGroup{}, ErrEmptyWorkoutGroupDate
 	}
-	w := WorkoutGroup{
-		uuid:          groupUUID,
-		trainerUUID:   trainerUUID,
-		limit:         limit,
-		customerUUIDs: customerUUIDs,
-		groupName:     groupName,
-		trainerName:   trainerName,
-		groupDesc:     groupDesc,
-		date:          date,
+	if w.TrainerUUID == "" {
+		return WorkoutGroup{}, ErrEmptyWorkoutTrainerUUID
 	}
-	return w, nil
+	if w.TrainerName == "" {
+		return WorkoutGroup{}, ErrEmptyTrainerName
+	}
+	group := WorkoutGroup{
+		uuid:            w.UUID,
+		limit:           w.Limit,
+		name:            w.Name,
+		description:     w.Description,
+		date:            w.Date,
+		customerDetails: customerDetails,
+		trainerUUID:     w.TrainerUUID,
+		trainerName:     w.TrainerName,
+	}
+	return group, nil
 }
 
 var (
@@ -202,7 +213,6 @@ var (
 	ErrEmptyWorkoutGroupName   = errors.New("empty workout name")
 	ErrEmptyTrainerName        = errors.New("empty trainer name")
 	ErrEmptyWorkoutGroupDesc   = errors.New("empty workout desc")
-	ErrEmptyCustomerUUID       = errors.New("empty customer UUID")
 	ErrEmptyWorkoutGroupDate   = errors.New("empty workout date")
 )
 

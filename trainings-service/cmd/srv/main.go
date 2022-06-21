@@ -8,7 +8,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/customer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	customcmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
 	trainercmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
@@ -23,7 +24,7 @@ func main() {
 }
 
 func execute() error {
-	customerRepository, err := mongodb.NewCustomerRepository(mongodb.CustomerRepositoryConfig{
+	customerRepository, err := customer.NewCustomerRepository(customer.RepositoryConfig{
 		Addr:               "mongodb://localhost:27017",
 		Database:           "trainings_service_test",
 		CustomerCollection: "customer_schedules",
@@ -35,7 +36,7 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("creating customer repository failed: %v", err)
 	}
-	trainerRepository, err := mongodb.NewTrainerRepository(mongodb.TrainerRepositoryConfig{
+	trainerRepository, err := trainer.NewTrainerRepository(trainer.RepositoryConfig{
 		Addr:              "mongodb://localhost:27017",
 		Database:          "trainings_service_test",
 		TrainerCollection: "trainer_schedules",
@@ -70,7 +71,7 @@ func execute() error {
 					r.Get("/", HTTP.GetTrainerWorkoutGroups())
 					r.Post("/", HTTP.CreateTrainerWorkoutGroup())
 					r.Delete("/", HTTP.DeleteWorkoutGroups())
-					r.Route("/{workoutUUID}", func(r chi.Router) {
+					r.Route("/{groupUUID}", func(r chi.Router) {
 						r.Get("/", HTTP.GetTrainerWorkoutGroup())
 						r.Delete("/", HTTP.DeleteWorkoutGroup())
 						r.Route("/customers", func(r chi.Router) {

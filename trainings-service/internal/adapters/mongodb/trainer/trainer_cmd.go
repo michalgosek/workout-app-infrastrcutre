@@ -40,15 +40,20 @@ func (m *CommandHandler) DropCollection(ctx context.Context) error {
 }
 
 func (m *CommandHandler) UpsertTrainerWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error {
+	var details []CustomerDetailsDocument
+	for _, d := range group.CustomerDetails() {
+		details = append(details, CustomerDetailsDocument{UUID: d.UUID(), Name: d.Name()})
+	}
+
 	doc := WorkoutGroupDocument{
-		UUID:          group.UUID(),
-		TrainerUUID:   group.TrainerUUID(),
-		TrainerName:   group.TrainerName(),
-		Limit:         group.Limit(),
-		CustomerUUIDs: group.CustomerUUIDs(),
-		WorkoutName:   group.GroupName(),
-		WorkoutDesc:   group.GroupDescription(),
-		Date:          group.Date().Format(m.cfg.Format),
+		UUID:            group.UUID(),
+		TrainerUUID:     group.TrainerUUID(),
+		TrainerName:     group.TrainerName(),
+		Limit:           group.Limit(),
+		CustomerDetails: details,
+		WorkoutName:     group.Name(),
+		WorkoutDesc:     group.Description(),
+		Date:            group.Date().Format(m.cfg.Format),
 	}
 
 	db := m.cli.Database(m.cfg.Database)
@@ -67,17 +72,6 @@ func (m *CommandHandler) UpsertTrainerWorkoutGroup(ctx context.Context, group tr
 	return nil
 }
 
-func (m *CommandHandler) DeleteTrainerWorkoutGroups(ctx context.Context, trainerUUID string) error {
-	db := m.cli.Database(m.cfg.Database)
-	coll := db.Collection(m.cfg.Collection)
-	f := bson.M{"trainer_uuid": trainerUUID}
-	_, err := coll.DeleteMany(ctx, f)
-	if err != nil {
-		return fmt.Errorf("delete many failed: %v", err)
-	}
-	return nil
-}
-
 func (m *CommandHandler) DeleteTrainerWorkoutGroup(ctx context.Context, groupUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
@@ -85,6 +79,17 @@ func (m *CommandHandler) DeleteTrainerWorkoutGroup(ctx context.Context, groupUUI
 	_, err := coll.DeleteOne(ctx, f)
 	if err != nil {
 		return fmt.Errorf("delete one failed: %v", err)
+	}
+	return nil
+}
+
+func (m *CommandHandler) DeleteTrainerWorkoutGroups(ctx context.Context, trainerUUID string) error {
+	db := m.cli.Database(m.cfg.Database)
+	coll := db.Collection(m.cfg.Collection)
+	f := bson.M{"trainer_uuid": trainerUUID}
+	_, err := coll.DeleteMany(ctx, f)
+	if err != nil {
+		return fmt.Errorf("delete many failed: %v", err)
 	}
 	return nil
 }

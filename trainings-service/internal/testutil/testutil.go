@@ -14,15 +14,17 @@ func getStaticTime() time.Time {
 }
 
 func NewTrainerWorkoutGroup(trainerUUID string) trainer.WorkoutGroup {
+	const (
+		groupName   = "dummy"
+		groupDesc   = "dummy"
+		trainerName = "John Doe"
+	)
 	ts := getStaticTime()
-	groupName := "dummy"
-	groupDesc := "dummy"
-	trainerName := "John Doe"
-	schedule, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, ts)
+	group, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, ts)
 	if err != nil {
 		panic(err)
 	}
-	return *schedule
+	return *group
 }
 
 func NewWorkoutDay(customerUUID string) customer.WorkoutDay {

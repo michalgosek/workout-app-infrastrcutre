@@ -20,8 +20,8 @@ func TestShouldGetEmptyTrainerWorkoutGroupsWhenNonOfGroupsDoesNotExist_Unit(t *t
 	ctx := context.Background()
 
 	repository := new(mocks.TrainerRepository)
-	var workouts []trainer.WorkoutGroup
-	repository.EXPECT().QueryTrainerWorkoutGroups(ctx, trainerUUID).Return(workouts, nil)
+	var groups []trainer.WorkoutGroup
+	repository.EXPECT().QueryTrainerWorkoutGroups(ctx, trainerUUID).Return(groups, nil)
 
 	SUT := query.NewWorkoutGroupsHandler(repository)
 
@@ -30,7 +30,7 @@ func TestShouldGetEmptyTrainerWorkoutGroupsWhenNonOfGroupsDoesNotExist_Unit(t *t
 
 	// then:
 	assertions.Nil(err)
-	assertions.Empty(workouts, actualSchedule)
+	assertions.Empty(groups, actualSchedule)
 	repository.AssertExpectations(t)
 }
 
@@ -50,7 +50,7 @@ func TestShouldNotGetTrainerWorkoutGroupsWhenRepositoryFailure_Unit(t *testing.T
 	_, err := SUT.Do(ctx, trainerUUID)
 
 	// then:
-	assertions.ErrorIs(err, query.ErrRepositoryFailure)
+	assertions.Equal(err, query.ErrRepositoryFailure)
 	repository.AssertExpectations(t)
 
 }
@@ -62,19 +62,42 @@ func TestShouldGetAllTrainerWorkoutGroupsWithSuccess_Unit(t *testing.T) {
 	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 	ctx := context.Background()
 
-	first := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	second := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	workouts := []trainer.WorkoutGroup{first, second}
+	firstWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	secondWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
+
+	groups := []trainer.WorkoutGroup{firstWorkout, secondWorkout}
+	expectedWorkouts := query.WorkoutGroupsDetails{
+		WorkoutGroups: []query.WorkoutGroupDetails{
+			{
+				TrainerUUID: firstWorkout.TrainerUUID(),
+				TrainerName: firstWorkout.TrainerName(),
+				GroupUUID:   firstWorkout.UUID(),
+				GroupDesc:   firstWorkout.Description(),
+				GroupName:   firstWorkout.Name(),
+				Customers:   query.ConvertToCustomersData(firstWorkout.CustomerDetails()),
+				Date:        firstWorkout.Date().String(),
+			},
+			{
+				TrainerUUID: secondWorkout.TrainerUUID(),
+				TrainerName: secondWorkout.TrainerName(),
+				GroupUUID:   secondWorkout.UUID(),
+				GroupDesc:   secondWorkout.Description(),
+				GroupName:   secondWorkout.Name(),
+				Customers:   query.ConvertToCustomersData(secondWorkout.CustomerDetails()),
+				Date:        secondWorkout.Date().String(),
+			},
+		},
+	}
 
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroups(ctx, trainerUUID).Return(workouts, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroups(ctx, trainerUUID).Return(groups, nil)
 	SUT := query.NewWorkoutGroupsHandler(repository)
 
 	// when:
-	actualSchedule, err := SUT.Do(ctx, trainerUUID)
+	actualGroups, err := SUT.Do(ctx, trainerUUID)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(workouts, actualSchedule)
+	assertions.Equal(expectedWorkouts, actualGroups)
 	repository.AssertExpectations(t)
 }

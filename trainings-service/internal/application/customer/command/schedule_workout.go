@@ -7,8 +7,12 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutScheduleDetails struct {
+//TODO:
+// - Adding check for duplicates workouts with the same date !
+
+type ScheduleWorkout struct {
 	CustomerUUID string
+	CustomerName string
 	GroupUUID    string
 }
 
@@ -17,7 +21,7 @@ type ScheduleWorkoutHandler struct {
 	customerRepository CustomerRepository
 }
 
-func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutScheduleDetails) error {
+func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w ScheduleWorkout) error {
 	logger := logrus.WithFields(logrus.Fields{"Component": "ScheduleWorkoutHandler"})
 	group, err := s.trainerRepository.QueryTrainerWorkoutGroup(ctx, w.GroupUUID)
 	if err != nil {
@@ -28,7 +32,14 @@ func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w WorkoutScheduleDetail
 		logger.Errorf("group UUID: %s does not exist", w.GroupUUID)
 		return ErrResourceNotFound
 	}
-	group.AssignCustomer(w.CustomerUUID)
+
+	customerDetails, err := customer.NewCustomerDetails(w.CustomerUUID, w.CustomerName)
+	if err != nil {
+		logger.Errorf("creating customer details failed, reason: %v", err)
+		return err
+	}
+
+	group.AssignCustomer(customerDetails)
 
 	workoutDay, err := customer.NewWorkoutDay(w.CustomerUUID, group.UUID(), group.Date())
 	if err != nil {

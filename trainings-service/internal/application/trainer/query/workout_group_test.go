@@ -17,19 +17,28 @@ func TestShouldGetRequestedTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
 
 	// given:
 	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
-	ctx := context.Background()
 
+	ctx := context.Background()
+	group := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	expectedGroup := query.WorkoutGroupDetails{
+		TrainerUUID: group.TrainerUUID(),
+		TrainerName: group.TrainerName(),
+		GroupUUID:   group.UUID(),
+		GroupDesc:   group.Description(),
+		GroupName:   group.Name(),
+		Customers:   query.ConvertToCustomersData(group.CustomerDetails()),
+		Date:        group.Date().String(),
+	}
 	repository := new(mocks.TrainerRepository)
-	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workout.UUID()).Return(workout, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, group.UUID()).Return(group, nil)
 	SUT := query.NewWorkoutGroupHandler(repository)
 
 	// when:
-	actualSchedule, err := SUT.Do(ctx, workout.UUID(), trainerUUID)
+	actualGroup, err := SUT.Do(ctx, group.UUID(), trainerUUID)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(workout, actualSchedule)
+	assertions.Equal(expectedGroup, actualGroup)
 	repository.AssertExpectations(t)
 }
 
@@ -41,18 +50,18 @@ func TestShouldGetEmptyTrainerWorkoutGroupWhenRequestedGroupNotExist_Unit(t *tes
 	const workoutUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 
 	ctx := context.Background()
-	workout := trainer.WorkoutGroup{}
+	group := trainer.WorkoutGroup{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutUUID).Return(workout, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutUUID).Return(group, nil)
 
 	SUT := query.NewWorkoutGroupHandler(repository)
 
 	// when:
-	actualSchedule, err := SUT.Do(ctx, workoutUUID, trainerUUID)
+	actualGroup, err := SUT.Do(ctx, workoutUUID, trainerUUID)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Empty(actualSchedule)
+	assertions.Empty(actualGroup)
 	repository.AssertExpectations(t)
 }
 
@@ -65,17 +74,18 @@ func TestShouldReturnErrorWhenWhenRequestedGroupNotOwnedByTrainer_Unit(t *testin
 
 	ctx := context.Background()
 	secondTrainerGroup := testutil.NewTrainerWorkoutGroup(secondTrainerUUID)
-	workoutUUID := secondTrainerGroup.UUID()
+	groupUUID := secondTrainerGroup.UUID()
+
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutUUID).Return(secondTrainerGroup, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, groupUUID).Return(secondTrainerGroup, nil)
 	SUT := query.NewWorkoutGroupHandler(repository)
 
 	// when:
-	actualSchedule, err := SUT.Do(ctx, workoutUUID, trainerUUID)
+	actualGroup, err := SUT.Do(ctx, groupUUID, trainerUUID)
 
 	// then:
 	assertions.Equal(query.ErrWorkoutGroupNotOwner, err)
-	assertions.Empty(actualSchedule)
+	assertions.Empty(actualGroup)
 	repository.AssertExpectations(t)
 }
 

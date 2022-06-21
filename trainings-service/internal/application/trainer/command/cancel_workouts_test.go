@@ -15,16 +15,17 @@ func TestShouldCancelWorkoutsGroupsWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	ctx := context.Background()
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
-	workout := testutil.NewTrainerWorkoutGroup(trainerUUID)
+
+	ctx := context.Background()
+	group := testutil.NewTrainerWorkoutGroup(trainerUUID)
 	repository := new(mocks.TrainerRepository)
 	repository.EXPECT().DeleteTrainerWorkoutGroups(ctx, trainerUUID).Return(nil)
 
 	SUT := command.NewCancelWorkoutsHandler(repository)
 
 	// when:
-	err := SUT.Do(ctx, workout.TrainerUUID())
+	err := SUT.Do(ctx, group.TrainerUUID())
 
 	// then:
 	assertions.Nil(err)
@@ -35,8 +36,9 @@ func TestShouldNotCancelWorkoutsGroupWhenRepositoryFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	ctx := context.Background()
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
+
+	ctx := context.Background()
 	repository := new(mocks.TrainerRepository)
 	expectedErr := errors.New("repository failure")
 	repository.EXPECT().DeleteTrainerWorkoutGroups(ctx, trainerUUID).Return(expectedErr)
@@ -46,6 +48,6 @@ func TestShouldNotCancelWorkoutsGroupWhenRepositoryFailure_Unit(t *testing.T) {
 	err := SUT.Do(ctx, trainerUUID)
 
 	// then:
-	assertions.Contains(err.Error(), expectedErr.Error())
+	assertions.Equal(command.ErrRepositoryFailure, err)
 	repository.AssertExpectations(t)
 }

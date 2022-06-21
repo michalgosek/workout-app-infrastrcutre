@@ -6,7 +6,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CancelWorkoutDetails struct {
+type CancelWorkout struct {
 	CustomerUUID string
 	GroupUUID    string
 }
@@ -16,7 +16,7 @@ type CancelWorkoutHandler struct {
 	customerRepository CustomerRepository
 }
 
-func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkoutDetails) error {
+func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkout) error {
 	logger := logrus.WithFields(logrus.Fields{"Component": "CancelWorkoutHandler"})
 	group, err := c.trainerRepository.QueryTrainerWorkoutGroup(ctx, w.GroupUUID)
 	if err != nil {

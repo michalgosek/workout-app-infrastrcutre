@@ -17,13 +17,13 @@ func TestShouldCreateCustomerWorkoutDayWithSuccess_Unit(t *testing.T) {
 	date := time.Now().Add(24 * time.Hour)
 
 	// when:
-	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
+	SUT, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(customerUUID, workout.CustomerUUID())
-	assertions.Equal(date, workout.Date())
-	assertions.Equal(trainerWorkoutGroupUUID, workout.GroupUUID())
+	assertions.Equal(customerUUID, SUT.CustomerUUID())
+	assertions.Equal(date, SUT.Date())
+	assertions.Equal(trainerWorkoutGroupUUID, SUT.GroupUUID())
 }
 
 func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerUUID_Unit(t *testing.T) {
@@ -34,11 +34,11 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerUUID
 	const trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
 
 	// when:
-	workout, err := customer.NewWorkoutDay("", trainerWorkoutGroupUUID, date)
+	SUT, err := customer.NewWorkoutDay("", trainerWorkoutGroupUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyCustomerUUID, err)
-	assertions.Nil(workout)
+	assertions.Nil(SUT)
 }
 
 func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyDate_Unit(t *testing.T) {
@@ -50,11 +50,11 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyDate_Unit(t 
 	date := time.Time{}
 
 	// when:
-	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
+	SUT, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupDate, err)
-	assertions.Nil(workout)
+	assertions.Nil(SUT)
 }
 
 func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyWorkoutUUID_Unit(t *testing.T) {
@@ -66,11 +66,11 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyWorkoutUUID_
 	date := time.Now()
 
 	// when:
-	workout, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
+	SUT, err := customer.NewWorkoutDay(customerUUID, trainerWorkoutGroupUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupUUID, err)
-	assertions.Nil(workout)
+	assertions.Nil(SUT)
 }
 
 func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
@@ -83,14 +83,14 @@ func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
 	date := time.Now()
 
 	// when:
-	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
+	SUT, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(trainerWorkoutGroupUUID, workout.GroupUUID())
-	assertions.Equal(customerUUID, workout.CustomerUUID())
-	assertions.Equal(customerWorkoutDayUUID, workout.UUID())
-	assertions.Equal(date, workout.Date())
+	assertions.Equal(trainerWorkoutGroupUUID, SUT.GroupUUID())
+	assertions.Equal(customerUUID, SUT.CustomerUUID())
+	assertions.Equal(customerWorkoutDayUUID, SUT.UUID())
+	assertions.Equal(date, SUT.Date())
 }
 
 func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerWorkoutDayUUID_Unit(t *testing.T) {
@@ -103,11 +103,11 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerWorkoutDayUUID_Un
 	date := time.Now()
 
 	// when:
-	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
+	SUT, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyWorkoutDayUUID, err)
-	assertions.Empty(workout)
+	assertions.Empty(SUT)
 }
 
 func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerUUID_Unit(t *testing.T) {
@@ -137,11 +137,11 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyGroupUUID_Unit(t *testing
 	date := time.Now()
 
 	// when:
-	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
+	SUT, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupUUID, err)
-	assertions.Empty(workout)
+	assertions.Empty(SUT)
 }
 
 func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyGroupDate_Unit(t *testing.T) {
@@ -154,9 +154,9 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyGroupDate_Unit(t *testing
 	date := time.Time{}
 
 	// when:
-	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
+	SUT, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupDate, err)
-	assertions.Empty(workout)
+	assertions.Empty(SUT)
 }

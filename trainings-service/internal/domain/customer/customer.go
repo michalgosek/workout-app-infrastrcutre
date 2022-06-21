@@ -1,7 +1,6 @@
 package customer
 
 import (
-	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -70,10 +69,3 @@ func UnmarshalFromDatabase(workoutDayUUID, groupUUID, customerUUID string, date 
 	}
 	return c, nil
 }
-
-var (
-	ErrEmptyWorkoutDayUUID = errors.New("empty customer workout day UUID")
-	ErrEmptyGroupDate      = errors.New("empty workout date")
-	ErrEmptyCustomerUUID   = errors.New("empty customer UUID")
-	ErrEmptyGroupUUID      = errors.New("empty trainer workout group UUID")
-)

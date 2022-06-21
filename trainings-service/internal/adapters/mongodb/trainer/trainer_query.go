@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -53,16 +55,27 @@ func (t *QueryHandler) QueryTrainerWorkoutGroup(ctx context.Context, groupUUID s
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("parsing date value from document failed: %v", err)
 	}
-	group, err := trainer.UnmarshalFromDatabase(
-		doc.UUID,
-		doc.TrainerUUID,
-		doc.TrainerName,
-		doc.WorkoutName,
-		doc.WorkoutDesc,
-		doc.CustomerUUIDs,
-		date,
-		doc.Limit,
-	)
+	var cd []customer.Details
+	for _, c := range doc.CustomerDetails {
+		d, err := customer.UnmarshalCustomerDetails(c.UUID, c.Name)
+		if err != nil {
+			return trainer.WorkoutGroup{}, fmt.Errorf("unmarshal customer details failed: %v", err)
+		}
+		cd = append(cd, d)
+	}
+	group, err := trainer.UnmarshalWorkoutGroupFromDatabase(trainer.WorkoutGroupDetails{
+		UUID:        doc.UUID,
+		TrainerUUID: doc.TrainerUUID,
+		TrainerName: doc.TrainerName,
+		Name:        doc.WorkoutName,
+		Description: doc.WorkoutDesc,
+		Date:        date,
+		Limit:       doc.Limit,
+	}, cd)
+	if err != nil {
+		return trainer.WorkoutGroup{}, fmt.Errorf("unmarshal workout group from database failed: %v", err)
+	}
+
 	return group, nil
 }
 
@@ -81,32 +94,32 @@ func (t *QueryHandler) QueryTrainerWorkoutGroups(ctx context.Context, trainerUUI
 		return nil, fmt.Errorf("decoding failed: %v", err)
 	}
 
-	groups, err := convertDocumentsToWorkoutGroups(t.cfg.Format, docs...)
-	if err != nil {
-		return nil, fmt.Errorf("converting docs to domain workout groups failed: %v", err)
-	}
-	return groups, nil
-}
-
-func convertDocumentsToWorkoutGroups(format string, docs ...WorkoutGroupDocument) ([]trainer.WorkoutGroup, error) {
 	var groups []trainer.WorkoutGroup
-	for _, d := range docs {
-		date, err := time.Parse(format, d.Date)
+	for _, d := range docs { // O(n^2)
+		date, err := time.Parse(t.cfg.Format, d.Date)
 		if err != nil {
 			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
 		}
-		group, err := trainer.UnmarshalFromDatabase(
-			d.UUID,
-			d.TrainerUUID,
-			d.TrainerName,
-			d.WorkoutName,
-			d.WorkoutDesc,
-			d.CustomerUUIDs,
-			date,
-			d.Limit,
-		)
+		var details []customer.Details
+		for _, c := range d.CustomerDetails {
+			d, err := customer.UnmarshalCustomerDetails(c.UUID, c.Name)
+			if err != nil {
+				return nil, fmt.Errorf("unmarshal customer details failed: %v", err)
+			}
+			details = append(details, d)
+		}
+
+		group, err := trainer.UnmarshalWorkoutGroupFromDatabase(trainer.WorkoutGroupDetails{
+			UUID:        d.UUID,
+			TrainerUUID: d.TrainerUUID,
+			TrainerName: d.TrainerName,
+			Name:        d.WorkoutName,
+			Description: d.WorkoutDesc,
+			Date:        date,
+			Limit:       d.Limit,
+		}, details)
 		if err != nil {
-			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
+			return nil, fmt.Errorf("unmarshal workout group from database failed: %v", err)
 		}
 		groups = append(groups, group)
 	}

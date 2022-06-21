@@ -1,4 +1,4 @@
-package mongodb
+package common
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-func newMongoClient(addr string, timeout time.Duration) (*mongo.Client, error) {
+func NewMongoClient(addr string, timeout time.Duration) (*mongo.Client, error) {
 	opts := options.Client()
 	opts.ApplyURI(addr)
 	opts.SetConnectTimeout(timeout)

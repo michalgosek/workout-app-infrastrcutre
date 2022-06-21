@@ -186,7 +186,7 @@ func (m *TrainerTestSuite) TestShouldUpdateNameOfExistingWorkoutGroup() {
 	expectedGroup := testutil.NewTrainerWorkoutGroup(trainerUUID)
 
 	_ = m.commandHandler.UpsertTrainerWorkoutGroup(ctx, expectedGroup)
-	_ = expectedGroup.UpdateGroupDescription("dummy2")
+	_ = expectedGroup.UpdateDescription("dummy2")
 
 	// when:
 	err := m.commandHandler.UpsertTrainerWorkoutGroup(ctx, expectedGroup)
