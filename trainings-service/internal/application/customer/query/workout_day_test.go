@@ -2,14 +2,12 @@ package query_test
 
 import (
 	"context"
-	"testing"
-
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/query/mocks"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
+	"testing"
 )
 
 func TestShouldGetRequestedWorkoutDayWithSuccess_Unit(t *testing.T) {
@@ -29,7 +27,7 @@ func TestShouldGetRequestedWorkoutDayWithSuccess_Unit(t *testing.T) {
 	customerDetails, _ := customer.NewCustomerDetails(customerUUID, customerName)
 	trainerWorkout.AssignCustomer(customerDetails)
 
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
 	repository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkoutDay, nil)
 
 	expectedDay := query.CustomerWorkoutDay{
@@ -44,6 +42,7 @@ func TestShouldGetRequestedWorkoutDayWithSuccess_Unit(t *testing.T) {
 	day, err := SUT.Do(ctx, query.WorkoutDay{
 		CustomerUUID: customerUUID,
 		GroupUUID:    trainerWorkout.UUID(),
+		TrainerUUID:  trainerWorkout.TrainerUUID(),
 	})
 
 	// then:

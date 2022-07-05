@@ -67,26 +67,7 @@ func TestShouldGetAllTrainerWorkoutGroupsWithSuccess_Unit(t *testing.T) {
 
 	groups := []trainer.WorkoutGroup{firstWorkout, secondWorkout}
 	expectedWorkouts := query.WorkoutGroupsDetails{
-		WorkoutGroups: []query.WorkoutGroupDetails{
-			{
-				TrainerUUID: firstWorkout.TrainerUUID(),
-				TrainerName: firstWorkout.TrainerName(),
-				GroupUUID:   firstWorkout.UUID(),
-				GroupDesc:   firstWorkout.Description(),
-				GroupName:   firstWorkout.Name(),
-				Customers:   query.ConvertToCustomersData(firstWorkout.CustomerDetails()),
-				Date:        firstWorkout.Date().String(),
-			},
-			{
-				TrainerUUID: secondWorkout.TrainerUUID(),
-				TrainerName: secondWorkout.TrainerName(),
-				GroupUUID:   secondWorkout.UUID(),
-				GroupDesc:   secondWorkout.Description(),
-				GroupName:   secondWorkout.Name(),
-				Customers:   query.ConvertToCustomersData(secondWorkout.CustomerDetails()),
-				Date:        secondWorkout.Date().String(),
-			},
-		},
+		WorkoutGroups: query.ConvertToWorkoutGroupsDetails(groups...),
 	}
 
 	repository := new(mocks.TrainerRepository)

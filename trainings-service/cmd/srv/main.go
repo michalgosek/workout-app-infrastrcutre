@@ -63,6 +63,8 @@ func execute() error {
 		},
 	}
 	HTTP := http.NewTrainerWorkoutGroupsHTTP(&app, "02/01/2006 15:04")
+	customerHTTP := http.NewCustomerHTTP(&app, "02/01/2006 15:04")
+
 	API := rest.NewRouter()
 	API.Route("/api/v1", func(r chi.Router) {
 		r.Route("/trainers", func(r chi.Router) {
@@ -79,6 +81,13 @@ func execute() error {
 							r.Delete("/{customerUUID}", HTTP.UnassignCustomer())
 						})
 					})
+				})
+			})
+		})
+		r.Route("/customers", func(r chi.Router) {
+			r.Route("/{customerUUID}", func(r chi.Router) {
+				r.Route("/workouts", func(r chi.Router) {
+					r.Post("/", customerHTTP.CreateCustomerWorkout())
 				})
 			})
 		})

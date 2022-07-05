@@ -28,20 +28,24 @@ type Repository struct {
 func (r *Repository) UpsertTrainerWorkoutGroup(ctx context.Context, workoutGroup trainer.WorkoutGroup) error {
 	return r.commands.UpsertTrainerWorkoutGroup(ctx, workoutGroup)
 }
-func (r *Repository) QueryTrainerWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
-	return r.queries.QueryTrainerWorkoutGroup(ctx, groupUUID)
+func (r *Repository) QueryTrainerWorkoutGroup(ctx context.Context, groupUUID, trainerUUID string) (trainer.WorkoutGroup, error) {
+	return r.queries.QueryTrainerWorkoutGroup(ctx, groupUUID, trainerUUID)
 }
 
 func (r *Repository) QueryTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
 	return r.queries.QueryTrainerWorkoutGroups(ctx, trainerUUID)
 }
 
+func (r *Repository) QueryTrainerWorkoutGroupWithDate(ctx context.Context, trainerUUID string, date time.Time) (trainer.WorkoutGroup, error) {
+	return r.queries.QueryTrainerWorkoutGroupWithDate(ctx, trainerUUID, date)
+}
+
 func (r *Repository) DeleteTrainerWorkoutGroups(ctx context.Context, trainerUUID string) error {
 	return r.commands.DeleteTrainerWorkoutGroups(ctx, trainerUUID)
 }
 
-func (r *Repository) DeleteTrainerWorkoutGroup(ctx context.Context, groupUUID string) error {
-	return r.commands.DeleteTrainerWorkoutGroup(ctx, groupUUID)
+func (r *Repository) DeleteTrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) error {
+	return r.commands.DeleteTrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
 }
 
 func NewTrainerRepository(cfg RepositoryConfig) (*Repository, error) {

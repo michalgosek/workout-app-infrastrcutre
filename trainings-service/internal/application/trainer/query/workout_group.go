@@ -10,10 +10,9 @@ type WorkoutGroupHandler struct {
 	repository TrainerRepository
 }
 
-func (t *WorkoutGroupHandler) Do(ctx context.Context, groupUUID, trainerUUID string) (WorkoutGroupDetails, error) {
+func (t *WorkoutGroupHandler) Do(ctx context.Context, trainerUUID, groupUUID string) (WorkoutGroupDetails, error) {
 	logger := logrus.WithFields(logrus.Fields{"Trainer-QRY": "WorkoutGroupHandler"})
-
-	group, err := t.repository.QueryTrainerWorkoutGroup(ctx, groupUUID)
+	group, err := t.repository.QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
 	if err != nil {
 		logger.Errorf("query workout groupUUID: %s for trainerUUID: %s failed, reason: %v", groupUUID, trainerUUID, err)
 		return WorkoutGroupDetails{}, ErrRepositoryFailure
@@ -21,11 +20,6 @@ func (t *WorkoutGroupHandler) Do(ctx context.Context, groupUUID, trainerUUID str
 	if group.UUID() == "" {
 		return WorkoutGroupDetails{}, nil
 	}
-	if group.TrainerUUID() != trainerUUID {
-		logger.Errorf("query workout group UUID: %s does not belong to trainerUUID: %s", groupUUID, trainerUUID)
-		return WorkoutGroupDetails{}, ErrWorkoutGroupNotOwner
-	}
-
 	out := WorkoutGroupDetails{
 		TrainerUUID: group.TrainerUUID(),
 		TrainerName: group.TrainerName(),

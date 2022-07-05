@@ -29,15 +29,15 @@ func (c *WorkoutDay) CustomerUUID() string {
 	return c.customerUUID
 }
 
-func NewWorkoutDay(customerUUID, groupUUID string, date time.Time) (*WorkoutDay, error) {
+func NewWorkoutDay(customerUUID, groupUUID string, date time.Time) (WorkoutDay, error) {
 	if customerUUID == "" {
-		return nil, ErrEmptyCustomerUUID
+		return WorkoutDay{}, ErrEmptyCustomerUUID
 	}
 	if groupUUID == "" {
-		return nil, ErrEmptyGroupUUID
+		return WorkoutDay{}, ErrEmptyGroupUUID
 	}
 	if date.IsZero() {
-		return nil, ErrEmptyGroupDate
+		return WorkoutDay{}, ErrEmptyGroupDate
 	}
 	c := WorkoutDay{
 		uuid:         uuid.NewString(),
@@ -45,7 +45,7 @@ func NewWorkoutDay(customerUUID, groupUUID string, date time.Time) (*WorkoutDay,
 		groupUUID:    groupUUID,
 		date:         date,
 	}
-	return &c, nil
+	return c, nil
 }
 
 func UnmarshalFromDatabase(workoutDayUUID, groupUUID, customerUUID string, date time.Time) (WorkoutDay, error) {

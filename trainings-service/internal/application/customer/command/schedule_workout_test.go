@@ -32,7 +32,8 @@ func TestShouldScheduleWorkoutToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing
 	customerDetails, _ := customer.NewCustomerDetails(customerUUID, customerName)
 	workoutGroupWithCustomer.AssignCustomer(customerDetails)
 
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutGroup.UUID()).Return(workoutGroup, nil)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerDetails.UUID(), workoutGroup.UUID()).Return(customer.WorkoutDay{}, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutGroup.TrainerUUID(), workoutGroup.UUID()).Return(workoutGroup, nil)
 	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, workoutGroupWithCustomer).Return(nil)
 	customerRepository.EXPECT().UpsertCustomerWorkoutDay(ctx, mock.Anything).
 		Run(func(ctx context.Context, workout customer.WorkoutDay) {
@@ -47,13 +48,13 @@ func TestShouldScheduleWorkoutToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing
 	err := SUT.Do(ctx, command.ScheduleWorkout{
 		CustomerUUID: customerDetails.UUID(),
 		CustomerName: customerDetails.Name(),
+		TrainerUUID:  workoutGroup.TrainerUUID(),
 		GroupUUID:    workoutGroup.UUID(),
 	})
 
 	// then:
 	assertions.Nil(err)
-	trainerRepository.AssertExpectations(t)
-	customerRepository.AssertExpectations(t)
+	mock.AssertExpectationsForObjects(t, trainerRepository, customerRepository)
 }
 
 func TestShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(t *testing.T) {
@@ -62,11 +63,14 @@ func TestShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(t *testing.T) {
 	// given:
 	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
 	const groupUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
+	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
 
 	ctx := context.Background()
 	trainerRepository := new(mocks.TrainerRepository)
 	customerRepository := new(mocks.CustomerRepository)
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, groupUUID).Return(trainer.WorkoutGroup{}, errors.New("err"))
+
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, groupUUID).Return(customer.WorkoutDay{}, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(trainer.WorkoutGroup{}, errors.New("err"))
 
 	SUT := command.NewScheduleWorkoutHandler(customerRepository, trainerRepository)
 
@@ -75,12 +79,12 @@ func TestShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(t *testing.T) {
 		CustomerName: "John Doe",
 		CustomerUUID: customerUUID,
 		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
 	})
 
 	// then:
 	assertions.Equal(err, command.ErrRepositoryFailure)
-	trainerRepository.AssertExpectations(t)
-	customerRepository.AssertExpectations(t)
+	mock.AssertExpectationsForObjects(t, trainerRepository, customerRepository)
 }
 
 func TestShouldReturnErrorWhenUpsertWorkoutGroupFailure_Unit(t *testing.T) {
@@ -100,23 +104,23 @@ func TestShouldReturnErrorWhenUpsertWorkoutGroupFailure_Unit(t *testing.T) {
 	customerDetails, _ := customer.NewCustomerDetails(customerUUID, customerName)
 	workoutGroupWithCustomer.AssignCustomer(customerDetails)
 
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutGroup.UUID()).Return(workoutGroup, nil)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, workoutGroup.UUID()).Return(customer.WorkoutDay{}, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, workoutGroup.UUID()).Return(workoutGroup, nil)
 	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, workoutGroupWithCustomer).Return(errors.New("err"))
 
 	SUT := command.NewScheduleWorkoutHandler(customerRepository, trainerRepository)
 
 	// when:
-
 	err := SUT.Do(ctx, command.ScheduleWorkout{
 		CustomerName: customerDetails.Name(),
 		CustomerUUID: customerDetails.UUID(),
 		GroupUUID:    workoutGroup.UUID(),
+		TrainerUUID:  trainerUUID,
 	})
 
 	// then:
 	assertions.Equal(err, command.ErrRepositoryFailure)
-	trainerRepository.AssertExpectations(t)
-	customerRepository.AssertExpectations(t)
+	mock.AssertExpectationsForObjects(t, trainerRepository, customerRepository)
 }
 
 func TestShouldReturnErrorWhenUpsertCustomerWorkoutDayFailure_Unit(t *testing.T) {
@@ -137,7 +141,8 @@ func TestShouldReturnErrorWhenUpsertCustomerWorkoutDayFailure_Unit(t *testing.T)
 	customerDetails, _ := customer.NewCustomerDetails(customerUUID, customerName)
 	workoutGroupWithCustomer.AssignCustomer(customerDetails)
 
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutGroup.UUID()).Return(workoutGroup, nil)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, workoutGroup.UUID()).Return(customer.WorkoutDay{}, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, workoutGroup.UUID()).Return(workoutGroup, nil)
 	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, workoutGroupWithCustomer).Return(nil)
 	customerRepository.EXPECT().UpsertCustomerWorkoutDay(ctx, mock.Anything).Run(func(ctx context.Context, workout customer.WorkoutDay) {
 		assertions.Equal(workoutGroup.UUID(), workout.GroupUUID())
@@ -148,17 +153,16 @@ func TestShouldReturnErrorWhenUpsertCustomerWorkoutDayFailure_Unit(t *testing.T)
 	SUT := command.NewScheduleWorkoutHandler(customerRepository, trainerRepository)
 
 	// when:
-
 	err := SUT.Do(ctx, command.ScheduleWorkout{
 		CustomerName: customerDetails.Name(),
 		CustomerUUID: customerDetails.UUID(),
 		GroupUUID:    workoutGroup.UUID(),
+		TrainerUUID:  trainerUUID,
 	})
 
 	// then:
 	assertions.Equal(err, command.ErrRepositoryFailure)
-	customerRepository.AssertExpectations(t)
-	trainerRepository.AssertExpectations(t)
+	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
 }
 
 func TestShouldReturnErrorWhenWorkoutGroupDoesNotExist_Unit(t *testing.T) {
@@ -167,12 +171,14 @@ func TestShouldReturnErrorWhenWorkoutGroupDoesNotExist_Unit(t *testing.T) {
 	// given:
 	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
 	const workoutGroupUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
+	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
 
 	ctx := context.Background()
 	trainerRepository := new(mocks.TrainerRepository)
 	customerRepository := new(mocks.CustomerRepository)
 
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutGroupUUID).Return(trainer.WorkoutGroup{}, nil)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, workoutGroupUUID).Return(customer.WorkoutDay{}, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, workoutGroupUUID).Return(trainer.WorkoutGroup{}, nil)
 	SUT := command.NewScheduleWorkoutHandler(customerRepository, trainerRepository)
 
 	// when:
@@ -180,10 +186,40 @@ func TestShouldReturnErrorWhenWorkoutGroupDoesNotExist_Unit(t *testing.T) {
 		CustomerUUID: customerUUID,
 		CustomerName: "John Doe",
 		GroupUUID:    workoutGroupUUID,
+		TrainerUUID:  trainerUUID,
 	})
 
 	// then:
 	assertions.Equal(err, command.ErrResourceNotFound)
-	trainerRepository.AssertExpectations(t)
-	customerRepository.AssertExpectations(t)
+	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
+}
+
+func TestShouldReturnErrorWhenAttemptsToScheduleDuplicateWorkoutGroup_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
+	const customerName = "John Doe"
+	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
+
+	ctx := context.Background()
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
+
+	workoutDay := testutil.NewWorkoutDay(customerUUID)
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, workoutDay.GroupUUID()).Return(workoutDay, nil)
+
+	SUT := command.NewScheduleWorkoutHandler(customerRepository, trainerRepository)
+
+	// when:
+	err := SUT.Do(ctx, command.ScheduleWorkout{
+		CustomerUUID: customerUUID,
+		CustomerName: customerName,
+		GroupUUID:    workoutDay.GroupUUID(),
+		TrainerUUID:  trainerUUID,
+	})
+
+	// then:
+	assertions.ErrorIs(command.ErrWorkoutGroupDuplicated, err)
+	mock.AssertExpectationsForObjects(t, trainerRepository, customerRepository)
 }

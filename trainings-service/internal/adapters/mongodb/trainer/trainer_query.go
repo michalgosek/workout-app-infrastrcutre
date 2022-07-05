@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -33,11 +32,10 @@ func NewQueryHandler(cli *mongo.Client, cfg QueryHandlerConfig) *QueryHandler {
 	return &t
 }
 
-func (t *QueryHandler) QueryTrainerWorkoutGroup(ctx context.Context, groupUUID string) (trainer.WorkoutGroup, error) {
+func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, filter bson.M) (trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
-	f := bson.M{"_id": groupUUID}
-	res := coll.FindOne(ctx, f)
+	res := coll.FindOne(ctx, filter)
 	err := res.Err()
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return trainer.WorkoutGroup{}, nil
@@ -77,6 +75,16 @@ func (t *QueryHandler) QueryTrainerWorkoutGroup(ctx context.Context, groupUUID s
 	}
 
 	return group, nil
+}
+
+func (t *QueryHandler) QueryTrainerWorkoutGroupWithDate(ctx context.Context, trainerUUID string, date time.Time) (trainer.WorkoutGroup, error) {
+	f := bson.M{"trainer_uuid": trainerUUID, "date": date.Format(t.cfg.Format)}
+	return t.queryTrainerWorkoutGroupWithFilter(ctx, f)
+}
+
+func (t *QueryHandler) QueryTrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (trainer.WorkoutGroup, error) {
+	f := bson.M{"_id": groupUUID, "trainer_uuid": trainerUUID}
+	return t.queryTrainerWorkoutGroupWithFilter(ctx, f)
 }
 
 func (t *QueryHandler) QueryTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {

@@ -38,7 +38,7 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerUUID
 
 	// then:
 	assertions.Equal(customer.ErrEmptyCustomerUUID, err)
-	assertions.Nil(SUT)
+	assertions.Empty(SUT)
 }
 
 func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyDate_Unit(t *testing.T) {
@@ -54,7 +54,7 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyDate_Unit(t 
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupDate, err)
-	assertions.Nil(SUT)
+	assertions.Empty(SUT)
 }
 
 func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyWorkoutUUID_Unit(t *testing.T) {
@@ -70,7 +70,7 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyWorkoutUUID_
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupUUID, err)
-	assertions.Nil(SUT)
+	assertions.Empty(SUT)
 }
 
 func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {

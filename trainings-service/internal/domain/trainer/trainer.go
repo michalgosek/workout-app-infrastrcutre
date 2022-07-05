@@ -15,6 +15,9 @@ import (
 // * Desc cannot be length than 100 chars
 // * Name cannot be length than 15 chars
 
+// TODO:
+// 	*	add duration field as indicator how long training session can take (maximum 4h)
+
 type WorkoutGroup struct {
 	uuid            string
 	trainerUUID     string
@@ -133,25 +136,25 @@ func (t *WorkoutGroup) AssignCustomer(c customer.Details) error {
 	return nil
 }
 
-func NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc string, date time.Time) (*WorkoutGroup, error) {
+func NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc string, date time.Time) (WorkoutGroup, error) {
 	ok := date.IsZero()
 	if ok {
-		return nil, ErrScheduleDateViolation
+		return WorkoutGroup{}, ErrScheduleDateViolation
 	}
 	ok = isProposedTimeNotExceeded(date)
 	if !ok {
-		return nil, ErrScheduleDateViolation
+		return WorkoutGroup{}, ErrScheduleDateViolation
 	}
 	ok = isProposedDescriptionNotExceeded(groupDesc)
 	if ok {
-		return nil, ErrScheduleDescriptionExceeded
+		return WorkoutGroup{}, ErrScheduleDescriptionExceeded
 	}
 	ok = isProposedNameNotExceeded(groupName)
 	if ok {
-		return nil, ErrScheduleNameExceeded
+		return WorkoutGroup{}, ErrScheduleNameExceeded
 	}
 	if trainerName == "" {
-		return nil, ErrEmptyTrainerName
+		return WorkoutGroup{}, ErrEmptyTrainerName
 	}
 	w := WorkoutGroup{
 		uuid:        uuid.NewString(),
@@ -162,7 +165,7 @@ func NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc string, date
 		limit:       10,
 		date:        date,
 	}
-	return &w, nil
+	return w, nil
 }
 
 type WorkoutGroupDetails struct {

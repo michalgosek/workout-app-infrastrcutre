@@ -6,9 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
-
 	"github.com/google/uuid"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/stretchr/testify/assert"
 )
@@ -29,7 +28,7 @@ func TestShouldReturnErrorWhenCustomerLimitExceeded_Unit(t *testing.T) {
 	date := time.Now().Add(24 * time.Hour)
 	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
 	SUT, _ := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, date)
-	_ = AssignCustomerToWorkoutGroup(SUT, 10)
+	_ = AssignCustomerToWorkoutGroup(&SUT, 10)
 
 	// when:
 	err := SUT.AssignCustomer(details)
@@ -227,7 +226,7 @@ func TestShouldReturnErrorWhenSpecifiedTimeIsOneMinEarlierFromNow_Unit(t *testin
 
 	// then:
 	assertions.Equal(trainer.ErrScheduleDateViolation, err)
-	assertions.Nil(SUT)
+	assertions.Empty(SUT)
 }
 
 func TestShouldNotReturnErrorWhenSpecifiedTimeIsOneMinLaterFromThreshold_Unit(t *testing.T) {
@@ -343,7 +342,7 @@ func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(*expectedWorkoutGroup, SUT)
+	assertions.Equal(expectedWorkoutGroup, SUT)
 }
 
 func TestShouldNotReturnErrorWhenSpecifiedTrainerNameIsEmpty_Unit(t *testing.T) {
@@ -362,7 +361,7 @@ func TestShouldNotReturnErrorWhenSpecifiedTrainerNameIsEmpty_Unit(t *testing.T) 
 
 	// then:
 	assertions.Equal(trainer.ErrEmptyTrainerName, err)
-	assertions.Nil(SUT)
+	assertions.Empty(SUT)
 }
 
 func AssignCustomerToWorkoutGroup(workoutGroup *trainer.WorkoutGroup, n int) error {

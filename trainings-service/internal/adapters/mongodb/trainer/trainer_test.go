@@ -2,9 +2,6 @@ package trainer_test
 
 import (
 	"context"
-	"testing"
-	"time"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -12,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"testing"
+	"time"
 )
 
 type Config struct {
@@ -105,23 +104,24 @@ func (m *TrainerTestSuite) TearDownSuite() {
 	}
 }
 
-func (m *TrainerTestSuite) TestShouldReturnEmptyWorkoutGroupWhenQuery() {
+func (m *TrainerTestSuite) TestShouldReturnEmptyWorkoutGroup() {
 	t := m.T()
 	assertions := assert.New(t)
 
 	// given:
 	const groupUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	const trainerUUID = "f7cb1930-11e4-490a-9e92-70be45aef11a"
 	ctx := context.Background()
 
 	// when:
-	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, groupUUID)
+	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
 
 	// then:
 	assertions.Nil(err)
 	assertions.Empty(actualGroup)
 }
 
-func (m *TrainerTestSuite) TestShouldReturnEmptyWorkoutGroupsWhenQuery() {
+func (m *TrainerTestSuite) TestShouldReturnEmptyWorkoutGroups() {
 	t := m.T()
 	assertions := assert.New(t)
 
@@ -137,7 +137,7 @@ func (m *TrainerTestSuite) TestShouldReturnEmptyWorkoutGroupsWhenQuery() {
 	assertions.Empty(actualGroup)
 }
 
-func (m *TrainerTestSuite) TestShouldReturnWorkoutGroupForQuery() {
+func (m *TrainerTestSuite) TestShouldReturnWorkoutGroup() {
 	t := m.T()
 	assertions := assert.New(t)
 
@@ -149,7 +149,7 @@ func (m *TrainerTestSuite) TestShouldReturnWorkoutGroupForQuery() {
 	_ = m.commandHandler.UpsertTrainerWorkoutGroup(ctx, expectedGroup)
 
 	// when:
-	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, expectedGroup.UUID())
+	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, trainerUUID, expectedGroup.UUID())
 
 	// then:
 	assertions.Nil(err)
@@ -171,7 +171,7 @@ func (m *TrainerTestSuite) TestShouldInsertNonExistingWorkoutGroup() {
 	// then:
 	assertions.Nil(err)
 
-	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, expectedGroup.UUID())
+	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, trainerUUID, expectedGroup.UUID())
 	assertions.Nil(err)
 	assertions.Equal(expectedGroup, actualGroup)
 }
@@ -194,7 +194,7 @@ func (m *TrainerTestSuite) TestShouldUpdateNameOfExistingWorkoutGroup() {
 	// then:
 	assertions.Nil(err)
 
-	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, expectedGroup.UUID())
+	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, trainerUUID, expectedGroup.UUID())
 	assertions.Nil(err)
 	assertions.Equal(expectedGroup, actualGroup)
 }
@@ -210,12 +210,12 @@ func (m *TrainerTestSuite) TestShouldDeleteWorkoutGroupWithSuccess() {
 	_ = m.commandHandler.UpsertTrainerWorkoutGroup(ctx, expectedGroup)
 
 	// when:
-	err := m.commandHandler.DeleteTrainerWorkoutGroup(ctx, expectedGroup.UUID())
+	err := m.commandHandler.DeleteTrainerWorkoutGroup(ctx, trainerUUID, expectedGroup.UUID())
 
 	// then:
 	assertions.Nil(err)
 
-	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, expectedGroup.UUID())
+	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, trainerUUID, expectedGroup.UUID())
 	assertions.Nil(err)
 	assertions.Empty(actualGroup)
 }
@@ -233,12 +233,12 @@ func (m *TrainerTestSuite) TestShouldNotReturnErrorWhenDeleteWorkoutGroupNonExis
 	_ = m.commandHandler.UpsertTrainerWorkoutGroup(ctx, expectedGroup)
 
 	// when:
-	err := m.commandHandler.DeleteTrainerWorkoutGroup(ctx, fakeUUID)
+	err := m.commandHandler.DeleteTrainerWorkoutGroup(ctx, fakeUUID, trainerUUID)
 
 	// then:
 	assertions.Nil(err)
 
-	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, expectedGroup.UUID())
+	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroup(ctx, trainerUUID, expectedGroup.UUID())
 	assertions.Nil(err)
 	assertions.Equal(expectedGroup, actualGroup)
 }
@@ -284,4 +284,22 @@ func (m *TrainerTestSuite) TestShouldNotReturnErrorWhenDeleteWorkoutGroupsNonExi
 	actualGroups, err := m.queryHandler.QueryTrainerWorkoutGroups(ctx, trainerUUID)
 	assertions.Nil(err)
 	assertions.Empty(actualGroups)
+}
+
+func (m *TrainerTestSuite) TestShouldReturnWorkoutGroupWithSpecifiedDate() {
+	t := m.T()
+	assertions := assert.New(t)
+
+	// given:
+	const trainerUUID = "f1741a08-39d7-465d-adc9-a63cf058b409"
+	ctx := context.Background()
+	expectedGroup := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	_ = m.commandHandler.UpsertTrainerWorkoutGroup(ctx, expectedGroup)
+
+	// when:
+	actualGroup, err := m.queryHandler.QueryTrainerWorkoutGroupWithDate(ctx, trainerUUID, expectedGroup.Date())
+
+	// then:
+	assertions.Nil(err)
+	assertions.Equal(actualGroup, expectedGroup)
 }

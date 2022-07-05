@@ -24,15 +24,15 @@ func NewTrainerWorkoutGroup(trainerUUID string) trainer.WorkoutGroup {
 	if err != nil {
 		panic(err)
 	}
-	return *group
+	return group
 }
 
 func NewWorkoutDay(customerUUID string) customer.WorkoutDay {
 	ts := getStaticTime()
 	workoutUUID := uuid.NewString()
-	session, err := customer.NewWorkoutDay(customerUUID, workoutUUID, ts)
+	workoutDay, err := customer.NewWorkoutDay(customerUUID, workoutUUID, ts)
 	if err != nil {
 		panic(err)
 	}
-	return *session
+	return workoutDay
 }

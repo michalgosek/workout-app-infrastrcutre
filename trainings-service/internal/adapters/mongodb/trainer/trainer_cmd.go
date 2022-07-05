@@ -72,10 +72,10 @@ func (m *CommandHandler) UpsertTrainerWorkoutGroup(ctx context.Context, group tr
 	return nil
 }
 
-func (m *CommandHandler) DeleteTrainerWorkoutGroup(ctx context.Context, groupUUID string) error {
+func (m *CommandHandler) DeleteTrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) error {
 	db := m.cli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
-	f := bson.M{"_id": groupUUID}
+	f := bson.M{"_id": groupUUID, "trainer_uuid": trainerUUID}
 	_, err := coll.DeleteOne(ctx, f)
 	if err != nil {
 		return fmt.Errorf("delete one failed: %v", err)

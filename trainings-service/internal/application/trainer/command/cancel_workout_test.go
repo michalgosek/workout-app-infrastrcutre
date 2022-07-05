@@ -21,8 +21,8 @@ func TestShouldCancelWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
 	ctx := context.Background()
 	group := testutil.NewTrainerWorkoutGroup(trainerUUID)
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, group.UUID()).Return(group, nil)
-	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, group.UUID()).Return(nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(group, nil)
+	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(nil)
 	SUT := command.NewCancelWorkoutHandler(repository)
 
 	// when:
@@ -41,17 +41,17 @@ func TestShouldNotCancelWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
 
 	// given:
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
-	const workoutUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	const groupUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
 
 	ctx := context.Background()
 	group := trainer.WorkoutGroup{}
 	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, workoutUUID).Return(group, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(group, nil)
 	SUT := command.NewCancelWorkoutHandler(repository)
 
 	// when:
 	err := SUT.Do(ctx, command.CancelWorkout{
-		GroupUUID:   workoutUUID,
+		GroupUUID:   groupUUID,
 		TrainerUUID: trainerUUID,
 	})
 
@@ -71,8 +71,8 @@ func TestShouldNotCancelTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing
 	repository := new(mocks.TrainerRepository)
 
 	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, group.UUID()).Return(group, nil)
-	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, group.UUID()).Return(expectedErr)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(group, nil)
+	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(expectedErr)
 	SUT := command.NewCancelWorkoutHandler(repository)
 
 	// when:
