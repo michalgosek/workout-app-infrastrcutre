@@ -18,7 +18,7 @@ type CustomerWorkoutDay struct {
 
 type WorkoutDayHandlerRepository interface {
 	QueryCustomerWorkoutDay(ctx context.Context, customerUUID, groupUUID string) (customer.WorkoutDay, error)
-	QueryWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (trainer.WorkoutGroup, error)
+	QueryTrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (trainer.WorkoutGroup, error)
 }
 
 type WorkoutDayHandler struct {
@@ -32,7 +32,7 @@ type WorkoutDay struct {
 }
 
 func (w *WorkoutDayHandler) Do(ctx context.Context, d WorkoutDay) (CustomerWorkoutDay, error) {
-	group, err := w.repository.QueryWorkoutGroup(ctx, d.TrainerUUID, d.GroupUUID)
+	group, err := w.repository.QueryTrainerWorkoutGroup(ctx, d.TrainerUUID, d.GroupUUID)
 	if err != nil {
 		return CustomerWorkoutDay{}, err
 	}

@@ -27,7 +27,7 @@ func TestShouldGetRequestedWorkoutDayWithSuccess_Unit(t *testing.T) {
 	customerDetails, _ := customer.NewCustomerDetails(customerUUID, customerName)
 	trainerWorkout.AssignCustomer(customerDetails)
 
-	repository.EXPECT().QueryWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
 	repository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkoutDay, nil)
 
 	expectedDay := query.CustomerWorkoutDay{

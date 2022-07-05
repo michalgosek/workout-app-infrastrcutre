@@ -24,7 +24,7 @@ func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkout) error {
 		logger.Errorf("query workout group UUID: %s failed, reason: %v", w.GroupUUID, err)
 		return ErrRepositoryFailure
 	}
-	// if group not exist then check if it still exists in customer workouts ...
+	//fixme if group not exist then check if it still exists in customer workouts ...
 
 	err = c.customerRepository.DeleteCustomerWorkoutDay(ctx, w.CustomerUUID, w.GroupUUID)
 	if err != nil {

@@ -70,8 +70,8 @@ func (_c *WorkoutDayHandlerRepository_QueryCustomerWorkoutDay_Call) Return(_a0 c
 	return _c
 }
 
-// QueryWorkoutGroup provides a mock function with given fields: ctx, trainerUUID, groupUUID
-func (_m *WorkoutDayHandlerRepository) QueryWorkoutGroup(ctx context.Context, trainerUUID string, groupUUID string) (trainer.WorkoutGroup, error) {
+// QueryTrainerWorkoutGroup provides a mock function with given fields: ctx, trainerUUID, groupUUID
+func (_m *WorkoutDayHandlerRepository) QueryTrainerWorkoutGroup(ctx context.Context, trainerUUID string, groupUUID string) (trainer.WorkoutGroup, error) {
 	ret := _m.Called(ctx, trainerUUID, groupUUID)
 
 	var r0 trainer.WorkoutGroup
@@ -91,27 +91,27 @@ func (_m *WorkoutDayHandlerRepository) QueryWorkoutGroup(ctx context.Context, tr
 	return r0, r1
 }
 
-// WorkoutDayHandlerRepository_QueryWorkoutGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryWorkoutGroup'
-type WorkoutDayHandlerRepository_QueryWorkoutGroup_Call struct {
+// WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'QueryTrainerWorkoutGroup'
+type WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call struct {
 	*mock.Call
 }
 
-// QueryWorkoutGroup is a helper method to define mock.On call
+// QueryTrainerWorkoutGroup is a helper method to define mock.On call
 //  - ctx context.Context
 //  - trainerUUID string
 //  - groupUUID string
-func (_e *WorkoutDayHandlerRepository_Expecter) QueryWorkoutGroup(ctx interface{}, trainerUUID interface{}, groupUUID interface{}) *WorkoutDayHandlerRepository_QueryWorkoutGroup_Call {
-	return &WorkoutDayHandlerRepository_QueryWorkoutGroup_Call{Call: _e.mock.On("QueryWorkoutGroup", ctx, trainerUUID, groupUUID)}
+func (_e *WorkoutDayHandlerRepository_Expecter) QueryTrainerWorkoutGroup(ctx interface{}, trainerUUID interface{}, groupUUID interface{}) *WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call {
+	return &WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call{Call: _e.mock.On("QueryTrainerWorkoutGroup", ctx, trainerUUID, groupUUID)}
 }
 
-func (_c *WorkoutDayHandlerRepository_QueryWorkoutGroup_Call) Run(run func(ctx context.Context, trainerUUID string, groupUUID string)) *WorkoutDayHandlerRepository_QueryWorkoutGroup_Call {
+func (_c *WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call) Run(run func(ctx context.Context, trainerUUID string, groupUUID string)) *WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(string), args[2].(string))
 	})
 	return _c
 }
 
-func (_c *WorkoutDayHandlerRepository_QueryWorkoutGroup_Call) Return(_a0 trainer.WorkoutGroup, _a1 error) *WorkoutDayHandlerRepository_QueryWorkoutGroup_Call {
+func (_c *WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call) Return(_a0 trainer.WorkoutGroup, _a1 error) *WorkoutDayHandlerRepository_QueryTrainerWorkoutGroup_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
