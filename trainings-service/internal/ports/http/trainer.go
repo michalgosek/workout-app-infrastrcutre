@@ -111,7 +111,7 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.GetTrainerWorkout.Do(r.Context(), groupUUID, trainerUUID)
+		res, err := h.app.Queries.GetTrainerWorkout.Do(r.Context(), trainerUUID, groupUUID)
 		if errors.Is(err, query.ErrWorkoutGroupNotOwner) {
 			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
 			return

@@ -18,6 +18,7 @@ func (c *CustomerHTTP) CreateCustomerWorkout() http.HandlerFunc {
 	type HTTPRequestBody struct {
 		GroupUUID    string `json:"group_uuid"`
 		CustomerName string `json:"customer_name"`
+		TrainerUUID  string `json:"trainer_uuid"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -38,6 +39,7 @@ func (c *CustomerHTTP) CreateCustomerWorkout() http.HandlerFunc {
 			CustomerUUID: customerUUID,
 			CustomerName: payload.CustomerName,
 			GroupUUID:    payload.GroupUUID,
+			TrainerUUID:  payload.TrainerUUID,
 		})
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)

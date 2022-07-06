@@ -3,8 +3,6 @@ package command_test
 import (
 	"context"
 	"errors"
-	"testing"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
@@ -12,6 +10,7 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"testing"
 )
 
 func TestShouldScheduleWorkoutToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing.T) {
@@ -222,4 +221,33 @@ func TestShouldReturnErrorWhenAttemptsToScheduleDuplicateWorkoutGroup_Unit(t *te
 	// then:
 	assertions.ErrorIs(command.ErrWorkoutGroupDuplicated, err)
 	mock.AssertExpectationsForObjects(t, trainerRepository, customerRepository)
+}
+
+func TestShouldReturnErrorWhenAttemptsToScheduleWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
+	const customerName = "John Doe"
+	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
+	const groupUUID = "2e286992-114f-4cdd-a9e7-d4ee8ef37ea9"
+
+	ctx := context.Background()
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
+	SUT := command.NewScheduleWorkoutHandler(customerRepository, trainerRepository)
+
+	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, groupUUID).Return(customer.WorkoutDay{}, nil)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(trainer.WorkoutGroup{}, nil)
+
+	// when:
+	err := SUT.Do(ctx, command.ScheduleWorkout{
+		CustomerUUID: customerUUID,
+		CustomerName: customerName,
+		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
+	})
+
+	// then:
+	assertions.ErrorIs(err, command.ErrResourceNotFound)
+	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
 }

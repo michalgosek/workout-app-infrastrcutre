@@ -40,7 +40,7 @@ func TestShouldCancelWorkoutDayWithSuccess_Unit(t *testing.T) {
 	// when:
 	err := SUT.Do(ctx, command.CancelWorkout{
 		CustomerUUID: customerUUID,
-		TrainerUUUID: trainerUUID,
+		TrainerUUID:  trainerUUID,
 		GroupUUID:    trainerWorkout.UUID(),
 	})
 
@@ -68,7 +68,7 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenQueryWorkoutGroupFailure_Unit(
 	err := SUT.Do(ctx, command.CancelWorkout{
 		CustomerUUID: customerUUID,
 		GroupUUID:    groupUUID,
-		TrainerUUUID: trainerUUID,
+		TrainerUUID:  trainerUUID,
 	})
 
 	// then:
@@ -103,7 +103,7 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenDeleteCustomerWorkoutDayFailur
 	err := SUT.Do(ctx, command.CancelWorkout{
 		CustomerUUID: customerUUID,
 		GroupUUID:    trainerWorkout.UUID(),
-		TrainerUUUID: trainerWorkout.TrainerUUID(),
+		TrainerUUID:  trainerWorkout.TrainerUUID(),
 	})
 
 	// then:
@@ -139,10 +139,36 @@ func TestCancelWorkoutHandlerShouldReturnErrorWhenUpsertWorkoutGroupFailure_Unit
 	err := SUT.Do(ctx, command.CancelWorkout{
 		CustomerUUID: customerUUID,
 		GroupUUID:    trainerWorkout.UUID(),
-		TrainerUUUID: trainerWorkout.TrainerUUID(),
+		TrainerUUID:  trainerWorkout.TrainerUUID(),
 	})
 
 	// then:
 	assertions.Equal(command.ErrRepositoryFailure, err)
 	mock.AssertExpectationsForObjects(t, trainerRepository, customerRepository)
+}
+
+func TestShouldReturnErrorWhenWorkoutGroupNotBelongToTrainer_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	const customerUUID = "f2691a1e-575e-4fa8-8a37-e01d29a204e1"
+	const trainerUUID = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
+	const groupUUID = "2e286992-114f-4cdd-a9e7-d4ee8ef37ea9"
+
+	ctx := context.Background()
+	trainerRepository := new(mocks.TrainerRepository)
+	customerRepository := new(mocks.CustomerRepository)
+
+	SUT := command.NewCancelWorkoutHandler(customerRepository, trainerRepository)
+	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(trainer.WorkoutGroup{}, nil)
+
+	// when:
+	err := SUT.Do(ctx, command.CancelWorkout{
+		CustomerUUID: customerUUID,
+		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
+	})
+
+	// then:
+	assertions.ErrorIs(err, command.ErrResourceNotFound)
+	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
 }
