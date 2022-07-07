@@ -37,7 +37,7 @@ type CustomerTestSuite struct {
 func TestCustomerTestSuite_Integration(t *testing.T) {
 	cfg := Config{
 		Addr:               "mongodb://localhost:27017",
-		Database:           "trainings_service_test",
+		Database:           "trainings_service_test_customer",
 		CustomerCollection: "customer_schedules",
 		CommandTimeout:     10 * time.Second,
 		QueryTimeout:       10 * time.Second,

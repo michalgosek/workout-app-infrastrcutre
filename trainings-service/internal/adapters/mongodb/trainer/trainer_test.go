@@ -32,23 +32,19 @@ type TrainerTestSuite struct {
 }
 
 func TestTrainerTestSuite_Integration(t *testing.T) {
-	suite.Run(t, &TrainerTestSuite{
-		cfg: Config{
-			Addr:              "mongodb://localhost:27017",
-			Database:          "trainings_service_test",
-			TrainerCollection: "trainer_schedules",
-			CommandTimeout:    10 * time.Second,
-			QueryTimeout:      10 * time.Second,
-			ConnectionTimeout: 10 * time.Second,
-			Format:            "2006-01-02 15:04",
-		},
-	})
-}
+	cfg := Config{
+		Addr:              "mongodb://localhost:27017",
+		Database:          "trainings_service_test",
+		TrainerCollection: "trainer_schedules",
+		CommandTimeout:    10 * time.Second,
+		QueryTimeout:      10 * time.Second,
+		ConnectionTimeout: 10 * time.Second,
+		Format:            "2006-01-02 15:04",
+	}
 
-func (m *TrainerTestSuite) BeforeTest(string, string) {
-	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.ConnectionTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.ConnectionTimeout)
 	defer cancel()
-	mongoCLI, err := mongo.NewClient(options.Client().ApplyURI(m.cfg.Addr))
+	mongoCLI, err := mongo.NewClient(options.Client().ApplyURI(cfg.Addr))
 	if err != nil {
 		panic(err)
 	}
@@ -60,28 +56,37 @@ func (m *TrainerTestSuite) BeforeTest(string, string) {
 	if err != nil {
 		panic(err)
 	}
-	m.mongoCLI = mongoCLI
-	m.commandHandler = trainer.NewCommandHandler(mongoCLI, trainer.CommandHandlerConfig{
-		Collection:     m.cfg.TrainerCollection,
-		Database:       m.cfg.Database,
-		Format:         m.cfg.Format,
-		CommandTimeout: m.cfg.CommandTimeout,
-	})
-	err = m.commandHandler.DropCollection(ctx)
-	if err != nil {
-		panic(err)
-	}
+	suite.Run(t, &TrainerTestSuite{
+		mongoCLI: mongoCLI,
+		commandHandler: trainer.NewCommandHandler(mongoCLI, trainer.CommandHandlerConfig{
+			Collection:     cfg.TrainerCollection,
+			Database:       cfg.Database,
+			Format:         cfg.Format,
+			CommandTimeout: cfg.CommandTimeout,
+		}),
+		queryHandler: trainer.NewQueryHandler(mongoCLI, trainer.QueryHandlerConfig{
+			Collection:   cfg.TrainerCollection,
+			Database:     cfg.Database,
+			Format:       cfg.Format,
+			QueryTimeout: cfg.QueryTimeout,
+		}),
 
-	m.queryHandler = trainer.NewQueryHandler(mongoCLI, trainer.QueryHandlerConfig{
-		Collection:   m.cfg.TrainerCollection,
-		Database:     m.cfg.Database,
-		Format:       m.cfg.Format,
-		QueryTimeout: m.cfg.CommandTimeout,
+		cfg: cfg,
 	})
 }
 
+func (m *TrainerTestSuite) BeforeTest(string, string) {
+	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.ConnectionTimeout)
+	defer cancel()
+	err := m.commandHandler.DropCollection(ctx)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (m *TrainerTestSuite) AfterTest(string, string) {
-	ctx := context.Background()
+	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.ConnectionTimeout)
+	defer cancel()
 	err := m.commandHandler.DropCollection(ctx)
 	if err != nil {
 		panic(err)
