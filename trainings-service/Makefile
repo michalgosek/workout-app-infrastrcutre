@@ -15,7 +15,7 @@ test:
 	@go test ./... -cover -count=1 -timeout 10s
 
 test-unit:
-	@go test ./... -run Unit -v -race -count=1
+	@go test ./... -run Unit -race -count=1
 
 test-integration:
-	@go test ./... -run Integration -v -race -count=1
+	@go test ./... -run Integration -race -count=1 -cover

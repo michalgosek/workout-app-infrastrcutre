@@ -2,6 +2,8 @@ package customer_test
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"testing"
 	"time"
 
@@ -11,8 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type Config struct {
@@ -28,14 +28,52 @@ type Config struct {
 
 type CustomerTestSuite struct {
 	suite.Suite
+	mongoCLI       *mongo.Client
 	commandHandler *mcustomer.CommandHandler
 	queryHandler   *mcustomer.QueryHandler
 	cfg            Config
-	mongoCLI       *mongo.Client
 }
 
 func TestCustomerTestSuite_Integration(t *testing.T) {
+	cfg := Config{
+		Addr:               "mongodb://localhost:27017",
+		Database:           "trainings_service_test",
+		CustomerCollection: "customer_schedules",
+		CommandTimeout:     10 * time.Second,
+		QueryTimeout:       10 * time.Second,
+		ConnectionTimeout:  10 * time.Second,
+		Format:             "2006-01-02 15:04",
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.ConnectionTimeout)
+	defer cancel()
+	mongoCLI, err := mongo.NewClient(options.Client().ApplyURI(cfg.Addr))
+	if err != nil {
+		panic(err)
+	}
+	err = mongoCLI.Connect(ctx)
+	if err != nil {
+		panic(err)
+	}
+	err = mongoCLI.Ping(ctx, readpref.Primary())
+	if err != nil {
+		panic(err)
+	}
+
 	suite.Run(t, &CustomerTestSuite{
+		mongoCLI: mongoCLI,
+		commandHandler: mcustomer.NewCommandHandler(mongoCLI, mcustomer.CommandHandlerConfig{
+			Collection:     cfg.CustomerCollection,
+			Database:       cfg.Database,
+			Format:         cfg.Format,
+			CommandTimeout: cfg.CommandTimeout,
+		}),
+		queryHandler: mcustomer.NewQueryHandler(mongoCLI, mcustomer.QueryHandlerConfig{
+			Collection:   cfg.CustomerCollection,
+			Database:     cfg.Database,
+			Format:       cfg.Format,
+			QueryTimeout: cfg.QueryTimeout,
+		}),
 		cfg: Config{
 			Addr:               "mongodb://localhost:27017",
 			Database:           "trainings_service_test",
@@ -49,38 +87,11 @@ func TestCustomerTestSuite_Integration(t *testing.T) {
 }
 
 func (c *CustomerTestSuite) BeforeTest(string, string) {
-	ctx, cancel := context.WithTimeout(context.Background(), c.cfg.ConnectionTimeout)
-	defer cancel()
-	mongoCLI, err := mongo.NewClient(options.Client().ApplyURI(c.cfg.Addr))
+	ctx := context.Background()
+	err := c.commandHandler.DropCollection(ctx)
 	if err != nil {
 		panic(err)
 	}
-	err = mongoCLI.Connect(ctx)
-	if err != nil {
-		panic(err)
-	}
-	err = mongoCLI.Ping(ctx, readpref.Primary())
-	if err != nil {
-		panic(err)
-	}
-	c.mongoCLI = mongoCLI
-	c.commandHandler = mcustomer.NewCommandHandler(mongoCLI, mcustomer.CommandHandlerConfig{
-		Collection:     c.cfg.CustomerCollection,
-		Database:       c.cfg.Database,
-		Format:         c.cfg.Format,
-		CommandTimeout: c.cfg.CommandTimeout,
-	})
-	err = c.commandHandler.DropCollection(ctx)
-	if err != nil {
-		panic(err)
-	}
-
-	c.queryHandler = mcustomer.NewQueryHandler(mongoCLI, mcustomer.QueryHandlerConfig{
-		Collection:   c.cfg.CustomerCollection,
-		Database:     c.cfg.Database,
-		Format:       c.cfg.Format,
-		QueryTimeout: c.cfg.QueryTimeout,
-	})
 }
 
 func (c *CustomerTestSuite) AfterTest(string, string) {
