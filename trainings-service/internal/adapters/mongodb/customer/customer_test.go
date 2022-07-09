@@ -37,7 +37,7 @@ type CustomerTestSuite struct {
 func TestCustomerTestSuite_Integration(t *testing.T) {
 	cfg := Config{
 		Addr:               "mongodb://localhost:27017",
-		Database:           "trainings_service_test_customer",
+		Database:           "trainings_service_test",
 		CustomerCollection: "customer_schedules",
 		CommandTimeout:     10 * time.Second,
 		QueryTimeout:       10 * time.Second,
@@ -84,14 +84,6 @@ func TestCustomerTestSuite_Integration(t *testing.T) {
 			Format:             "2006-01-02 15:04",
 		},
 	})
-}
-
-func (c *CustomerTestSuite) BeforeTest(string, string) {
-	ctx := context.Background()
-	err := c.commandHandler.DropCollection(ctx)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (c *CustomerTestSuite) AfterTest(string, string) {

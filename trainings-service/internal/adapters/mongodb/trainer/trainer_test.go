@@ -34,7 +34,7 @@ type TrainerTestSuite struct {
 func TestTrainerTestSuite_Integration(t *testing.T) {
 	cfg := Config{
 		Addr:              "mongodb://localhost:27017",
-		Database:          "trainings_service_test",
+		Database:          "trainings_service",
 		TrainerCollection: "trainer_schedules",
 		CommandTimeout:    10 * time.Second,
 		QueryTimeout:      10 * time.Second,
@@ -70,18 +70,8 @@ func TestTrainerTestSuite_Integration(t *testing.T) {
 			Format:       cfg.Format,
 			QueryTimeout: cfg.QueryTimeout,
 		}),
-
 		cfg: cfg,
 	})
-}
-
-func (m *TrainerTestSuite) BeforeTest(string, string) {
-	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.ConnectionTimeout)
-	defer cancel()
-	err := m.commandHandler.DropCollection(ctx)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (m *TrainerTestSuite) AfterTest(string, string) {
