@@ -2,11 +2,10 @@ package http
 
 import (
 	"encoding/json"
-	"net/http"
-
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
+	"net/http"
 )
 
 type CustomerHTTP struct {
@@ -35,7 +34,7 @@ func (c *CustomerHTTP) CreateCustomerWorkout() http.HandlerFunc {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		err = c.app.Commands.CustomerScheduleWorkout.Do(r.Context(), command.ScheduleWorkout{
+		err = c.app.Commands.CustomerScheduleWorkout.Do(r.Context(), command.ScheduleWorkoutArgs{
 			CustomerUUID: customerUUID,
 			CustomerName: payload.CustomerName,
 			GroupUUID:    payload.GroupUUID,

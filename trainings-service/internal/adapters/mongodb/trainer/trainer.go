@@ -40,6 +40,10 @@ func (r *Repository) QueryTrainerWorkoutGroupWithDate(ctx context.Context, train
 	return r.queries.QueryTrainerWorkoutGroupWithDate(ctx, trainerUUID, date)
 }
 
+func (r *Repository) QueryCustomerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID, customerUUID string) (trainer.WorkoutGroup, error) {
+	return r.queries.QueryCustomerWorkoutGroup(ctx, trainerUUID, groupUUID, customerUUID)
+}
+
 func (r *Repository) DeleteTrainerWorkoutGroups(ctx context.Context, trainerUUID string) error {
 	return r.commands.DeleteTrainerWorkoutGroups(ctx, trainerUUID)
 }

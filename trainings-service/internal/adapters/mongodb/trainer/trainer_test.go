@@ -3,6 +3,7 @@ package trainer_test
 import (
 	"context"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/trainer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
@@ -297,4 +298,30 @@ func (m *TrainerTestSuite) TestShouldReturnWorkoutGroupWithSpecifiedDate() {
 	// then:
 	assertions.Nil(err)
 	assertions.Equal(actualGroup, expectedGroup)
+}
+
+func (m *TrainerTestSuite) TestShouldReturnWorkoutGroupWithSpecifiedCustomerUUID() {
+	t := m.T()
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		trainerUUID  = "f1741a08-39d7-465d-adc9-a63cf058b409"
+		customerUUID = "e3e43d61-a418-48ca-a824-732590a4339e"
+		customerName = "John Doe"
+	)
+
+	ctx := context.Background()
+	customerDetails, _ := customer.NewCustomerDetails(customerUUID, customerName)
+	trainerWorkoutGroup := testutil.NewTrainerWorkoutGroup(trainerUUID)
+	trainerWorkoutGroup.AssignCustomer(customerDetails)
+
+	_ = m.commandHandler.UpsertTrainerWorkoutGroup(ctx, trainerWorkoutGroup)
+
+	// when:
+	actualGroup, err := m.queryHandler.QueryCustomerWorkoutGroup(ctx, trainerWorkoutGroup.TrainerUUID(), trainerWorkoutGroup.UUID(), customerUUID)
+
+	// then:
+	assertions.Nil(err)
+	assertions.Equal(actualGroup, trainerWorkoutGroup)
 }

@@ -286,3 +286,82 @@ func (c *CustomerTestSuite) TestShouldDeleteWorkoutDaysWithSuccess() {
 	assertions.Nil(err)
 	assertions.Empty(actualWorkoutDays)
 }
+
+func (c *CustomerTestSuite) TestShouldDeleteAllCustomerWorkoutDaysWithSpecifiedGroupUUID() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		firstCustomerName  = "John Doe"
+		secondCustomerName = "Jerry Doe"
+		firstCustomerUUID  = "f1741a08-39d7-465d-adc9-a63cf058b409"
+		secondCustomerUUID = "2e9be2da-448d-4236-afb6-8bffba6668b6"
+		groupUUID          = "0f2407e1-346c-4f56-bceb-d94c9d3b014b"
+	)
+	ctx := context.Background()
+	schedule := time.Now().AddDate(0, 0, 1)
+	firstCustomerWorkoutDay, _ := customer.NewWorkoutDay(firstCustomerUUID, firstCustomerName, groupUUID, schedule)
+	secondCustomerWorkoutDay, _ := customer.NewWorkoutDay(secondCustomerUUID, secondCustomerName, groupUUID, schedule)
+
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, firstCustomerWorkoutDay)
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, secondCustomerWorkoutDay)
+
+	// when:
+	err := c.commandHandler.DeleteCustomersWorkoutDaysWithGroup(ctx, groupUUID)
+
+	// then:
+	assertions.Nil(err)
+
+	actualWorkoutDays, err := c.queryHandler.QueryCustomerWorkoutDays(ctx, firstCustomerUUID)
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDays)
+
+	actualWorkoutDays, err = c.queryHandler.QueryCustomerWorkoutDays(ctx, secondCustomerUUID)
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDays)
+}
+
+func (c *CustomerTestSuite) TestShouldDeleteTwoCustomerWorkoutDaysWithSpecifiedGroupUUID() {
+	t := c.T()
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		firstCustomerName  = "John Doe"
+		secondCustomerName = "Jerry Doe"
+		thirdCustomerName  = "Jane Doe"
+		firstCustomerUUID  = "f1741a08-39d7-465d-adc9-a63cf058b409"
+		secondCustomerUUID = "2e9be2da-448d-4236-afb6-8bffba6668b6"
+		thirdCustomerUUID  = "1d25c898-dadc-4b98-a065-1dd7e0d4c904"
+		commonGroupUUID    = "0f2407e1-346c-4f56-bceb-d94c9d3b014b"
+		otherGroupUUID     = "ece96132-a4fd-466d-9c5c-965a4744f0ae"
+	)
+	ctx := context.Background()
+	schedule, _ := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
+	firstCustomerWorkoutDay, _ := customer.NewWorkoutDay(firstCustomerUUID, firstCustomerName, commonGroupUUID, schedule)
+	secondCustomerWorkoutDay, _ := customer.NewWorkoutDay(secondCustomerUUID, secondCustomerName, commonGroupUUID, schedule)
+	thirdCustomerWorkoutDay, _ := customer.NewWorkoutDay(thirdCustomerUUID, thirdCustomerName, otherGroupUUID, schedule)
+
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, firstCustomerWorkoutDay)
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, secondCustomerWorkoutDay)
+	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, thirdCustomerWorkoutDay)
+
+	// when:
+	err := c.commandHandler.DeleteCustomersWorkoutDaysWithGroup(ctx, commonGroupUUID)
+
+	// then:
+	assertions.Nil(err)
+
+	actualWorkoutDays, err := c.queryHandler.QueryCustomerWorkoutDays(ctx, firstCustomerUUID)
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDays)
+
+	actualWorkoutDays, err = c.queryHandler.QueryCustomerWorkoutDays(ctx, secondCustomerUUID)
+	assertions.Nil(err)
+	assertions.Empty(actualWorkoutDays)
+
+	actualWorkoutDay, err := c.queryHandler.QueryCustomerWorkoutDay(ctx, thirdCustomerUUID, otherGroupUUID)
+	assertions.Nil(err)
+	assertions.Equal(actualWorkoutDay, thirdCustomerWorkoutDay)
+}

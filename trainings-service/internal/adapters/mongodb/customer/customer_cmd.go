@@ -23,12 +23,14 @@ type CommandHandler struct {
 	cli *mongo.Client
 }
 
-func NewCommandHandler(cli *mongo.Client, cfg CommandHandlerConfig) *CommandHandler {
-	t := CommandHandler{
-		cli: cli,
-		cfg: cfg,
+func (c *CommandHandler) deleteManyWithFilter(ctx context.Context, f bson.M) error {
+	db := c.cli.Database(c.cfg.Database)
+	coll := db.Collection(c.cfg.Collection)
+	_, err := coll.DeleteMany(ctx, f)
+	if err != nil {
+		return fmt.Errorf("delete many failed: %v", err)
 	}
-	return &t
+	return nil
 }
 
 func (c *CommandHandler) DropCollection(ctx context.Context) error {
@@ -42,6 +44,7 @@ func (c *CommandHandler) DropCollection(ctx context.Context) error {
 func (c *CommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error {
 	doc := WorkoutDayDocument{
 		UUID:         workout.UUID(),
+		CustomerName: workout.CustomerName(),
 		CustomerUUID: workout.CustomerUUID(),
 		GroupUUID:    workout.GroupUUID(),
 		Date:         workout.Date().Format(c.cfg.Format),
@@ -74,13 +77,20 @@ func (c *CommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, customerU
 	return nil
 }
 
+func (c *CommandHandler) DeleteCustomersWorkoutDaysWithGroup(ctx context.Context, groupUUID string) error {
+	f := bson.M{"trainer_workout_group_uuid": groupUUID}
+	return c.deleteManyWithFilter(ctx, f)
+}
+
 func (c *CommandHandler) DeleteCustomerWorkoutDays(ctx context.Context, customerUUID string) error {
-	db := c.cli.Database(c.cfg.Database)
-	coll := db.Collection(c.cfg.Collection)
 	f := bson.M{"customer_uuid": customerUUID}
-	_, err := coll.DeleteMany(ctx, f)
-	if err != nil {
-		return fmt.Errorf("delete many failed: %v", err)
+	return c.deleteManyWithFilter(ctx, f)
+}
+
+func NewCommandHandler(cli *mongo.Client, cfg CommandHandlerConfig) *CommandHandler {
+	t := CommandHandler{
+		cli: cli,
+		cfg: cfg,
 	}
-	return nil
+	return &t
 }

@@ -155,7 +155,7 @@ func (h *TrainerWorkoutGroups) DeleteWorkoutGroup() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		err := h.app.Commands.DeleteTrainerWorkout.Do(r.Context(), command.CancelWorkout{
+		err := h.app.Commands.DeleteTrainerWorkout.Do(r.Context(), command.CancelWorkoutArgs{
 			GroupUUID:   groupUUID,
 			TrainerUUID: trainerUUID,
 		})

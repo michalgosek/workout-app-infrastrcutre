@@ -2,12 +2,11 @@ package command
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 )
 
-type ScheduleWorkout struct {
+type ScheduleWorkoutArgs struct {
 	CustomerUUID string
 	CustomerName string
 	TrainerUUID  string
@@ -15,46 +14,29 @@ type ScheduleWorkout struct {
 }
 
 type ScheduleWorkoutHandler struct {
-	customerService CustomerService
-	trainerService  TrainerService
+	trainingsService TrainingsService
 }
 
-func (s *ScheduleWorkoutHandler) Do(ctx context.Context, w ScheduleWorkout) error {
-	details, err := s.trainerService.AssignCustomerToWorkoutGroup(ctx, services.AssignCustomerToWorkoutGroupArgs{
-		TrainerUUID:  w.TrainerUUID,
-		GroupUUID:    w.GroupUUID,
-		CustomerUUID: w.CustomerUUID,
-		CustomerName: w.CustomerName,
+func (s *ScheduleWorkoutHandler) Do(ctx context.Context, args ScheduleWorkoutArgs) error {
+	err := s.trainingsService.AssignCustomerToWorkoutGroup(ctx, trainings.AssignCustomerToWorkoutArgs{
+		TrainerUUID:  args.TrainerUUID,
+		GroupUUID:    args.GroupUUID,
+		CustomerUUID: args.CustomerUUID,
+		CustomerName: args.CustomerName,
 	})
 	if err != nil {
-		return fmt.Errorf("trainer service failure: %w", err)
-	}
-	err = s.customerService.ScheduleWorkoutDay(ctx, services.ScheduleWorkoutDayArgs{
-		CustomerUUID: w.CustomerUUID,
-		GroupUUID:    w.GroupUUID,
-		Date:         details.Date,
-	})
-	if err != nil {
-		return fmt.Errorf("customer service failure: %w", err)
+		return fmt.Errorf("trainings service  failure: %w", err)
 	}
 	return nil
 }
 
-func NewScheduleWorkoutHandler(t TrainerService, c CustomerService) (*ScheduleWorkoutHandler, error) {
+func NewScheduleWorkoutHandler(t TrainingsService) (*ScheduleWorkoutHandler, error) {
 	if t == nil {
-		return nil, ErrNilTrainerService
+		return nil, ErrNilTrainingsService
 	}
-	if c == nil {
-		return nil, ErrNiLCustomerService
-	}
+
 	h := ScheduleWorkoutHandler{
-		trainerService:  t,
-		customerService: c,
+		trainingsService: t,
 	}
 	return &h, nil
 }
-
-var (
-	ErrNilTrainerService  = errors.New("nil trainer service")
-	ErrNiLCustomerService = errors.New("nil customer service")
-)

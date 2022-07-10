@@ -2,17 +2,14 @@ package command
 
 import (
 	"context"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services"
+	"errors"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 )
 
-//go:generate mockery --name=CustomerService --case underscore --with-expecter
-type CustomerService interface {
-	CancelWorkoutDay(ctx context.Context, args services.CancelWorkoutDayArgs) error
-	ScheduleWorkoutDay(ctx context.Context, args services.ScheduleWorkoutDayArgs) error
+//go:generate mockery --name=TrainingsService --case underscore --with-expecter
+type TrainingsService interface {
+	CancelCustomerWorkout(ctx context.Context, args trainings.CancelCustomerWorkoutArgs) error
+	AssignCustomerToWorkoutGroup(ctx context.Context, args trainings.AssignCustomerToWorkoutArgs) error
 }
 
-//go:generate mockery --name=TrainerService --case underscore --with-expecter
-type TrainerService interface {
-	CancelCustomerWorkoutParticipation(ctx context.Context, args services.CancelCustomerWorkoutParticipationArgs) error
-	AssignCustomerToWorkoutGroup(ctx context.Context, args services.AssignCustomerToWorkoutGroupArgs) (services.AssignedCustomerWorkoutGroupDetails, error)
-}
+var ErrNilTrainingsService = errors.New("nil trainings service")

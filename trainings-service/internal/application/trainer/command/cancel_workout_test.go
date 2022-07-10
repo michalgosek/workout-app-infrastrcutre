@@ -3,85 +3,67 @@ package command_test
 import (
 	"context"
 	"errors"
-	"testing"
-
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command/mocks"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"testing"
 )
 
-func TestShouldCancelWorkoutGroupOwnedByTrainerWithSuccess_Unit(t *testing.T) {
+func TestCancelWorkoutHandler_ShouldCancelTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
-
+	const (
+		groupUUID   = "33c12629-a38f-4437-8de1-6b1cb1b54fd1"
+		trainerUUID = "b8c77ceb-158f-497e-8d2f-6d1764c7a607"
+	)
 	ctx := context.Background()
-	group := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(group, nil)
-	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(nil)
-	SUT := command.NewCancelWorkoutHandler(repository)
+	service := new(mocks.TrainingsService)
+	SUT, _ := command.NewCancelWorkoutHandler(service)
+
+	service.EXPECT().CancelTrainerWorkoutGroup(ctx, trainings.CancelTrainerWorkoutGroupArgs{
+		TrainerUUID: trainerUUID,
+		GroupUUID:   groupUUID,
+	}).Return(nil)
 
 	// when:
-	err := SUT.Do(ctx, command.CancelWorkout{
-		GroupUUID:   group.UUID(),
-		TrainerUUID: group.TrainerUUID(),
-	})
-
-	// then:
-	assertions.Nil(err)
-	repository.AssertExpectations(t)
-}
-
-func TestShouldNotCancelWorkoutGroupNotOwnedByTrainer_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
-	const groupUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-
-	ctx := context.Background()
-	group := trainer.WorkoutGroup{}
-	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(group, nil)
-	SUT := command.NewCancelWorkoutHandler(repository)
-
-	// when:
-	err := SUT.Do(ctx, command.CancelWorkout{
+	err := SUT.Do(ctx, command.CancelWorkoutArgs{
 		GroupUUID:   groupUUID,
 		TrainerUUID: trainerUUID,
 	})
 
 	// then:
-	assertions.Equal(command.ErrWorkoutGroupNotOwner, err)
-	repository.AssertExpectations(t)
+	assertions.Nil(err)
+	mock.AssertExpectationsForObjects(t, service)
 }
 
-func TestShouldNotCancelTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing.T) {
+func TestCancelWorkoutHandler_ShouldNotCancelTrainerWorkoutGroupWhenTrainingsServiceFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
-
+	const (
+		groupUUID   = "33c12629-a38f-4437-8de1-6b1cb1b54fd1"
+		trainerUUID = "b8c77ceb-158f-497e-8d2f-6d1764c7a607"
+	)
 	ctx := context.Background()
-	group := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	repository := new(mocks.TrainerRepository)
+	service := new(mocks.TrainingsService)
+	SUT, _ := command.NewCancelWorkoutHandler(service)
 
-	expectedErr := errors.New("repository failure")
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(group, nil)
-	repository.EXPECT().DeleteTrainerWorkoutGroup(ctx, trainerUUID, group.UUID()).Return(expectedErr)
-	SUT := command.NewCancelWorkoutHandler(repository)
+	serviceFailureErr := errors.New("service failure")
+	service.EXPECT().CancelTrainerWorkoutGroup(ctx, trainings.CancelTrainerWorkoutGroupArgs{
+		TrainerUUID: trainerUUID,
+		GroupUUID:   groupUUID,
+	}).Return(serviceFailureErr)
 
 	// when:
-	err := SUT.Do(ctx, command.CancelWorkout{
-		GroupUUID:   group.UUID(),
-		TrainerUUID: group.TrainerUUID(),
+	err := SUT.Do(ctx, command.CancelWorkoutArgs{
+		GroupUUID:   groupUUID,
+		TrainerUUID: trainerUUID,
 	})
 
 	// then:
-	assertions.ErrorIs(err, command.ErrRepositoryFailure)
-	repository.AssertExpectations(t)
+	assertions.ErrorIs(err, serviceFailureErr)
+	mock.AssertExpectationsForObjects(t, service)
 }

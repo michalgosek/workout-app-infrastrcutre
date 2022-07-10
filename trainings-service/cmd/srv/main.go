@@ -2,6 +2,10 @@ package main
 
 import (
 	"fmt"
+	cservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/customer"
+	tservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainer"
+	trservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
+
 	"log"
 	"time"
 
@@ -36,6 +40,11 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("creating customer repository failed: %v", err)
 	}
+	customerService, err := cservice.NewCustomerService(customerRepository)
+	if err != nil {
+		return fmt.Errorf("creating customer service failed: %v", err)
+	}
+
 	trainerRepository, err := trainer.NewTrainerRepository(trainer.RepositoryConfig{
 		Addr:              "mongodb://localhost:27017",
 		Database:          "trainings_service_test",
@@ -48,14 +57,32 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("creating trainer repository failed: %v", err)
 	}
+	trainerService, err := tservice.NewTrainerService(trainerRepository)
+	if err != nil {
+		return fmt.Errorf("creating trainer service failed: %v", err)
+	}
+	trainingsService, err := trservice.NewService(customerService, trainerService)
+	if err != nil {
+		return fmt.Errorf("creating trainings service failed: %v", err)
+	}
+
+	customerScheduleWorkoutHandler, err := customcmd.NewScheduleWorkoutHandler(trainingsService)
+	if err != nil {
+		return fmt.Errorf("creating customer schedule workout handler failed: %v", err)
+	}
+	deleteTrainerWorkoutHandler, err := trainercmd.NewCancelWorkoutHandler(trainingsService)
+	if err != nil {
+		return fmt.Errorf("creating cancel workout workout handler failed: %v", err)
+
+	}
 
 	app := application.Application{
 		Commands: application.Commands{
 			CreateTrainerWorkout:    trainercmd.NewScheduleWorkoutHandler(trainerRepository),
-			DeleteTrainerWorkout:    trainercmd.NewCancelWorkoutHandler(trainerRepository),
+			DeleteTrainerWorkout:    deleteTrainerWorkoutHandler,
 			DeleteTrainerWorkouts:   trainercmd.NewCancelWorkoutsHandler(trainerRepository),
 			UnassignCustomer:        trainercmd.NewUnassignCustomerHandler(customerRepository, trainerRepository),
-			CustomerScheduleWorkout: customcmd.NewScheduleWorkoutHandler(customerRepository, trainerRepository),
+			CustomerScheduleWorkout: customerScheduleWorkoutHandler,
 		},
 		Queries: application.Queries{
 			GetTrainerWorkout:  trainerqry.NewWorkoutGroupHandler(trainerRepository),

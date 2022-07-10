@@ -43,12 +43,12 @@ func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, f
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("find one failed: %v", err)
 	}
-
 	var doc WorkoutGroupDocument
 	err = res.Decode(&doc)
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("decoding failed: %v", err)
 	}
+
 	date, err := time.Parse(t.cfg.Format, doc.Date)
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("parsing date value from document failed: %v", err)
@@ -75,6 +75,11 @@ func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, f
 	}
 
 	return group, nil
+}
+
+func (t *QueryHandler) QueryCustomerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID, customerUUID string) (trainer.WorkoutGroup, error) {
+	f := bson.M{"_id": groupUUID, "trainer_uuid": trainerUUID, "customer_details.uuid": customerUUID}
+	return t.queryTrainerWorkoutGroupWithFilter(ctx, f)
 }
 
 func (t *QueryHandler) QueryTrainerWorkoutGroupWithDate(ctx context.Context, trainerUUID string, date time.Time) (trainer.WorkoutGroup, error) {

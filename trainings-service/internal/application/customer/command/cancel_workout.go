@@ -3,46 +3,35 @@ package command
 import (
 	"context"
 	"fmt"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 )
 
 type CancelWorkoutHandler struct {
-	customerService CustomerService
-	trainerService  TrainerService
+	trainingsService TrainingsService
 }
 
-type CancelWorkout struct {
+type CancelWorkoutArgs struct {
 	CustomerUUID string
 	TrainerUUID  string
 	GroupUUID    string
 }
 
-func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkout) error {
-	err := c.customerService.CancelWorkoutDay(ctx, services.CancelWorkoutDayArgs{
-		CustomerUUID: w.CustomerUUID,
-		GroupUUID:    w.GroupUUID,
+func (c *CancelWorkoutHandler) Do(ctx context.Context, args CancelWorkoutArgs) error {
+	err := c.trainingsService.CancelCustomerWorkout(ctx, trainings.CancelCustomerWorkoutArgs{
+		CustomerUUID: args.CustomerUUID,
+		GroupUUID:    args.GroupUUID,
+		TrainerUUID:  args.TrainerUUID,
 	})
 	if err != nil {
-		return fmt.Errorf("customer service failure: %w", err)
-	}
-	err = c.trainerService.CancelCustomerWorkoutParticipation(ctx, services.CancelCustomerWorkoutParticipationArgs{
-		CustomerUUID: w.CustomerUUID,
-		GroupUUID:    w.GroupUUID,
-		TrainerUUID:  w.TrainerUUID,
-	})
-	if err != nil {
-		return fmt.Errorf("trainer service failure: %w", err)
+		return fmt.Errorf("trainings service failure: %w", err)
 	}
 	return nil
 }
 
-func NewCancelWorkoutHandler(c CustomerService, t TrainerService) *CancelWorkoutHandler {
-	if c == nil {
-		panic("nil customer service") //fixme: should be returned err instead of panic!
-	}
+func NewCancelWorkoutHandler(t TrainingsService) (*CancelWorkoutHandler, error) {
 	if t == nil {
-		panic("nil trainer service") //fixme: should be returned err instead of panic!
+		return &CancelWorkoutHandler{}, ErrNilTrainingsService
 	}
-	h := CancelWorkoutHandler{customerService: c, trainerService: t}
-	return &h
+	h := CancelWorkoutHandler{trainingsService: t}
+	return &h, nil
 }

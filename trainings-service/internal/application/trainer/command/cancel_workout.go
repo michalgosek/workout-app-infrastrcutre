@@ -2,45 +2,47 @@ package command
 
 import (
 	"context"
-
+	"errors"
+	"fmt"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 	"github.com/sirupsen/logrus"
 )
 
-type CancelWorkoutHandler struct {
-	repository TrainerRepository
+//go:generate mockery --name=TrainingsService --case underscore --with-expecter
+type TrainingsService interface {
+	CancelTrainerWorkoutGroup(ctx context.Context, args trainings.CancelTrainerWorkoutGroupArgs) error
 }
 
-type CancelWorkout struct {
+type CancelWorkoutHandler struct {
+	trainingsService TrainingsService
+}
+
+type CancelWorkoutArgs struct {
 	GroupUUID   string
 	TrainerUUID string
 }
 
-func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkout) error {
+func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkoutArgs) error {
 	logger := logrus.WithFields(logrus.Fields{"Component": "WorkoutDeleteHandler"})
-	group, err := c.repository.QueryTrainerWorkoutGroup(ctx, w.TrainerUUID, w.GroupUUID)
+	err := c.trainingsService.CancelTrainerWorkoutGroup(ctx, trainings.CancelTrainerWorkoutGroupArgs{
+		TrainerUUID: w.TrainerUUID,
+		GroupUUID:   w.GroupUUID,
+	})
 	if err != nil {
-		const s = "query workout group UUID: %s for trainerUUID: %s failed, reason: %v"
-		logger.Errorf(s, w.GroupUUID, w.TrainerUUID, err)
-		return ErrRepositoryFailure
-	}
-	if group.TrainerUUID() != w.TrainerUUID {
-		logger.Errorf("workout group UUID: %s does not belong to trainerUUID: %s", w.GroupUUID, w.TrainerUUID)
-		return ErrWorkoutGroupNotOwner
-	}
-	err = c.repository.DeleteTrainerWorkoutGroup(ctx, w.TrainerUUID, w.GroupUUID)
-	if err != nil {
-		const s = "delete workout group UUID: %s for trainerUUID: %s failed, reason: %v"
-		logger.Errorf(s, w.GroupUUID, w.TrainerUUID, err)
-		return ErrRepositoryFailure
+		logger.Errorf("Cancel Trainer Workout Group Failure: %s", err)
+		return fmt.Errorf("trainings service failure: %w", err)
 	}
 	return nil
 }
 
-func NewCancelWorkoutHandler(w TrainerRepository) *CancelWorkoutHandler {
-	if w == nil {
-		panic("nil trainer repository")
+func NewCancelWorkoutHandler(t TrainingsService) (*CancelWorkoutHandler, error) {
+	if t == nil {
+		return nil, ErrNilTrainingsService
 	}
-	return &CancelWorkoutHandler{
-		repository: w,
+	h := CancelWorkoutHandler{
+		trainingsService: t,
 	}
+	return &h, nil
 }
+
+var ErrNilTrainingsService = errors.New("nil trainings service")

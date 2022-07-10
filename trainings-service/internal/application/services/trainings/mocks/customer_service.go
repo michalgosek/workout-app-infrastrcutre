@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	services "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services"
+	customer "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/customer"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -23,11 +23,11 @@ func (_m *CustomerService) EXPECT() *CustomerService_Expecter {
 }
 
 // CancelWorkoutDay provides a mock function with given fields: ctx, args
-func (_m *CustomerService) CancelWorkoutDay(ctx context.Context, args services.CancelWorkoutDayArgs) error {
+func (_m *CustomerService) CancelWorkoutDay(ctx context.Context, args customer.CancelWorkoutDayArgs) error {
 	ret := _m.Called(ctx, args)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, services.CancelWorkoutDayArgs) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, customer.CancelWorkoutDayArgs) error); ok {
 		r0 = rf(ctx, args)
 	} else {
 		r0 = ret.Error(0)
@@ -43,14 +43,14 @@ type CustomerService_CancelWorkoutDay_Call struct {
 
 // CancelWorkoutDay is a helper method to define mock.On call
 //  - ctx context.Context
-//  - args services.CancelWorkoutDayArgs
+//  - args customer.CancelWorkoutDayArgs
 func (_e *CustomerService_Expecter) CancelWorkoutDay(ctx interface{}, args interface{}) *CustomerService_CancelWorkoutDay_Call {
 	return &CustomerService_CancelWorkoutDay_Call{Call: _e.mock.On("CancelWorkoutDay", ctx, args)}
 }
 
-func (_c *CustomerService_CancelWorkoutDay_Call) Run(run func(ctx context.Context, args services.CancelWorkoutDayArgs)) *CustomerService_CancelWorkoutDay_Call {
+func (_c *CustomerService_CancelWorkoutDay_Call) Run(run func(ctx context.Context, args customer.CancelWorkoutDayArgs)) *CustomerService_CancelWorkoutDay_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(services.CancelWorkoutDayArgs))
+		run(args[0].(context.Context), args[1].(customer.CancelWorkoutDayArgs))
 	})
 	return _c
 }
@@ -60,12 +60,50 @@ func (_c *CustomerService_CancelWorkoutDay_Call) Return(_a0 error) *CustomerServ
 	return _c
 }
 
+// CancelWorkoutDaysWithGroup provides a mock function with given fields: ctx, groupUUID
+func (_m *CustomerService) CancelWorkoutDaysWithGroup(ctx context.Context, groupUUID string) error {
+	ret := _m.Called(ctx, groupUUID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, groupUUID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CustomerService_CancelWorkoutDaysWithGroup_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelWorkoutDaysWithGroup'
+type CustomerService_CancelWorkoutDaysWithGroup_Call struct {
+	*mock.Call
+}
+
+// CancelWorkoutDaysWithGroup is a helper method to define mock.On call
+//  - ctx context.Context
+//  - groupUUID string
+func (_e *CustomerService_Expecter) CancelWorkoutDaysWithGroup(ctx interface{}, groupUUID interface{}) *CustomerService_CancelWorkoutDaysWithGroup_Call {
+	return &CustomerService_CancelWorkoutDaysWithGroup_Call{Call: _e.mock.On("CancelWorkoutDaysWithGroup", ctx, groupUUID)}
+}
+
+func (_c *CustomerService_CancelWorkoutDaysWithGroup_Call) Run(run func(ctx context.Context, groupUUID string)) *CustomerService_CancelWorkoutDaysWithGroup_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *CustomerService_CancelWorkoutDaysWithGroup_Call) Return(_a0 error) *CustomerService_CancelWorkoutDaysWithGroup_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // ScheduleWorkoutDay provides a mock function with given fields: ctx, args
-func (_m *CustomerService) ScheduleWorkoutDay(ctx context.Context, args services.ScheduleWorkoutDayArgs) error {
+func (_m *CustomerService) ScheduleWorkoutDay(ctx context.Context, args customer.ScheduleWorkoutDayArgs) error {
 	ret := _m.Called(ctx, args)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, services.ScheduleWorkoutDayArgs) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, customer.ScheduleWorkoutDayArgs) error); ok {
 		r0 = rf(ctx, args)
 	} else {
 		r0 = ret.Error(0)
@@ -81,14 +119,14 @@ type CustomerService_ScheduleWorkoutDay_Call struct {
 
 // ScheduleWorkoutDay is a helper method to define mock.On call
 //  - ctx context.Context
-//  - args services.ScheduleWorkoutDayArgs
+//  - args customer.ScheduleWorkoutDayArgs
 func (_e *CustomerService_Expecter) ScheduleWorkoutDay(ctx interface{}, args interface{}) *CustomerService_ScheduleWorkoutDay_Call {
 	return &CustomerService_ScheduleWorkoutDay_Call{Call: _e.mock.On("ScheduleWorkoutDay", ctx, args)}
 }
 
-func (_c *CustomerService_ScheduleWorkoutDay_Call) Run(run func(ctx context.Context, args services.ScheduleWorkoutDayArgs)) *CustomerService_ScheduleWorkoutDay_Call {
+func (_c *CustomerService_ScheduleWorkoutDay_Call) Run(run func(ctx context.Context, args customer.ScheduleWorkoutDayArgs)) *CustomerService_ScheduleWorkoutDay_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(services.ScheduleWorkoutDayArgs))
+		run(args[0].(context.Context), args[1].(customer.ScheduleWorkoutDayArgs))
 	})
 	return _c
 }

@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-
 	"github.com/sirupsen/logrus"
 )
 

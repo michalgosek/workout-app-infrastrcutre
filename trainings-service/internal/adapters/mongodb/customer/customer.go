@@ -41,6 +41,10 @@ func (r *Repository) DeleteCustomerWorkoutDay(ctx context.Context, customerUUID,
 	return r.commands.DeleteCustomerWorkoutDay(ctx, customerUUID, workoutDayUUID)
 }
 
+func (r *Repository) DeleteCustomersWorkoutDaysWithGroup(ctx context.Context, groupUUID string) error {
+	return r.commands.DeleteCustomersWorkoutDaysWithGroup(ctx, groupUUID)
+}
+
 func (r *Repository) DeleteCustomerWorkoutDays(ctx context.Context, customerUUID string) error {
 	return r.commands.DeleteCustomerWorkoutDays(ctx, customerUUID)
 }
