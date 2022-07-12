@@ -72,15 +72,19 @@ func execute() error {
 	}
 	deleteTrainerWorkoutHandler, err := trainercmd.NewCancelWorkoutHandler(trainingsService)
 	if err != nil {
-		return fmt.Errorf("creating cancel workout workout handler failed: %v", err)
+		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
+	}
 
+	cancelTrainerWorkoutsHandler, err := trainercmd.NewCancelWorkoutsHandler(trainingsService)
+	if err != nil {
+		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
 	}
 
 	app := application.Application{
 		Commands: application.Commands{
 			CreateTrainerWorkout:    trainercmd.NewScheduleWorkoutHandler(trainerRepository),
 			DeleteTrainerWorkout:    deleteTrainerWorkoutHandler,
-			DeleteTrainerWorkouts:   trainercmd.NewCancelWorkoutsHandler(trainerRepository),
+			DeleteTrainerWorkouts:   cancelTrainerWorkoutsHandler,
 			UnassignCustomer:        trainercmd.NewUnassignCustomerHandler(customerRepository, trainerRepository),
 			CustomerScheduleWorkout: customerScheduleWorkoutHandler,
 		},

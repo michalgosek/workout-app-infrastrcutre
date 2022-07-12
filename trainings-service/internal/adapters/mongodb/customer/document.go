@@ -5,5 +5,6 @@ type WorkoutDayDocument struct {
 	CustomerName string `bson:"customer_name"`
 	CustomerUUID string `bson:"customer_uuid"`
 	GroupUUID    string `bson:"trainer_workout_group_uuid"`
+	TrainerUUID  string `bson:"trainer_uuid"`
 	Date         string `bson:"date"`
 }

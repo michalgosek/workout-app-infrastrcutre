@@ -49,6 +49,10 @@ func (r *Repository) DeleteCustomerWorkoutDays(ctx context.Context, customerUUID
 	return r.commands.DeleteCustomerWorkoutDays(ctx, customerUUID)
 }
 
+func (r *Repository) DeleteCustomersWorkoutDaysWithTrainer(ctx context.Context, trainerUUID string) error {
+	return r.commands.DeleteCustomersWorkoutDaysWithTrainer(ctx, trainerUUID)
+}
+
 func NewCustomerRepository(cfg RepositoryConfig) (*Repository, error) {
 	mongoCLI, err := common.NewMongoClient(cfg.Addr, cfg.ConnectionTimeout)
 	if err != nil {

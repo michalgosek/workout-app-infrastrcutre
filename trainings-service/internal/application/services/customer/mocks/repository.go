@@ -100,6 +100,44 @@ func (_c *Repository_DeleteCustomersWorkoutDaysWithGroup_Call) Return(_a0 error)
 	return _c
 }
 
+// DeleteCustomersWorkoutDaysWithTrainer provides a mock function with given fields: ctx, trainerUUID
+func (_m *Repository) DeleteCustomersWorkoutDaysWithTrainer(ctx context.Context, trainerUUID string) error {
+	ret := _m.Called(ctx, trainerUUID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, trainerUUID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// Repository_DeleteCustomersWorkoutDaysWithTrainer_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'DeleteCustomersWorkoutDaysWithTrainer'
+type Repository_DeleteCustomersWorkoutDaysWithTrainer_Call struct {
+	*mock.Call
+}
+
+// DeleteCustomersWorkoutDaysWithTrainer is a helper method to define mock.On call
+//  - ctx context.Context
+//  - trainerUUID string
+func (_e *Repository_Expecter) DeleteCustomersWorkoutDaysWithTrainer(ctx interface{}, trainerUUID interface{}) *Repository_DeleteCustomersWorkoutDaysWithTrainer_Call {
+	return &Repository_DeleteCustomersWorkoutDaysWithTrainer_Call{Call: _e.mock.On("DeleteCustomersWorkoutDaysWithTrainer", ctx, trainerUUID)}
+}
+
+func (_c *Repository_DeleteCustomersWorkoutDaysWithTrainer_Call) Run(run func(ctx context.Context, trainerUUID string)) *Repository_DeleteCustomersWorkoutDaysWithTrainer_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *Repository_DeleteCustomersWorkoutDaysWithTrainer_Call) Return(_a0 error) *Repository_DeleteCustomersWorkoutDaysWithTrainer_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // QueryCustomerWorkoutDay provides a mock function with given fields: ctx, customerUUID, GroupUUID
 func (_m *Repository) QueryCustomerWorkoutDay(ctx context.Context, customerUUID string, GroupUUID string) (domaincustomer.WorkoutDay, error) {
 	ret := _m.Called(ctx, customerUUID, GroupUUID)

@@ -15,6 +15,7 @@ type CancelWorkoutDayArgs struct {
 type ScheduleWorkoutDayArgs struct {
 	CustomerUUID string
 	CustomerName string
+	TrainerUUID  string
 	GroupUUID    string
 	Date         time.Time
 }
@@ -30,6 +31,7 @@ type Repository interface {
 	UpsertCustomerWorkoutDay(ctx context.Context, workout customer.WorkoutDay) error
 	DeleteCustomerWorkoutDay(ctx context.Context, customerUUID, groupUUID string) error
 	DeleteCustomersWorkoutDaysWithGroup(ctx context.Context, groupUUID string) error
+	DeleteCustomersWorkoutDaysWithTrainer(ctx context.Context, trainerUUID string) error
 }
 
 type Service struct {
@@ -40,6 +42,14 @@ func (s *Service) CancelWorkoutDaysWithGroup(ctx context.Context, groupUUID stri
 	err := s.repository.DeleteCustomersWorkoutDaysWithGroup(ctx, groupUUID)
 	if err != nil {
 		return ErrDeleteCustomersWorkoutDaysWithGroup
+	}
+	return nil
+}
+
+func (s *Service) CancelWorkoutDaysWithTrainer(ctx context.Context, trainerUUID string) error {
+	err := s.repository.DeleteCustomersWorkoutDaysWithTrainer(ctx, trainerUUID)
+	if err != nil {
+		return ErrDeleteCustomersWorkoutDaysWithTrainer
 	}
 	return nil
 }
@@ -67,7 +77,7 @@ func (s *Service) ScheduleWorkoutDay(ctx context.Context, args ScheduleWorkoutDa
 	if !isCustomerWorkoutDayEmpty(customerWorkoutDay) {
 		return ErrResourceDuplicated
 	}
-	workoutDay, err := customer.NewWorkoutDay(args.CustomerUUID, args.CustomerName, args.GroupUUID, args.Date)
+	workoutDay, err := customer.NewWorkoutDay(args.CustomerUUID, args.CustomerName, args.GroupUUID, args.TrainerUUID, args.Date)
 	if err != nil {
 		return err
 	}
@@ -87,10 +97,11 @@ func NewCustomerService(r Repository) (*Service, error) {
 }
 
 var (
-	ErrDeleteCustomersWorkoutDaysWithGroup = errors.New("cmd delete customers workout days with group failure")
-	ErrUpsertCustomerWorkoutDay            = errors.New("cmd upsert customer workout day failure")
-	ErrDeleteCustomerWorkoutDay            = errors.New("cmd delete customer workout group failure")
-	ErrQueryCustomerWorkoutDay             = errors.New("query customer workout day failure")
+	ErrDeleteCustomersWorkoutDaysWithGroup   = errors.New("cmd delete customers workout days with group failure")
+	ErrUpsertCustomerWorkoutDay              = errors.New("cmd upsert customer workout day failure")
+	ErrDeleteCustomerWorkoutDay              = errors.New("cmd delete customer workout group failure")
+	ErrDeleteCustomersWorkoutDaysWithTrainer = errors.New("cmd delete customers workout days with trainer failure")
+	ErrQueryCustomerWorkoutDay               = errors.New("query customer workout day failure")
 )
 
 var (

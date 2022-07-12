@@ -427,6 +427,45 @@ func TestService_ShouldNotGetCustomerWorkoutGroupWhenQueryCustomerWorkoutGroupFa
 
 }
 
+func TestService_ShouldCancelWorkoutGroupsWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const trainerUUID = "647909be-5eba-4ae1-9d33-dda8b734a9cc"
+	ctx := context.Background()
+	repository := new(mocks.Repository)
+	SUT, _ := trainer.NewTrainerService(repository)
+
+	repository.EXPECT().DeleteTrainerWorkoutGroups(ctx, trainerUUID).Return(nil)
+
+	// when:
+	err := SUT.CancelWorkoutGroups(ctx, trainerUUID)
+
+	// then:
+	assertions.Nil(err)
+	mock.AssertExpectationsForObjects(t, repository)
+}
+
+func TestService_ShouldNotCancelWorkoutGroupsWithSuccessWhenTrainerServiceFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const trainerUUID = "647909be-5eba-4ae1-9d33-dda8b734a9cc"
+	ctx := context.Background()
+	repository := new(mocks.Repository)
+	SUT, _ := trainer.NewTrainerService(repository)
+
+	repositoryFailureErr := errors.New("repository failure")
+	repository.EXPECT().DeleteTrainerWorkoutGroups(ctx, trainerUUID).Return(repositoryFailureErr)
+
+	// when:
+	err := SUT.CancelWorkoutGroups(ctx, trainerUUID)
+
+	// then:
+	assertions.ErrorIs(err, trainer.ErrDeleteTrainerWorkoutGroups)
+	mock.AssertExpectationsForObjects(t, repository)
+}
+
 func newTestTrainerWorkoutGroup(trainerUUID string) domain.WorkoutGroup {
 	schedule := time.Now().AddDate(0, 0, 1)
 	group, err := domain.NewWorkoutGroup(trainerUUID, "dummy_trainer", "dummy_group", "dummy_desc", schedule)

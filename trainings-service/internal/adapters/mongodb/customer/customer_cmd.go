@@ -47,6 +47,7 @@ func (c *CommandHandler) UpsertCustomerWorkoutDay(ctx context.Context, workout c
 		CustomerName: workout.CustomerName(),
 		CustomerUUID: workout.CustomerUUID(),
 		GroupUUID:    workout.GroupUUID(),
+		TrainerUUID:  workout.TrainerUUID(),
 		Date:         workout.Date().Format(c.cfg.Format),
 	}
 
@@ -79,6 +80,11 @@ func (c *CommandHandler) DeleteCustomerWorkoutDay(ctx context.Context, customerU
 
 func (c *CommandHandler) DeleteCustomersWorkoutDaysWithGroup(ctx context.Context, groupUUID string) error {
 	f := bson.M{"trainer_workout_group_uuid": groupUUID}
+	return c.deleteManyWithFilter(ctx, f)
+}
+
+func (c *CommandHandler) DeleteCustomersWorkoutDaysWithTrainer(ctx context.Context, trainerUUID string) error {
+	f := bson.M{"trainer_uuid": trainerUUID}
 	return c.deleteManyWithFilter(ctx, f)
 }
 

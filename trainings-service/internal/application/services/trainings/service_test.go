@@ -229,6 +229,7 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenCustomerServiceFailure
 		CustomerUUID: customerUUID,
 		CustomerName: customerName,
 		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
 		Date:         assignedWorkoutDetails.Date,
 	}).Return(repositoryFailureErr)
 

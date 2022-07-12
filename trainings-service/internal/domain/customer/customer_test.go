@@ -13,20 +13,21 @@ func TestShouldCreateCustomerWorkoutDayWithSuccess_Unit(t *testing.T) {
 
 	// given:
 	const (
-		customerUUID            = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-		customerName            = "John Doe"
-		trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
+		customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		customerName = "John Doe"
+		trainerUUID  = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		groupUUID    = "01503798-eccb-4e90-8b12-d635e7494698"
 	)
 	date := time.Now().Add(24 * time.Hour)
 
 	// when:
-	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkoutGroupUUID, date)
+	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, groupUUID, trainerUUID, date)
 
 	// then:
 	assertions.Nil(err)
 	assertions.Equal(customerUUID, actualWorkoutDay.CustomerUUID())
 	assertions.Equal(date, actualWorkoutDay.Date())
-	assertions.Equal(trainerWorkoutGroupUUID, actualWorkoutDay.GroupUUID())
+	assertions.Equal(groupUUID, actualWorkoutDay.GroupUUID())
 }
 
 func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerName_Unit(t *testing.T) {
@@ -34,14 +35,15 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerName
 
 	// given:
 	const (
-		customerUUID            = "7e4946a1-8d33-4eec-b639-93fdb1c6fe30"
-		customerName            = ""
-		trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
+		customerUUID = "7e4946a1-8d33-4eec-b639-93fdb1c6fe30"
+		customerName = ""
+		trainerUUID  = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		groupUUID    = "01503798-eccb-4e90-8b12-d635e7494698"
 	)
 	date := time.Now().Add(24 * time.Hour)
 
 	// when:
-	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkoutGroupUUID, date)
+	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, trainerUUID, groupUUID, date)
 
 	// then:
 	assertions.Equal(err, customer.ErrEmptyCustomerName)
@@ -54,12 +56,13 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyCustomerUUID
 	// given:
 	date := time.Now().Add(24 * time.Hour)
 	const (
-		trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
-		customerName            = "John Doe"
+		groupUUID    = "01503798-eccb-4e90-8b12-d635e7494698"
+		trainerUUID  = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		customerName = "John Doe"
 	)
 
 	// when:
-	actualWorkoutDay, err := customer.NewWorkoutDay("", customerName, trainerWorkoutGroupUUID, date)
+	actualWorkoutDay, err := customer.NewWorkoutDay("", customerName, trainerUUID, groupUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyCustomerUUID, err)
@@ -71,14 +74,15 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyDate_Unit(t 
 
 	// given:
 	const (
-		customerUUID            = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-		customerName            = "John Doe"
-		trainerWorkoutGroupUUID = "01503798-eccb-4e90-8b12-d635e7494698"
+		customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		customerName = "John Doe"
+		trainerUUID  = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		groupUUID    = "01503798-eccb-4e90-8b12-d635e7494698"
 	)
 	date := time.Time{}
 
 	// when:
-	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkoutGroupUUID, date)
+	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, trainerUUID, groupUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupDate, err)
@@ -90,14 +94,15 @@ func TestCreateCustomerWorkoutDayShouldReturnErrorWhenSpecifiedEmptyWorkoutUUID_
 
 	// given:
 	const (
-		customerUUID            = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-		customerName            = "John Doe"
-		trainerWorkoutGroupUUID = ""
+		customerUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		customerName = "John Doe"
+		trainerUUID  = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		groupUUID    = ""
 	)
 	date := time.Now()
 
 	// when:
-	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkoutGroupUUID, date)
+	actualWorkoutDay, err := customer.NewWorkoutDay(customerUUID, customerName, groupUUID, trainerUUID, date)
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupUUID, err)
@@ -109,23 +114,59 @@ func TestUnmarshalFromDatabaseShouldParseDataWithSuccess_Unit(t *testing.T) {
 
 	// given:
 	const (
-		customerWorkoutDayUUID  = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-		trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
-		customerUUID            = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
-		customerName            = "John Doe"
+		workoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		trainerUUID    = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		groupUUID      = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		customerUUID   = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+		customerName   = "John Doe"
 	)
 	date := time.Now()
 
 	// when:
-	actualWorkoutDay, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, customerName, date)
+	actualWorkoutDay, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: workoutDayUUID,
+		TrainerUUID:    trainerUUID,
+		GroupUUID:      groupUUID,
+		CustomerUUID:   customerUUID,
+		CustomerName:   customerName,
+		Date:           date,
+	})
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(trainerWorkoutGroupUUID, actualWorkoutDay.GroupUUID())
+	assertions.Equal(groupUUID, actualWorkoutDay.GroupUUID())
+	assertions.Equal(trainerUUID, actualWorkoutDay.TrainerUUID())
 	assertions.Equal(customerUUID, actualWorkoutDay.CustomerUUID())
-	assertions.Equal(customerWorkoutDayUUID, actualWorkoutDay.UUID())
 	assertions.Equal(customerName, actualWorkoutDay.CustomerName())
 	assertions.Equal(date, actualWorkoutDay.Date())
+}
+
+func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyTrainerUUID_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		workoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		trainerUUID    = ""
+		groupUUID      = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		customerUUID   = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+		customerName   = "John Doe"
+	)
+	date := time.Now()
+
+	// when:
+	actualWorkoutDay, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: workoutDayUUID,
+		TrainerUUID:    trainerUUID,
+		GroupUUID:      groupUUID,
+		CustomerUUID:   customerUUID,
+		CustomerName:   customerName,
+		Date:           date,
+	})
+
+	// then:
+	assertions.Equal(err, customer.ErrEmptyTrainerUUID)
+	assertions.Empty(actualWorkoutDay)
 }
 
 func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerName_Unit(t *testing.T) {
@@ -133,15 +174,23 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerName_Unit(t *test
 
 	// given:
 	const (
-		customerWorkoutDayUUID  = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-		trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
-		customerUUID            = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
-		customerName            = ""
+		workoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		trainerUUID    = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		groupUUID      = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		customerUUID   = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+		customerName   = ""
 	)
 	date := time.Now()
 
 	// when:
-	actualWorkoutDay, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, customerName, date)
+	actualWorkoutDay, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: workoutDayUUID,
+		TrainerUUID:    trainerUUID,
+		GroupUUID:      groupUUID,
+		CustomerUUID:   customerUUID,
+		CustomerName:   customerName,
+		Date:           date,
+	})
 
 	// then:
 	assertions.Equal(err, customer.ErrEmptyCustomerName)
@@ -153,15 +202,23 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerWorkoutDayUUID_Un
 
 	// given:
 	const (
-		customerWorkoutDayUUID  = ""
-		trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
-		customerUUID            = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
-		customerName            = "John Doe"
+		workoutDayUUID = ""
+		trainerUUID    = "d1f9cf76-0acf-445c-b9ee-d9515e20d22d"
+		groupUUID      = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		customerUUID   = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+		customerName   = "John Doe"
 	)
 	date := time.Now()
 
 	// when:
-	SUT, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, customerName, date)
+	SUT, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: workoutDayUUID,
+		TrainerUUID:    trainerUUID,
+		GroupUUID:      groupUUID,
+		CustomerUUID:   customerUUID,
+		CustomerName:   customerName,
+		Date:           date,
+	})
 
 	// then:
 	assertions.Equal(customer.ErrEmptyWorkoutDayUUID, err)
@@ -173,16 +230,24 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyCustomerUUID_Unit(t *test
 
 	// given:
 	const (
-		customerWorkoutDayUUID  = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-		customerUUID            = ""
-		customerName            = "John Doe"
-		trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		workoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		customerUUID   = ""
+		customerName   = "John Doe"
+		trainerUUID    = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		groupUUID      = "aa046e54-1c50-4b85-8a52-764d34c766ef"
 	)
 
 	date := time.Now()
 
 	// when:
-	workout, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, customerName, date)
+	workout, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: workoutDayUUID,
+		TrainerUUID:    trainerUUID,
+		GroupUUID:      groupUUID,
+		CustomerUUID:   customerUUID,
+		CustomerName:   customerName,
+		Date:           date,
+	})
 
 	// then:
 	assertions.Equal(customer.ErrEmptyCustomerUUID, err)
@@ -194,15 +259,23 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyGroupUUID_Unit(t *testing
 
 	// given:
 	const (
-		customerWorkoutDayUUID  = "aa046e54-1c50-4b85-8a52-764d34c766ef"
-		trainerWorkoutGroupUUID = ""
-		customerName            = "John Doe"
-		customerUUID            = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+		workoutDayUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		groupUUID      = ""
+		trainerUUID    = "e740726b-6817-4755-a1bb-097c024a76df"
+		customerName   = "John Doe"
+		customerUUID   = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
 	)
 	date := time.Now()
 
 	// when:
-	SUT, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, customerName, date)
+	SUT, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: workoutDayUUID,
+		TrainerUUID:    trainerUUID,
+		GroupUUID:      groupUUID,
+		CustomerUUID:   customerUUID,
+		CustomerName:   customerName,
+		Date:           date,
+	})
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupUUID, err)
@@ -214,15 +287,23 @@ func TestUnmarshalFromDatabaseShouldReturnErrorForEmptyGroupDate_Unit(t *testing
 
 	// given:
 	const (
-		customerWorkoutDayUUID  = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
-		trainerWorkoutGroupUUID = "aa046e54-1c50-4b85-8a52-764d34c766ef"
-		customerUUID            = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
-		customerName            = "John Doe"
+		WorkoutDayUUID = "346dcf15-549f-4853-aa92-6ecbc6486ce8"
+		groupUUID      = "aa046e54-1c50-4b85-8a52-764d34c766ef"
+		customerUUID   = "fb561c94-c60a-4864-84cb-9901cabf9ed5"
+		trainerUUID    = "02059e83-27f4-46f4-871e-c14b4b9235f0"
+		customerName   = "John Doe"
 	)
 	date := time.Time{}
 
 	// when:
-	SUT, err := customer.UnmarshalFromDatabase(customerWorkoutDayUUID, trainerWorkoutGroupUUID, customerUUID, customerName, date)
+	SUT, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: WorkoutDayUUID,
+		TrainerUUID:    trainerUUID,
+		GroupUUID:      groupUUID,
+		CustomerUUID:   customerUUID,
+		CustomerName:   customerName,
+		Date:           date,
+	})
 
 	// then:
 	assertions.Equal(customer.ErrEmptyGroupDate, err)

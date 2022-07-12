@@ -2,28 +2,33 @@ package command
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/sirupsen/logrus"
 )
 
 type CancelWorkoutsHandler struct {
-	repository TrainerRepository
+	trainingsService TrainingsService
 }
 
 func (c *CancelWorkoutsHandler) Do(ctx context.Context, trainerUUID string) error {
 	logger := logrus.WithFields(logrus.Fields{"Trainer-CMD": "WorkoutsDeleteHandler"})
-	err := c.repository.DeleteTrainerWorkoutGroups(ctx, trainerUUID)
+	err := c.trainingsService.CancelTrainerWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		logger.Errorf("delete workout groups for trainerUUID: %s failed, reason: %v", trainerUUID, err)
-		return ErrRepositoryFailure
+		logger.Errorf("CMD - cancel workout groups failure: %s", err)
+		return fmt.Errorf("trainer service failure: %w", err)
 	}
 	return nil
 }
 
-func NewCancelWorkoutsHandler(t TrainerRepository) *CancelWorkoutsHandler {
+func NewCancelWorkoutsHandler(t TrainingsService) (*CancelWorkoutsHandler, error) {
 	if t == nil {
-		panic("nil trainer repository")
+		return nil, ErrNilTrainingsService
 	}
-	return &CancelWorkoutsHandler{
-		repository: t,
+	h := CancelWorkoutsHandler{
+		trainingsService: t,
 	}
+	return &h, nil
 }
+
+var ErrNilTrainerService = errors.New("nil trainer service")

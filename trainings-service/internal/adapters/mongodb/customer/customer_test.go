@@ -295,14 +295,15 @@ func (c *CustomerTestSuite) TestShouldDeleteAllCustomerWorkoutDaysWithSpecifiedG
 	const (
 		firstCustomerName  = "John Doe"
 		secondCustomerName = "Jerry Doe"
+		commonTrainerUUID  = "1fdae430-f4bf-47d9-bb4c-a161a7d5a304"
 		firstCustomerUUID  = "f1741a08-39d7-465d-adc9-a63cf058b409"
 		secondCustomerUUID = "2e9be2da-448d-4236-afb6-8bffba6668b6"
 		groupUUID          = "0f2407e1-346c-4f56-bceb-d94c9d3b014b"
 	)
 	ctx := context.Background()
 	schedule := time.Now().AddDate(0, 0, 1)
-	firstCustomerWorkoutDay, _ := customer.NewWorkoutDay(firstCustomerUUID, firstCustomerName, groupUUID, schedule)
-	secondCustomerWorkoutDay, _ := customer.NewWorkoutDay(secondCustomerUUID, secondCustomerName, groupUUID, schedule)
+	firstCustomerWorkoutDay, _ := customer.NewWorkoutDay(firstCustomerUUID, firstCustomerName, groupUUID, commonTrainerUUID, schedule)
+	secondCustomerWorkoutDay, _ := customer.NewWorkoutDay(secondCustomerUUID, secondCustomerName, groupUUID, commonTrainerUUID, schedule)
 
 	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, firstCustomerWorkoutDay)
 	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, secondCustomerWorkoutDay)
@@ -335,13 +336,14 @@ func (c *CustomerTestSuite) TestShouldDeleteTwoCustomerWorkoutDaysWithSpecifiedG
 		secondCustomerUUID = "2e9be2da-448d-4236-afb6-8bffba6668b6"
 		thirdCustomerUUID  = "1d25c898-dadc-4b98-a065-1dd7e0d4c904"
 		commonGroupUUID    = "0f2407e1-346c-4f56-bceb-d94c9d3b014b"
+		commonTrainerUUID  = "43404fd3-62d2-409e-8aa6-2f85ac290cdc"
 		otherGroupUUID     = "ece96132-a4fd-466d-9c5c-965a4744f0ae"
 	)
 	ctx := context.Background()
 	schedule, _ := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
-	firstCustomerWorkoutDay, _ := customer.NewWorkoutDay(firstCustomerUUID, firstCustomerName, commonGroupUUID, schedule)
-	secondCustomerWorkoutDay, _ := customer.NewWorkoutDay(secondCustomerUUID, secondCustomerName, commonGroupUUID, schedule)
-	thirdCustomerWorkoutDay, _ := customer.NewWorkoutDay(thirdCustomerUUID, thirdCustomerName, otherGroupUUID, schedule)
+	firstCustomerWorkoutDay, _ := customer.NewWorkoutDay(firstCustomerUUID, firstCustomerName, commonGroupUUID, commonTrainerUUID, schedule)
+	secondCustomerWorkoutDay, _ := customer.NewWorkoutDay(secondCustomerUUID, secondCustomerName, commonGroupUUID, commonTrainerUUID, schedule)
+	thirdCustomerWorkoutDay, _ := customer.NewWorkoutDay(thirdCustomerUUID, thirdCustomerName, otherGroupUUID, commonTrainerUUID, schedule)
 
 	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, firstCustomerWorkoutDay)
 	_ = c.commandHandler.UpsertCustomerWorkoutDay(ctx, secondCustomerWorkoutDay)

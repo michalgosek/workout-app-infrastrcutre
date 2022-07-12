@@ -30,8 +30,9 @@ func NewTrainerWorkoutGroup(trainerUUID string) trainer.WorkoutGroup {
 func NewWorkoutDay(customerUUID string) customer.WorkoutDay {
 	ts := getStaticTime()
 	name := "John Doe"
-	workoutUUID := uuid.NewString()
-	workoutDay, err := customer.NewWorkoutDay(customerUUID, name, workoutUUID, ts)
+	trainerUUID := uuid.NewString()
+	groupUUID := uuid.NewString()
+	workoutDay, err := customer.NewWorkoutDay(customerUUID, name, groupUUID, trainerUUID, ts)
 	if err != nil {
 		panic(err)
 	}

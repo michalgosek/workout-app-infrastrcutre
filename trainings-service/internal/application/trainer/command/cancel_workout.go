@@ -8,11 +8,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-//go:generate mockery --name=TrainingsService --case underscore --with-expecter
-type TrainingsService interface {
-	CancelTrainerWorkoutGroup(ctx context.Context, args trainings.CancelTrainerWorkoutGroupArgs) error
-}
-
 type CancelWorkoutHandler struct {
 	trainingsService TrainingsService
 }
@@ -29,7 +24,7 @@ func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkoutArgs) erro
 		GroupUUID:   w.GroupUUID,
 	})
 	if err != nil {
-		logger.Errorf("Cancel Trainer Workout Group Failure: %s", err)
+		logger.Errorf("CMD - cancel trainer workout group Failure: %s", err)
 		return fmt.Errorf("trainings service failure: %w", err)
 	}
 	return nil

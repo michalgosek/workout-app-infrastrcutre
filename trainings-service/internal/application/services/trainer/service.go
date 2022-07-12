@@ -42,6 +42,7 @@ type WorkoutGroupWithCustomerArgs struct {
 type Commands interface {
 	UpsertTrainerWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error
 	DeleteTrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) error
+	DeleteTrainerWorkoutGroups(ctx context.Context, trainerUUID string) error
 }
 
 type Queries interface {
@@ -76,6 +77,14 @@ func (s *Service) CancelWorkoutGroup(ctx context.Context, args CancelWorkoutGrou
 	err = s.repository.DeleteTrainerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID)
 	if err != nil {
 		return ErrDeleteTrainerWorkoutGroup
+	}
+	return nil
+}
+
+func (s *Service) CancelWorkoutGroups(ctx context.Context, trainerUUID string) error {
+	err := s.repository.DeleteTrainerWorkoutGroups(ctx, trainerUUID)
+	if err != nil {
+		return ErrDeleteTrainerWorkoutGroups
 	}
 	return nil
 }
@@ -148,6 +157,7 @@ var (
 
 var (
 	ErrDeleteTrainerWorkoutGroup            = errors.New("cmd delete trainer workout group failure")
+	ErrDeleteTrainerWorkoutGroups           = errors.New("cmd delete trainer workout groups failure")
 	ErrUpsertTrainerWorkoutGroup            = errors.New("cmd upsert trainer workout group failure")
 	ErrQueryTrainerWorkoutGroup             = errors.New("query trainer group failure")
 	ErrQueryTrainerWorkoutGroupWithCustomer = errors.New("query trainer workout group with customer failure")

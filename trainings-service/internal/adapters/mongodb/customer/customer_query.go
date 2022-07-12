@@ -54,7 +54,14 @@ func (c *QueryHandler) QueryCustomerWorkoutDay(ctx context.Context, customerUUID
 	if err != nil {
 		return customer.WorkoutDay{}, fmt.Errorf("parsing date value from document failed: %v", err)
 	}
-	out, err := customer.UnmarshalFromDatabase(dst.UUID, dst.GroupUUID, dst.CustomerUUID, dst.CustomerName, date)
+	out, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+		WorkoutDayUUID: dst.UUID,
+		TrainerUUID:    dst.TrainerUUID,
+		GroupUUID:      dst.GroupUUID,
+		CustomerUUID:   dst.CustomerUUID,
+		CustomerName:   dst.CustomerName,
+		Date:           date,
+	})
 	if err != nil {
 		return customer.WorkoutDay{}, fmt.Errorf("unmarshal failed: %v", err)
 	}
@@ -87,7 +94,14 @@ func convertDocumentsToWorkoutDays(format string, docs ...WorkoutDayDocument) ([
 		if err != nil {
 			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
 		}
-		day, err := customer.UnmarshalFromDatabase(d.UUID, d.GroupUUID, d.CustomerUUID, d.CustomerName, date)
+		day, err := customer.UnmarshalFromDatabase(customer.UnmarshalFromDatabaseArgs{
+			WorkoutDayUUID: d.UUID,
+			TrainerUUID:    d.TrainerUUID,
+			GroupUUID:      d.GroupUUID,
+			CustomerUUID:   d.CustomerUUID,
+			CustomerName:   d.CustomerName,
+			Date:           date,
+		})
 		if err != nil {
 			return nil, fmt.Errorf("unmarshal from database failed: %v", err)
 		}

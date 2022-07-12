@@ -9,6 +9,7 @@ import (
 type WorkoutDay struct {
 	uuid         string
 	customerUUID string
+	trainerUUID  string
 	customerName string
 	groupUUID    string
 	date         time.Time
@@ -20,6 +21,10 @@ func (c *WorkoutDay) CustomerName() string {
 
 func (c *WorkoutDay) Date() time.Time {
 	return c.date
+}
+
+func (c *WorkoutDay) TrainerUUID() string {
+	return c.trainerUUID
 }
 
 func (c *WorkoutDay) GroupUUID() string {
@@ -34,7 +39,7 @@ func (c *WorkoutDay) CustomerUUID() string {
 	return c.customerUUID
 }
 
-func NewWorkoutDay(customerUUID, customerName, groupUUID string, date time.Time) (WorkoutDay, error) {
+func NewWorkoutDay(customerUUID, customerName, groupUUID string, trainerUUID string, date time.Time) (WorkoutDay, error) {
 	if customerUUID == "" {
 		return WorkoutDay{}, ErrEmptyCustomerUUID
 	}
@@ -43,6 +48,9 @@ func NewWorkoutDay(customerUUID, customerName, groupUUID string, date time.Time)
 	}
 	if groupUUID == "" {
 		return WorkoutDay{}, ErrEmptyGroupUUID
+	}
+	if trainerUUID == "" {
+		return WorkoutDay{}, ErrEmptyTrainerUUID
 	}
 	if date.IsZero() {
 		return WorkoutDay{}, ErrEmptyGroupDate
@@ -50,6 +58,7 @@ func NewWorkoutDay(customerUUID, customerName, groupUUID string, date time.Time)
 	c := WorkoutDay{
 		uuid:         uuid.NewString(),
 		customerUUID: customerUUID,
+		trainerUUID:  trainerUUID,
 		groupUUID:    groupUUID,
 		customerName: customerName,
 		date:         date,
@@ -57,28 +66,41 @@ func NewWorkoutDay(customerUUID, customerName, groupUUID string, date time.Time)
 	return c, nil
 }
 
-func UnmarshalFromDatabase(workoutDayUUID, groupUUID, customerUUID, customerName string, date time.Time) (WorkoutDay, error) {
-	if workoutDayUUID == "" {
+type UnmarshalFromDatabaseArgs struct {
+	WorkoutDayUUID string
+	TrainerUUID    string
+	GroupUUID      string
+	CustomerUUID   string
+	CustomerName   string
+	Date           time.Time
+}
+
+func UnmarshalFromDatabase(args UnmarshalFromDatabaseArgs) (WorkoutDay, error) {
+	if args.WorkoutDayUUID == "" {
 		return WorkoutDay{}, ErrEmptyWorkoutDayUUID
 	}
-	if customerUUID == "" {
+	if args.CustomerUUID == "" {
 		return WorkoutDay{}, ErrEmptyCustomerUUID
 	}
-	if groupUUID == "" {
+	if args.GroupUUID == "" {
 		return WorkoutDay{}, ErrEmptyGroupUUID
 	}
-	if date.IsZero() {
+	if args.Date.IsZero() {
 		return WorkoutDay{}, ErrEmptyGroupDate
 	}
-	if customerName == "" {
+	if args.CustomerName == "" {
 		return WorkoutDay{}, ErrEmptyCustomerName
 	}
+	if args.TrainerUUID == "" {
+		return WorkoutDay{}, ErrEmptyTrainerUUID
+	}
 	c := WorkoutDay{
-		uuid:         workoutDayUUID,
-		groupUUID:    groupUUID,
-		customerUUID: customerUUID,
-		customerName: customerName,
-		date:         date,
+		uuid:         args.WorkoutDayUUID,
+		groupUUID:    args.GroupUUID,
+		trainerUUID:  args.TrainerUUID,
+		customerUUID: args.CustomerUUID,
+		customerName: args.CustomerName,
+		date:         args.Date,
 	}
 	return c, nil
 }

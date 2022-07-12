@@ -30,6 +30,7 @@ type CustomerService interface {
 	CancelWorkoutDay(ctx context.Context, args customer.CancelWorkoutDayArgs) error
 	ScheduleWorkoutDay(ctx context.Context, args customer.ScheduleWorkoutDayArgs) error
 	CancelWorkoutDaysWithGroup(ctx context.Context, groupUUID string) error
+	CancelWorkoutDaysWithTrainer(ctx context.Context, trainerUUID string) error
 }
 
 //go:generate mockery --name=TrainerService --case underscore --with-expecter
@@ -37,11 +38,24 @@ type TrainerService interface {
 	AssignCustomerToWorkoutGroup(ctx context.Context, args trainer.AssignCustomerToWorkoutGroupArgs) (trainer.AssignedCustomerWorkoutGroupDetails, error)
 	CancelCustomerWorkoutParticipation(ctx context.Context, args trainer.CancelCustomerWorkoutParticipationArgs) error
 	CancelWorkoutGroup(ctx context.Context, args trainer.CancelWorkoutGroupArgs) error
+	CancelWorkoutGroups(ctx context.Context, trainerUUID string) error
 }
 
 type Service struct {
 	customerService CustomerService
 	trainerService  TrainerService
+}
+
+func (s *Service) CancelTrainerWorkoutGroups(ctx context.Context, trainerUUID string) error {
+	err := s.trainerService.CancelWorkoutGroups(ctx, trainerUUID)
+	if err != nil {
+		return fmt.Errorf("trainer service failure: %w", err)
+	}
+	err = s.customerService.CancelWorkoutDaysWithTrainer(ctx, trainerUUID)
+	if err != nil {
+		return fmt.Errorf("customer service failure: %w", err)
+	}
+	return nil
 }
 
 func (s *Service) CancelTrainerWorkoutGroup(ctx context.Context, args CancelTrainerWorkoutGroupArgs) error {
@@ -92,6 +106,7 @@ func (s *Service) AssignCustomerToWorkoutGroup(ctx context.Context, args AssignC
 		CustomerUUID: args.CustomerUUID,
 		CustomerName: args.CustomerName,
 		GroupUUID:    args.GroupUUID,
+		TrainerUUID:  args.TrainerUUID,
 		Date:         details.Date,
 	})
 	if err != nil {

@@ -132,6 +132,7 @@ func TestCustomerService_ShouldScheduleWorkoutDayWithSuccess_Unit(t *testing.T) 
 		customerUUID = "b1828953-c76f-4c29-85c5-065072d321d2"
 		customerName = "John Doe"
 		groupUUID    = "2c828785-8cd2-4e89-b198-55dac43f8317"
+		trainerUUID  = "869b8f52-55a9-467c-8745-c60a67fb0f9b"
 	)
 
 	repository := new(mocks.Repository)
@@ -143,6 +144,7 @@ func TestCustomerService_ShouldScheduleWorkoutDayWithSuccess_Unit(t *testing.T) 
 	repository.EXPECT().UpsertCustomerWorkoutDay(ctx, mock.Anything).Run(func(ctx context.Context, workout domain.WorkoutDay) {
 		assertions.Equal(groupUUID, workout.GroupUUID())
 		assertions.Equal(customerUUID, workout.CustomerUUID())
+		assertions.Equal(trainerUUID, workout.TrainerUUID())
 		assertions.Equal(date, workout.Date())
 	}).Return(nil)
 
@@ -151,6 +153,7 @@ func TestCustomerService_ShouldScheduleWorkoutDayWithSuccess_Unit(t *testing.T) 
 		CustomerUUID: customerUUID,
 		CustomerName: customerName,
 		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
 		Date:         date,
 	})
 
@@ -166,6 +169,7 @@ func TestCustomerService_ShouldNotScheduleWorkoutDayWhenQueryCustomerWorkoutDayF
 	const (
 		customerUUID = "b1828953-c76f-4c29-85c5-065072d321d2"
 		groupUUID    = "2c828785-8cd2-4e89-b198-55dac43f8317"
+		trainerUUID  = "869b8f52-55a9-467c-8745-c60a67fb0f9b"
 	)
 
 	repository := new(mocks.Repository)
@@ -180,6 +184,7 @@ func TestCustomerService_ShouldNotScheduleWorkoutDayWhenQueryCustomerWorkoutDayF
 	err := SUT.ScheduleWorkoutDay(ctx, customer.ScheduleWorkoutDayArgs{
 		CustomerUUID: customerUUID,
 		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
 		Date:         date,
 	})
 
@@ -195,6 +200,7 @@ func TestCustomerService_ShouldScheduleWorkoutDayWhenUpsertCustomerWorkoutDayFai
 	const (
 		customerUUID = "b1828953-c76f-4c29-85c5-065072d321d2"
 		groupUUID    = "2c828785-8cd2-4e89-b198-55dac43f8317"
+		trainerUUID  = "869b8f52-55a9-467c-8745-c60a67fb0f9b"
 		customerName = "John Doe"
 	)
 
@@ -215,6 +221,7 @@ func TestCustomerService_ShouldScheduleWorkoutDayWhenUpsertCustomerWorkoutDayFai
 	err := SUT.ScheduleWorkoutDay(ctx, customer.ScheduleWorkoutDayArgs{
 		CustomerUUID: customerUUID,
 		CustomerName: customerName,
+		TrainerUUID:  trainerUUID,
 		GroupUUID:    groupUUID,
 		Date:         date,
 	})
@@ -296,9 +303,57 @@ func TestCustomerService_ShouldNotCancelWorkoutDaysWhenDeleteCustomersWorkoutDay
 	mock.AssertExpectationsForObjects(t, repository)
 }
 
+func TestService_ShouldCancelWorkoutDaysWithTrainer_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		trainerUUID = "2c828785-8cd2-4e89-b198-55dac43f8317"
+	)
+	ctx := context.Background()
+	repository := new(mocks.Repository)
+	SUT, _ := customer.NewCustomerService(repository)
+
+	repository.EXPECT().DeleteCustomersWorkoutDaysWithTrainer(ctx, trainerUUID).Return(nil)
+
+	// when:
+	err := SUT.CancelWorkoutDaysWithTrainer(ctx, trainerUUID)
+
+	// then:
+	assertions.Nil(err)
+	mock.AssertExpectationsForObjects(t, repository)
+
+}
+
+func TestService_ShouldNotCancelWorkoutDaysWithTrainerWhenDeleteCustomersWorkoutDaysWithTrainerFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		trainerUUID = "2c828785-8cd2-4e89-b198-55dac43f8317"
+	)
+	ctx := context.Background()
+	repository := new(mocks.Repository)
+	SUT, _ := customer.NewCustomerService(repository)
+
+	repositoryFailureErr := errors.New("repository failure")
+	repository.EXPECT().DeleteCustomersWorkoutDaysWithTrainer(ctx, trainerUUID).Return(repositoryFailureErr)
+
+	// when:
+	err := SUT.CancelWorkoutDaysWithTrainer(ctx, trainerUUID)
+
+	// then:
+	assertions.Equal(err, customer.ErrDeleteCustomersWorkoutDaysWithTrainer)
+	mock.AssertExpectationsForObjects(t, repository)
+
+}
+
 func newTestCustomerWorkoutDay(customerUUID, groupUUID string, date time.Time) domain.WorkoutDay {
-	const name = "John Doe"
-	workoutDay, err := domain.NewWorkoutDay(customerUUID, name, groupUUID, date)
+	const (
+		name        = "John Doe"
+		trainerUUID = "869b8f52-55a9-467c-8745-c60a67fb0f9b"
+	)
+	workoutDay, err := domain.NewWorkoutDay(customerUUID, name, groupUUID, trainerUUID, date)
 	if err != nil {
 		panic(err)
 	}

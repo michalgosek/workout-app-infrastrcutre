@@ -98,6 +98,44 @@ func (_c *CustomerService_CancelWorkoutDaysWithGroup_Call) Return(_a0 error) *Cu
 	return _c
 }
 
+// CancelWorkoutDaysWithTrainer provides a mock function with given fields: ctx, trainerUUID
+func (_m *CustomerService) CancelWorkoutDaysWithTrainer(ctx context.Context, trainerUUID string) error {
+	ret := _m.Called(ctx, trainerUUID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, string) error); ok {
+		r0 = rf(ctx, trainerUUID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// CustomerService_CancelWorkoutDaysWithTrainer_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'CancelWorkoutDaysWithTrainer'
+type CustomerService_CancelWorkoutDaysWithTrainer_Call struct {
+	*mock.Call
+}
+
+// CancelWorkoutDaysWithTrainer is a helper method to define mock.On call
+//  - ctx context.Context
+//  - trainerUUID string
+func (_e *CustomerService_Expecter) CancelWorkoutDaysWithTrainer(ctx interface{}, trainerUUID interface{}) *CustomerService_CancelWorkoutDaysWithTrainer_Call {
+	return &CustomerService_CancelWorkoutDaysWithTrainer_Call{Call: _e.mock.On("CancelWorkoutDaysWithTrainer", ctx, trainerUUID)}
+}
+
+func (_c *CustomerService_CancelWorkoutDaysWithTrainer_Call) Run(run func(ctx context.Context, trainerUUID string)) *CustomerService_CancelWorkoutDaysWithTrainer_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(string))
+	})
+	return _c
+}
+
+func (_c *CustomerService_CancelWorkoutDaysWithTrainer_Call) Return(_a0 error) *CustomerService_CancelWorkoutDaysWithTrainer_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
 // ScheduleWorkoutDay provides a mock function with given fields: ctx, args
 func (_m *CustomerService) ScheduleWorkoutDay(ctx context.Context, args customer.ScheduleWorkoutDayArgs) error {
 	ret := _m.Called(ctx, args)

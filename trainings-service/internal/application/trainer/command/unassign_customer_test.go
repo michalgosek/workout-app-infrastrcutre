@@ -30,7 +30,7 @@ func TestShouldUnassignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testin
 
 	trainerWorkoutWithoutCustomer := trainerWorkout
 	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.Date())
+	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
 
 	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkout, nil)
 	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
@@ -66,7 +66,7 @@ func TestShouldReturnErrorWhenGroupNotOwnedByTrainer_Unit(t *testing.T) {
 	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	secondTrainerWorkout := testutil.NewTrainerWorkoutGroup(secondTrainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, secondTrainerWorkout.UUID(), secondTrainerWorkout.Date())
+	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, secondTrainerWorkout.UUID(), secondTrainerWorkout.TrainerUUID(), secondTrainerWorkout.Date())
 
 	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
 	secondTrainerWorkout.AssignCustomer(details)
@@ -98,7 +98,7 @@ func TestShouldReturnErrorWhenQueryTrainerWorkoutGroupFailure_Unit(t *testing.T)
 	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.Date())
+	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
 
 	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, trainerWorkout.UUID()).Return(trainerWorkout, errors.New("error"))
 
@@ -128,7 +128,7 @@ func TestShouldReturnErrorWhenQueryCustomerWorkoutDayFailure_Unit(t *testing.T) 
 	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.Date())
+	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
 
 	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
 	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, errors.New("error"))
@@ -164,7 +164,7 @@ func TestShouldReturnErrorWhenCustomerWorkoutDayNotExist_Unit(t *testing.T) {
 	trainerWorkoutWithoutCustomer := trainerWorkout
 
 	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.Date())
+	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
 
 	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
 	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, nil)
@@ -195,7 +195,7 @@ func TestShouldReturnErrorWheDeleteCustomerWorkoutDayFailure_Unit(t *testing.T) 
 	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
 
 	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.Date())
+	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
 
 	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkout, nil)
 	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
@@ -232,7 +232,7 @@ func TestShouldReturnErrorWheUpsertWorkoutGroupFailure_Unit(t *testing.T) {
 	_ = trainerWorkout.AssignCustomer(details)
 	trainerWorkoutWithoutCustomer := trainerWorkout
 	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.Date())
+	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
 
 	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkout, nil)
 	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
