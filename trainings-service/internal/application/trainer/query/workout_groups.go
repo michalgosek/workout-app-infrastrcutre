@@ -2,23 +2,31 @@ package query
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/sirupsen/logrus"
 )
+
+//go:generate mockery --name=TrainerService --case underscore --with-expecter
+type TrainerService interface {
+	GetTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error)
+}
 
 type WorkoutGroupsDetails struct {
 	WorkoutGroups []WorkoutGroupDetails
 }
 
 type WorkoutGroupsHandler struct {
-	repository TrainerRepository
+	trainerService TrainerService
 }
 
 func (w *WorkoutGroupsHandler) Do(ctx context.Context, trainerUUID string) (WorkoutGroupsDetails, error) {
 	logger := logrus.WithFields(logrus.Fields{"Trainer-QRY": "GetWorkoutsHandler"})
-	groups, err := w.repository.QueryTrainerWorkoutGroups(ctx, trainerUUID)
+	groups, err := w.trainerService.GetTrainerWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		logger.Errorf("query workout groups for trainerUUID: %s failed: %v", trainerUUID, err)
-		return WorkoutGroupsDetails{}, ErrRepositoryFailure
+		logger.Errorf("query - get trainer workout group failure: %s", err)
+		return WorkoutGroupsDetails{}, fmt.Errorf("trainer service failure:%w", err)
 	}
 	out := WorkoutGroupsDetails{
 		WorkoutGroups: ConvertToWorkoutGroupsDetails(groups...),
@@ -26,11 +34,14 @@ func (w *WorkoutGroupsHandler) Do(ctx context.Context, trainerUUID string) (Work
 	return out, nil
 }
 
-func NewWorkoutGroupsHandler(t TrainerRepository) *WorkoutGroupsHandler {
+func NewWorkoutGroupsHandler(t TrainerService) (*WorkoutGroupsHandler, error) {
 	if t == nil {
-		panic("nil trainer repository")
+		return nil, ErrNilTrainerService
 	}
-	return &WorkoutGroupsHandler{
-		repository: t,
+	h := WorkoutGroupsHandler{
+		trainerService: t,
 	}
+	return &h, nil
 }
+
+var ErrNilTrainerService = errors.New("nil trainer service")

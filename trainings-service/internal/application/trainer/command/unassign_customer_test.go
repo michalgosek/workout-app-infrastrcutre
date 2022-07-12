@@ -3,250 +3,73 @@ package command_test
 import (
 	"context"
 	"errors"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command/mocks"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
-func TestShouldUnassignCustomerToSpecifiedWorkoutGroupWithSuccess_Unit(t *testing.T) {
+func TestUnassignCustomerHandler_ShouldUnassignCustomerFromWorkoutWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	const customerName = "Jerry Smith"
-	const trainerUUID = "090d4e58-3a5e-4eaf-8905-14b892d35678"
-
+	const (
+		customerUUID = "728e2050-f5a4-4297-b613-2e506ce1555f"
+		groupUUID    = "63fd9cb4-c4d1-4ebd-9335-465153f1aeb3"
+		trainerUUID  = "0862326f-768f-4746-a6d5-e7c8b903be47"
+	)
 	ctx := context.Background()
-	customerRepository := new(mocks.CustomerRepository)
-	trainerRepository := new(mocks.TrainerRepository)
+	service := mocks.NewTrainingsService(t)
+	SUT, _ := command.NewUnassignCustomerHandler(service)
 
-	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
-	trainerWorkout.AssignCustomer(details)
-
-	trainerWorkoutWithoutCustomer := trainerWorkout
-	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
-
-	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkout, nil)
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(nil)
-	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(nil)
-
-	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
+	service.EXPECT().CancelCustomerWorkout(ctx, trainings.CancelCustomerWorkoutArgs{
+		CustomerUUID: customerUUID,
+		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
+	}).Return(nil)
 
 	// when:
-	err := SUT.Do(ctx, command.UnassignCustomer{
-		CustomerUUID: customerWorkout.CustomerUUID(),
-		GroupUUID:    customerWorkout.GroupUUID(),
-		TrainerUUID:  trainerWorkout.TrainerUUID(),
+	err := SUT.Do(ctx, command.UnassignCustomerArgs{
+		CustomerUUID: customerUUID,
+		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
 	})
 
 	// then:
 	assertions.Nil(err)
-	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
+	mock.AssertExpectationsForObjects(t, service)
 }
 
-func TestShouldReturnErrorWhenGroupNotOwnedByTrainer_Unit(t *testing.T) {
+func TestUnassignCustomerHandler_ShouldNotUnassignCustomerFromWorkoutWhenTrainingsServiceFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
-	const customerName = "Jerry Smith"
-	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	const firstTrainerUUID = "090d4e58-3a5e-4eaf-8905-14b892d35678"
-	const secondTrainerUUID = "2877afdd-a15a-451c-8857-25075d626d2a"
-
+	const (
+		customerUUID = "728e2050-f5a4-4297-b613-2e506ce1555f"
+		groupUUID    = "63fd9cb4-c4d1-4ebd-9335-465153f1aeb3"
+		trainerUUID  = "0862326f-768f-4746-a6d5-e7c8b903be47"
+	)
 	ctx := context.Background()
-	trainerRepository := new(mocks.TrainerRepository)
-	customerRepository := new(mocks.CustomerRepository)
-	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
+	service := mocks.NewTrainingsService(t)
+	SUT, _ := command.NewUnassignCustomerHandler(service)
 
-	secondTrainerWorkout := testutil.NewTrainerWorkoutGroup(secondTrainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, secondTrainerWorkout.UUID(), secondTrainerWorkout.TrainerUUID(), secondTrainerWorkout.Date())
-
-	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
-	secondTrainerWorkout.AssignCustomer(details)
-
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, firstTrainerUUID, secondTrainerWorkout.UUID()).Return(secondTrainerWorkout, nil)
+	serviceFailureErr := errors.New("service failure err")
+	service.EXPECT().CancelCustomerWorkout(ctx, trainings.CancelCustomerWorkoutArgs{
+		CustomerUUID: customerUUID,
+		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
+	}).Return(serviceFailureErr)
 
 	// when:
-	err := SUT.Do(ctx, command.UnassignCustomer{
-		CustomerUUID: customerWorkout.CustomerUUID(),
-		GroupUUID:    customerWorkout.GroupUUID(),
-		TrainerUUID:  firstTrainerUUID,
+	err := SUT.Do(ctx, command.UnassignCustomerArgs{
+		CustomerUUID: customerUUID,
+		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
 	})
 
 	// then:
-	assertions.Equal(err, command.ErrWorkoutGroupNotOwner)
-	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
-}
-
-func TestShouldReturnErrorWhenQueryTrainerWorkoutGroupFailure_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	const trainerUUID = "090d4e58-3a5e-4eaf-8905-14b892d35678"
-	const customerName = "John Doe"
-	ctx := context.Background()
-	trainerRepository := new(mocks.TrainerRepository)
-	customerRepository := new(mocks.CustomerRepository)
-	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
-
-	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
-
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, trainerWorkout.UUID()).Return(trainerWorkout, errors.New("error"))
-
-	// when:
-	err := SUT.Do(ctx, command.UnassignCustomer{
-		CustomerUUID: customerWorkout.CustomerUUID(),
-		GroupUUID:    customerWorkout.GroupUUID(),
-		TrainerUUID:  trainerWorkout.TrainerUUID(),
-	})
-
-	// then:
-	assertions.Equal(err, command.ErrRepositoryFailure)
-	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
-}
-
-func TestShouldReturnErrorWhenQueryCustomerWorkoutDayFailure_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	const trainerUUID = "090d4e58-3a5e-4eaf-8905-14b892d35678"
-	const customerName = "John Doe"
-
-	ctx := context.Background()
-	trainerRepository := new(mocks.TrainerRepository)
-	customerRepository := new(mocks.CustomerRepository)
-	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
-
-	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
-
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, errors.New("error"))
-
-	// when:
-	err := SUT.Do(ctx, command.UnassignCustomer{
-		CustomerUUID: customerWorkout.CustomerUUID(),
-		GroupUUID:    customerWorkout.GroupUUID(),
-		TrainerUUID:  trainerWorkout.TrainerUUID(),
-	})
-
-	// then:
-	assertions.Equal(err, command.ErrRepositoryFailure)
-	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
-}
-
-func TestShouldReturnErrorWhenCustomerWorkoutDayNotExist_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	const customerName = "Jerry Smith"
-	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	const trainerUUID = "090d4e58-3a5e-4eaf-8905-14b892d35678"
-
-	ctx := context.Background()
-	trainerRepository := new(mocks.TrainerRepository)
-	customerRepository := new(mocks.CustomerRepository)
-	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
-
-	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
-	trainerWorkout.AssignCustomer(details)
-	trainerWorkoutWithoutCustomer := trainerWorkout
-
-	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
-
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customer.WorkoutDay{}, nil)
-
-	// when:
-	err := SUT.Do(ctx, command.UnassignCustomer{
-		CustomerUUID: customerWorkout.CustomerUUID(),
-		GroupUUID:    customerWorkout.GroupUUID(),
-		TrainerUUID:  trainerWorkout.TrainerUUID(),
-	})
-
-	// then:
-	assertions.Equal(err, command.ErrResourceNotFound)
-	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
-}
-
-func TestShouldReturnErrorWheDeleteCustomerWorkoutDayFailure_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	const trainerUUID = "090d4e58-3a5e-4eaf-8905-14b892d35678"
-	const customerName = "John Doe"
-
-	ctx := context.Background()
-	trainerRepository := new(mocks.TrainerRepository)
-	customerRepository := new(mocks.CustomerRepository)
-	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
-
-	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
-
-	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkout, nil)
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(errors.New("error"))
-
-	// when:
-	err := SUT.Do(ctx, command.UnassignCustomer{
-		CustomerUUID: customerWorkout.CustomerUUID(),
-		GroupUUID:    customerWorkout.GroupUUID(),
-		TrainerUUID:  trainerWorkout.TrainerUUID(),
-	})
-
-	// then:
-	assertions.Equal(err, command.ErrRepositoryFailure)
-	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
-}
-
-func TestShouldReturnErrorWheUpsertWorkoutGroupFailure_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	const customerName = "Jerry Smith"
-	const customerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	const trainerUUID = "090d4e58-3a5e-4eaf-8905-14b892d35678"
-
-	ctx := context.Background()
-	trainerRepository := new(mocks.TrainerRepository)
-	customerRepository := new(mocks.CustomerRepository)
-	SUT := command.NewUnassignCustomerHandler(customerRepository, trainerRepository)
-
-	trainerWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	details, _ := customer.NewCustomerDetails(customerUUID, customerName)
-
-	_ = trainerWorkout.AssignCustomer(details)
-	trainerWorkoutWithoutCustomer := trainerWorkout
-	trainerWorkoutWithoutCustomer.UnregisterCustomer(customerUUID)
-	customerWorkout, _ := customer.NewWorkoutDay(customerUUID, customerName, trainerWorkout.UUID(), trainerWorkout.TrainerUUID(), trainerWorkout.Date())
-
-	customerRepository.EXPECT().QueryCustomerWorkoutDay(ctx, customerUUID, trainerWorkout.UUID()).Return(customerWorkout, nil)
-	trainerRepository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerWorkout.TrainerUUID(), trainerWorkout.UUID()).Return(trainerWorkout, nil)
-	customerRepository.EXPECT().DeleteCustomerWorkoutDay(ctx, customerUUID, customerWorkout.UUID()).Return(nil)
-	trainerRepository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutWithoutCustomer).Return(errors.New("error"))
-
-	// when:
-	err := SUT.Do(ctx, command.UnassignCustomer{
-		CustomerUUID: customerWorkout.CustomerUUID(),
-		GroupUUID:    customerWorkout.GroupUUID(),
-		TrainerUUID:  trainerWorkout.TrainerUUID(),
-	})
-
-	// then:
-	assertions.Equal(err, command.ErrRepositoryFailure)
-	mock.AssertExpectationsForObjects(t, customerRepository, trainerRepository)
+	assertions.ErrorIs(err, serviceFailureErr)
+	mock.AssertExpectationsForObjects(t, service)
 }

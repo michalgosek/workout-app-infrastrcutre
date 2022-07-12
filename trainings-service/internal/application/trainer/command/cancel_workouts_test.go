@@ -19,7 +19,7 @@ func TestShouldCancelTrainerWorkoutsGroupWithSuccess_Unit(t *testing.T) {
 
 	ctx := context.Background()
 	group := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	service := new(mocks.TrainingsService)
+	service := mocks.NewTrainingsService(t)
 
 	service.EXPECT().CancelTrainerWorkoutGroups(ctx, trainerUUID).Return(nil)
 
@@ -40,7 +40,7 @@ func TestShouldNotCancelTrainerWorkoutGroupWhenRepositoryFailure_Unit(t *testing
 	const trainerUUID = "1b83c88b-4aac-4719-ac23-03a43627cb3e"
 
 	ctx := context.Background()
-	service := new(mocks.TrainingsService)
+	service := mocks.NewTrainingsService(t)
 	repositoryFailureErr := errors.New("repository failure")
 	service.EXPECT().CancelTrainerWorkoutGroups(ctx, trainerUUID).Return(repositoryFailureErr)
 

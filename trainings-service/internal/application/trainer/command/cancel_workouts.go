@@ -2,7 +2,6 @@ package command
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
 )
@@ -30,5 +29,3 @@ func NewCancelWorkoutsHandler(t TrainingsService) (*CancelWorkoutsHandler, error
 	}
 	return &h, nil
 }
-
-var ErrNilTrainerService = errors.New("nil trainer service")

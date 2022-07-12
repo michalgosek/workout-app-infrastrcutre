@@ -2,13 +2,6 @@ package main
 
 import (
 	"fmt"
-	cservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/customer"
-	tservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainer"
-	trservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
-
-	"log"
-	"time"
-
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
@@ -16,9 +9,14 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	customcmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
+	cservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/customer"
+	tservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainer"
+	trservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 	trainercmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
 	trainerqry "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports/http"
+	"log"
+	"time"
 )
 
 func main() {
@@ -40,11 +38,6 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("creating customer repository failed: %v", err)
 	}
-	customerService, err := cservice.NewCustomerService(customerRepository)
-	if err != nil {
-		return fmt.Errorf("creating customer service failed: %v", err)
-	}
-
 	trainerRepository, err := trainer.NewTrainerRepository(trainer.RepositoryConfig{
 		Addr:              "mongodb://localhost:27017",
 		Database:          "trainings_service_test",
@@ -57,6 +50,12 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("creating trainer repository failed: %v", err)
 	}
+
+	// services:
+	customerService, err := cservice.NewCustomerService(customerRepository)
+	if err != nil {
+		return fmt.Errorf("creating customer service failed: %v", err)
+	}
 	trainerService, err := tservice.NewTrainerService(trainerRepository)
 	if err != nil {
 		return fmt.Errorf("creating trainer service failed: %v", err)
@@ -66,31 +65,46 @@ func execute() error {
 		return fmt.Errorf("creating trainings service failed: %v", err)
 	}
 
+	// customer
 	customerScheduleWorkoutHandler, err := customcmd.NewScheduleWorkoutHandler(trainingsService)
 	if err != nil {
 		return fmt.Errorf("creating customer schedule workout handler failed: %v", err)
 	}
+
+	// trainer
+	scheduleTrainerWorkoutHandler, err := trainercmd.NewScheduleWorkoutHandler(trainerService)
+	if err != nil {
+		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
+	}
+	getTrainerWorkoutGroupsHandler, err := trainerqry.NewWorkoutGroupsHandler(trainerService)
+	if err != nil {
+		return fmt.Errorf("creating get trainer workout groups handler failed: %v", err)
+	}
+
 	deleteTrainerWorkoutHandler, err := trainercmd.NewCancelWorkoutHandler(trainingsService)
 	if err != nil {
 		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
 	}
-
 	cancelTrainerWorkoutsHandler, err := trainercmd.NewCancelWorkoutsHandler(trainingsService)
 	if err != nil {
 		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
 	}
+	unassignCustomerWorkoutHandler, err := trainercmd.NewUnassignCustomerHandler(trainingsService)
+	if err != nil {
+		return fmt.Errorf("creating unassign customer workout workout handler failed: %v", err)
+	}
 
 	app := application.Application{
 		Commands: application.Commands{
-			CreateTrainerWorkout:    trainercmd.NewScheduleWorkoutHandler(trainerRepository),
+			CreateTrainerWorkout:    scheduleTrainerWorkoutHandler,
 			DeleteTrainerWorkout:    deleteTrainerWorkoutHandler,
 			DeleteTrainerWorkouts:   cancelTrainerWorkoutsHandler,
-			UnassignCustomer:        trainercmd.NewUnassignCustomerHandler(customerRepository, trainerRepository),
+			UnassignCustomer:        unassignCustomerWorkoutHandler,
 			CustomerScheduleWorkout: customerScheduleWorkoutHandler,
 		},
 		Queries: application.Queries{
 			GetTrainerWorkout:  trainerqry.NewWorkoutGroupHandler(trainerRepository),
-			GetTrainerWorkouts: trainerqry.NewWorkoutGroupsHandler(trainerRepository),
+			GetTrainerWorkouts: getTrainerWorkoutGroupsHandler,
 		},
 	}
 	HTTP := http.NewTrainerWorkoutGroupsHTTP(&app, "02/01/2006 15:04")

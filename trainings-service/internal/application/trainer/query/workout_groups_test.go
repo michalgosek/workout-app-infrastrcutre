@@ -3,82 +3,69 @@ package query_test
 import (
 	"context"
 	"errors"
-	"testing"
-
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query/mocks"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"testing"
+	"time"
 )
 
-func TestShouldGetEmptyTrainerWorkoutGroupsWhenNonOfGroupsDoesNotExist_Unit(t *testing.T) {
+func TestWorkoutGroupsHandler_ShouldReturnTrainerWorkoutGroupDetailsWithSuccess_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
-	// given:
-	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
+	// given
+	const trainerUUID = "e41bc13b-9d4b-42ec-ab36-3bf6688b03fb"
 	ctx := context.Background()
+	service := mocks.NewTrainerService(t)
+	SUT, _ := query.NewWorkoutGroupsHandler(service)
 
-	repository := new(mocks.TrainerRepository)
-	var groups []trainer.WorkoutGroup
-	repository.EXPECT().QueryTrainerWorkoutGroups(ctx, trainerUUID).Return(groups, nil)
-
-	SUT := query.NewWorkoutGroupsHandler(repository)
-
-	// when:
-	actualSchedule, err := SUT.Do(ctx, trainerUUID)
-
-	// then:
-	assertions.Nil(err)
-	assertions.Empty(groups, actualSchedule)
-	repository.AssertExpectations(t)
-}
-
-func TestShouldNotGetTrainerWorkoutGroupsWhenRepositoryFailure_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	ctx := context.Background()
-	const trainerUUID = "5a6bca90-a6d8-43d7-b1f8-069f9d5e846a"
-
-	expectedError := errors.New("repository failure")
-	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroups(ctx, trainerUUID).Return(nil, expectedError)
-	SUT := query.NewWorkoutGroupsHandler(repository)
-
-	// when:
-	_, err := SUT.Do(ctx, trainerUUID)
-
-	// then:
-	assertions.Equal(err, query.ErrRepositoryFailure)
-	repository.AssertExpectations(t)
-
-}
-
-func TestShouldGetAllTrainerWorkoutGroupsWithSuccess_Unit(t *testing.T) {
-	assertions := assert.New(t)
-
-	// given:
-	const trainerUUID = "094bb50a-7da3-461f-86f6-46d16c055e1e"
-	ctx := context.Background()
-
-	firstWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-	secondWorkout := testutil.NewTrainerWorkoutGroup(trainerUUID)
-
-	groups := []trainer.WorkoutGroup{firstWorkout, secondWorkout}
-	expectedWorkouts := query.WorkoutGroupsDetails{
+	groups := []trainer.WorkoutGroup{
+		newTestTrainerWorkoutGroup(trainerUUID),
+		newTestTrainerWorkoutGroup(trainerUUID),
+	}
+	expectedGroupDetails := query.WorkoutGroupsDetails{
 		WorkoutGroups: query.ConvertToWorkoutGroupsDetails(groups...),
 	}
 
-	repository := new(mocks.TrainerRepository)
-	repository.EXPECT().QueryTrainerWorkoutGroups(ctx, trainerUUID).Return(groups, nil)
-	SUT := query.NewWorkoutGroupsHandler(repository)
+	service.EXPECT().GetTrainerWorkoutGroups(ctx, trainerUUID).Return(groups, nil)
 
 	// when:
 	actualGroups, err := SUT.Do(ctx, trainerUUID)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(expectedWorkouts, actualGroups)
-	repository.AssertExpectations(t)
+	assertions.Equal(expectedGroupDetails, actualGroups)
+	mock.AssertExpectationsForObjects(t, service)
+}
+
+func TestWorkoutGroupsHandler_ShouldReturnNotReturnTrainerWorkoutGroupDetailssWhenTrainerServiceFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given
+	const trainerUUID = "e41bc13b-9d4b-42ec-ab36-3bf6688b03fb"
+	ctx := context.Background()
+	service := mocks.NewTrainerService(t)
+	SUT, _ := query.NewWorkoutGroupsHandler(service)
+
+	trainerServiceFailureErr := errors.New("trainer service failure")
+	service.EXPECT().GetTrainerWorkoutGroups(ctx, trainerUUID).Return(nil, trainerServiceFailureErr)
+
+	// when:
+	actualGroups, err := SUT.Do(ctx, trainerUUID)
+
+	// then:
+	assertions.ErrorIs(err, trainerServiceFailureErr)
+	assertions.Empty(actualGroups)
+	mock.AssertExpectationsForObjects(t, service)
+}
+
+func newTestTrainerWorkoutGroup(trainerUUID string) trainer.WorkoutGroup {
+	schedule := time.Now().AddDate(0, 0, 1)
+	group, err := trainer.NewWorkoutGroup(trainerUUID, "dummy_trainer", "dummy_group", "dummy_desc", schedule)
+	if err != nil {
+		panic(err)
+	}
+	return group
 }

@@ -45,7 +45,7 @@ func (h *TrainerWorkoutGroups) CreateTrainerWorkoutGroup() http.HandlerFunc {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		err = h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command.ScheduleWorkout{
+		err = h.app.Commands.CreateTrainerWorkout.Do(r.Context(), command.ScheduleWorkoutArgs{
 			TrainerUUID: payload.TrainerUUID,
 			GroupName:   payload.GroupName,
 			GroupDesc:   payload.GroupDesc,
@@ -78,21 +78,13 @@ func (h *TrainerWorkoutGroups) UnassignCustomer() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing customerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		err := h.app.Commands.UnassignCustomer.Do(r.Context(), command.UnassignCustomer{
+		err := h.app.Commands.UnassignCustomer.Do(r.Context(), command.UnassignCustomerArgs{
 			CustomerUUID: customerUUID,
 			GroupUUID:    groupUUID,
 			TrainerUUID:  trainerUUID,
 		})
-		if errors.Is(err, command.ErrResourceNotFound) {
-			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
-			return
-		}
-		if errors.Is(err, command.ErrWorkoutGroupNotOwner) {
-			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
-			return
-		}
-		if errors.Is(err, command.ErrRepositoryFailure) {
-			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -159,13 +151,6 @@ func (h *TrainerWorkoutGroups) DeleteWorkoutGroup() http.HandlerFunc {
 			GroupUUID:   groupUUID,
 			TrainerUUID: trainerUUID,
 		})
-		if errors.Is(err, command.ErrWorkoutGroupNotOwner) {
-			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
-			return
-		}
-		if errors.Is(err, command.ErrRepositoryFailure) {
-			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
-		}
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
@@ -182,9 +167,6 @@ func (h *TrainerWorkoutGroups) DeleteWorkoutGroups() http.HandlerFunc {
 			return
 		}
 		err := h.app.Commands.DeleteTrainerWorkouts.Do(r.Context(), trainerUUID)
-		if errors.Is(err, command.ErrRepositoryFailure) {
-			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
-		}
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return

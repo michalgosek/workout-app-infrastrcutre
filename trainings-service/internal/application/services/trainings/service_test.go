@@ -22,8 +22,8 @@ func TestService_ShouldCancelCustomerWorkoutDayWithSuccess_Unit(t *testing.T) {
 		groupUUID    = "438a1155-0145-4087-9ff8-16ebae0877d3"
 		trainerUUID  = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
 	)
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	ctx := context.Background()
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
@@ -59,8 +59,8 @@ func TestService_ShouldNotCancelCustomerWorkoutDayWhenCustomerServiceFailure_Uni
 		groupUUID    = "438a1155-0145-4087-9ff8-16ebae0877d3"
 		trainerUUID  = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
 	)
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	ctx := context.Background()
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
@@ -92,8 +92,8 @@ func TestService_ShouldNotCancelCustomerWorkoutDayWhenTrainerServiceFailure_Unit
 		trainerUUID  = "c7ea5361-faec-4d69-9eff-86c3e10384a9"
 	)
 
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	ctx := context.Background()
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
@@ -133,8 +133,8 @@ func TestService_ShouldAssignCustomerToWorkoutGroupWithSuccess_Unit(t *testing.T
 	)
 
 	ctx := context.Background()
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
 	repositoryFailureErr := errors.New("repository failure")
@@ -170,8 +170,8 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenTrainerServiceFailure_
 	)
 
 	ctx := context.Background()
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
 	repositoryFailureErr := errors.New("repository failure")
@@ -207,8 +207,8 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenCustomerServiceFailure
 	)
 
 	ctx := context.Background()
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
 	assignedWorkoutDetails := trainer.AssignedCustomerWorkoutGroupDetails{
@@ -256,8 +256,8 @@ func TestService_ShouldCancelTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
 	)
 
 	ctx := context.Background()
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
 	trainerService.EXPECT().CancelWorkoutGroup(ctx, trainer.CancelWorkoutGroupArgs{
@@ -288,8 +288,8 @@ func TestService_ShouldNotCancelTrainerWorkoutGroupWhenTrainerServiceFailure_Uni
 	)
 
 	ctx := context.Background()
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
 	repositoryFailure := errors.New("repository failure")
@@ -319,8 +319,8 @@ func TestService_ShouldNotCancelTrainerWorkoutGroupWhenCustomerServiceFailure_Un
 	)
 
 	ctx := context.Background()
-	customerService := new(mocks.CustomerService)
-	trainerService := new(mocks.TrainerService)
+	customerService := mocks.NewCustomerService(t)
+	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
 	trainerService.EXPECT().CancelWorkoutGroup(ctx, trainer.CancelWorkoutGroupArgs{

@@ -8,13 +8,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type CancelWorkoutHandler struct {
-	trainingsService TrainingsService
-}
-
 type CancelWorkoutArgs struct {
 	GroupUUID   string
 	TrainerUUID string
+}
+
+type CancelWorkoutHandler struct {
+	trainingsService TrainingsService
 }
 
 func (c *CancelWorkoutHandler) Do(ctx context.Context, w CancelWorkoutArgs) error {

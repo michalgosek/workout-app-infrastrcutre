@@ -92,6 +92,7 @@ func (s *Service) CancelCustomerWorkout(ctx context.Context, args CancelCustomer
 	return nil
 }
 
+// fixme! bug in assiging duplicated customer
 func (s *Service) AssignCustomerToWorkoutGroup(ctx context.Context, args AssignCustomerToWorkoutArgs) error {
 	details, err := s.trainerService.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
 		TrainerUUID:  args.TrainerUUID,

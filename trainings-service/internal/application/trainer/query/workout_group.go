@@ -2,7 +2,6 @@ package query
 
 import (
 	"context"
-
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,6 +26,7 @@ func (t *WorkoutGroupHandler) Do(ctx context.Context, trainerUUID, groupUUID str
 		GroupDesc:   group.Description(),
 		GroupName:   group.Name(),
 		Date:        group.Date().String(),
+		Customers:   convertToCustomersData(group.CustomerDetails()),
 	}
 	return out, nil
 }

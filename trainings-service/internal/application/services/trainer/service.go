@@ -33,10 +33,23 @@ type AssignedCustomerWorkoutGroupDetails struct {
 	Date        time.Time
 }
 
+type CancelWorkoutGroupArgs struct {
+	TrainerUUID string
+	GroupUUID   string
+}
+
 type WorkoutGroupWithCustomerArgs struct {
 	TrainerUUID  string
 	GroupUUID    string
 	CustomerUUID string
+}
+
+type CreateWorkoutGroupArgs struct {
+	TrainerUUID string
+	TrainerName string
+	GroupName   string
+	GroupDesc   string
+	Date        time.Time
 }
 
 type Commands interface {
@@ -47,7 +60,9 @@ type Commands interface {
 
 type Queries interface {
 	QueryTrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (trainer.WorkoutGroup, error)
+	QueryTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error)
 	QueryCustomerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID, customerUUID string) (trainer.WorkoutGroup, error)
+	QueryTrainerWorkoutGroupWithDate(ctx context.Context, trainerUUID string, date time.Time) (trainer.WorkoutGroup, error)
 }
 
 //go:generate mockery --name=Repository --case underscore --with-expecter
@@ -60,9 +75,31 @@ type Service struct {
 	repository Repository
 }
 
-type CancelWorkoutGroupArgs struct {
-	TrainerUUID string
-	GroupUUID   string
+func (s *Service) GetTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
+	groups, err := s.repository.QueryTrainerWorkoutGroups(ctx, trainerUUID)
+	if err != nil {
+		return nil, ErrErrQueryTrainerWorkoutGroups
+	}
+	return groups, nil
+}
+
+func (s *Service) CreateWorkoutGroup(ctx context.Context, args CreateWorkoutGroupArgs) error {
+	duplicate, err := s.repository.QueryTrainerWorkoutGroupWithDate(ctx, args.TrainerUUID, args.Date)
+	if err != nil {
+		return ErrQueryTrainerWorkoutGroupWithDateWithDate
+	}
+	if duplicate.UUID() != "" {
+		return ErrResourceDuplicated
+	}
+	group, err := trainer.NewWorkoutGroup(args.TrainerUUID, args.TrainerName, args.GroupName, args.GroupDesc, args.Date)
+	if err != nil {
+		return err
+	}
+	err = s.repository.UpsertTrainerWorkoutGroup(ctx, group)
+	if err != nil {
+		return ErrUpsertTrainerWorkoutGroup
+	}
+	return nil
 }
 
 func (s *Service) CancelWorkoutGroup(ctx context.Context, args CancelWorkoutGroupArgs) error {
@@ -90,13 +127,14 @@ func (s *Service) CancelWorkoutGroups(ctx context.Context, trainerUUID string) e
 }
 
 func (s *Service) AssignCustomerToWorkoutGroup(ctx context.Context, args AssignCustomerToWorkoutGroupArgs) (AssignedCustomerWorkoutGroupDetails, error) {
-	group, err := s.repository.QueryTrainerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID)
+	group, err := s.repository.QueryTrainerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID) // 	QueryTrainerWorkoutGroupWithCustomer()
 	if err != nil {
 		return AssignedCustomerWorkoutGroupDetails{}, ErrQueryTrainerWorkoutGroup
 	}
 	if group.UUID() == "" {
 		return AssignedCustomerWorkoutGroupDetails{}, ErrResourceNotFound
 	}
+
 	customerDetails, err := customer.NewCustomerDetails(args.CustomerUUID, args.CustomerName)
 	if err != nil {
 		return AssignedCustomerWorkoutGroupDetails{}, err
@@ -130,7 +168,7 @@ func (s *Service) CancelCustomerWorkoutParticipation(ctx context.Context, args C
 	return nil
 }
 
-func (s *Service) GetCustomerWorkoutGroup(ctx context.Context, args WorkoutGroupWithCustomerArgs) (trainer.WorkoutGroup, error) {
+func (s *Service) GetWorkoutGroupWithCustomer(ctx context.Context, args WorkoutGroupWithCustomerArgs) (trainer.WorkoutGroup, error) {
 	group, err := s.repository.QueryCustomerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID, args.CustomerUUID)
 	if err != nil {
 		return trainer.WorkoutGroup{}, ErrQueryTrainerWorkoutGroupWithCustomer
@@ -156,9 +194,11 @@ var (
 )
 
 var (
-	ErrDeleteTrainerWorkoutGroup            = errors.New("cmd delete trainer workout group failure")
-	ErrDeleteTrainerWorkoutGroups           = errors.New("cmd delete trainer workout groups failure")
-	ErrUpsertTrainerWorkoutGroup            = errors.New("cmd upsert trainer workout group failure")
-	ErrQueryTrainerWorkoutGroup             = errors.New("query trainer group failure")
-	ErrQueryTrainerWorkoutGroupWithCustomer = errors.New("query trainer workout group with customer failure")
+	ErrDeleteTrainerWorkoutGroup                = errors.New("cmd delete trainer workout group failure")
+	ErrDeleteTrainerWorkoutGroups               = errors.New("cmd delete trainer workout groups failure")
+	ErrUpsertTrainerWorkoutGroup                = errors.New("cmd upsert trainer workout group failure")
+	ErrQueryTrainerWorkoutGroup                 = errors.New("query trainer group failure")
+	ErrErrQueryTrainerWorkoutGroups             = errors.New("query trainer workout groups failure")
+	ErrQueryTrainerWorkoutGroupWithCustomer     = errors.New("query trainer workout group with customer failure")
+	ErrQueryTrainerWorkoutGroupWithDateWithDate = errors.New("query trainer workout group with date failure")
 )

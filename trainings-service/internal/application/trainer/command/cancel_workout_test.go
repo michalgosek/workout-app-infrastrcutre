@@ -20,7 +20,7 @@ func TestCancelWorkoutHandler_ShouldCancelTrainerWorkoutGroupWithSuccess_Unit(t 
 		trainerUUID = "b8c77ceb-158f-497e-8d2f-6d1764c7a607"
 	)
 	ctx := context.Background()
-	service := new(mocks.TrainingsService)
+	service := mocks.NewTrainingsService(t)
 	SUT, _ := command.NewCancelWorkoutHandler(service)
 
 	service.EXPECT().CancelTrainerWorkoutGroup(ctx, trainings.CancelTrainerWorkoutGroupArgs{
@@ -48,7 +48,7 @@ func TestCancelWorkoutHandler_ShouldNotCancelTrainerWorkoutGroupWhenTrainingsSer
 		trainerUUID = "b8c77ceb-158f-497e-8d2f-6d1764c7a607"
 	)
 	ctx := context.Background()
-	service := new(mocks.TrainingsService)
+	service := mocks.NewTrainingsService(t)
 	SUT, _ := command.NewCancelWorkoutHandler(service)
 
 	serviceFailureErr := errors.New("service failure")
