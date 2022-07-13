@@ -2,22 +2,25 @@ package query
 
 import (
 	"context"
+	"fmt"
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutGroupHandler struct {
-	repository TrainerRepository
+type WorkoutGroupArgs struct {
+	TrainerUUID string
+	GroupUUID   string
 }
 
-func (t *WorkoutGroupHandler) Do(ctx context.Context, trainerUUID, groupUUID string) (WorkoutGroupDetails, error) {
-	logger := logrus.WithFields(logrus.Fields{"Trainer-QRY": "WorkoutGroupHandler"})
-	group, err := t.repository.QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
+type WorkoutGroupHandler struct {
+	trainerService TrainerService
+}
+
+func (t *WorkoutGroupHandler) Do(ctx context.Context, args WorkoutGroupArgs) (WorkoutGroupDetails, error) {
+	logger := logrus.WithFields(logrus.Fields{"trainer-query": "WorkoutGroupHandler"})
+	group, err := t.trainerService.GetTrainerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID)
 	if err != nil {
-		logger.Errorf("query workout groupUUID: %s for trainerUUID: %s failed, reason: %v", groupUUID, trainerUUID, err)
-		return WorkoutGroupDetails{}, ErrRepositoryFailure
-	}
-	if group.UUID() == "" {
-		return WorkoutGroupDetails{}, nil
+		logger.Errorf("query - get trainer workout group failure: %s", err)
+		return WorkoutGroupDetails{}, fmt.Errorf("trainer service failure:%w", err)
 	}
 	out := WorkoutGroupDetails{
 		TrainerUUID: group.TrainerUUID(),
@@ -31,11 +34,12 @@ func (t *WorkoutGroupHandler) Do(ctx context.Context, trainerUUID, groupUUID str
 	return out, nil
 }
 
-func NewWorkoutGroupHandler(t TrainerRepository) *WorkoutGroupHandler {
+func NewWorkoutGroupHandler(t TrainerService) (*WorkoutGroupHandler, error) {
 	if t == nil {
-		panic("nil trainer repository")
+		return nil, ErrNilTrainerService
 	}
-	return &WorkoutGroupHandler{
-		repository: t,
+	h := WorkoutGroupHandler{
+		trainerService: t,
 	}
+	return &h, nil
 }

@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
@@ -103,14 +102,10 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.GetTrainerWorkout.Do(r.Context(), trainerUUID, groupUUID)
-		if errors.Is(err, query.ErrWorkoutGroupNotOwner) {
-			http.Error(w, ResourceNotFoundMsg, http.StatusNotFound)
-			return
-		}
-		if errors.Is(err, query.ErrRepositoryFailure) {
-			http.Error(w, ServiceUnavailable, http.StatusServiceUnavailable)
-		}
+		res, err := h.app.Queries.GetTrainerWorkout.Do(r.Context(), query.WorkoutGroupArgs{
+			TrainerUUID: trainerUUID,
+			GroupUUID:   groupUUID,
+		})
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return

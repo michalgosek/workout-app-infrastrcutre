@@ -78,9 +78,17 @@ type Service struct {
 func (s *Service) GetTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error) {
 	groups, err := s.repository.QueryTrainerWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
-		return nil, ErrErrQueryTrainerWorkoutGroups
+		return nil, ErrQueryTrainerWorkoutGroups
 	}
 	return groups, nil
+}
+
+func (s *Service) GetTrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (trainer.WorkoutGroup, error) {
+	group, err := s.repository.QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
+	if err != nil {
+		return trainer.WorkoutGroup{}, ErrQueryTrainerWorkoutGroup
+	}
+	return group, nil
 }
 
 func (s *Service) CreateWorkoutGroup(ctx context.Context, args CreateWorkoutGroupArgs) error {
@@ -126,31 +134,29 @@ func (s *Service) CancelWorkoutGroups(ctx context.Context, trainerUUID string) e
 	return nil
 }
 
-func (s *Service) AssignCustomerToWorkoutGroup(ctx context.Context, args AssignCustomerToWorkoutGroupArgs) (AssignedCustomerWorkoutGroupDetails, error) {
-	group, err := s.repository.QueryTrainerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID) // 	QueryTrainerWorkoutGroupWithCustomer()
+func (s *Service) AssignCustomerToWorkoutGroup(ctx context.Context, args AssignCustomerToWorkoutGroupArgs) (trainer.WorkoutGroup, error) {
+	group, err := s.repository.QueryCustomerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID, args.CustomerUUID)
 	if err != nil {
-		return AssignedCustomerWorkoutGroupDetails{}, ErrQueryTrainerWorkoutGroup
+		return trainer.WorkoutGroup{}, ErrQueryTrainerWorkoutGroupWithCustomer
 	}
-	if group.UUID() == "" {
-		return AssignedCustomerWorkoutGroupDetails{}, ErrResourceNotFound
+	if group.UUID() != "" {
+		return trainer.WorkoutGroup{}, ErrResourceDuplicated
+	}
+	group, err = s.repository.QueryTrainerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID)
+	if err != nil {
+		return trainer.WorkoutGroup{}, ErrQueryTrainerWorkoutGroup
 	}
 
 	customerDetails, err := customer.NewCustomerDetails(args.CustomerUUID, args.CustomerName)
 	if err != nil {
-		return AssignedCustomerWorkoutGroupDetails{}, err
+		return trainer.WorkoutGroup{}, err
 	}
 	group.AssignCustomer(customerDetails)
 	err = s.repository.UpsertTrainerWorkoutGroup(ctx, group)
 	if err != nil {
-		return AssignedCustomerWorkoutGroupDetails{}, ErrUpsertTrainerWorkoutGroup
+		return trainer.WorkoutGroup{}, ErrUpsertTrainerWorkoutGroup
 	}
-	workoutGroupDetails := AssignedCustomerWorkoutGroupDetails{
-		Date:        group.Date(),
-		UUID:        group.UUID(),
-		TrainerUUID: group.TrainerUUID(),
-		Name:        group.Name(),
-	}
-	return workoutGroupDetails, nil
+	return group, nil
 }
 
 func (s *Service) CancelCustomerWorkoutParticipation(ctx context.Context, args CancelCustomerWorkoutParticipationArgs) error {
@@ -194,11 +200,14 @@ var (
 )
 
 var (
-	ErrDeleteTrainerWorkoutGroup                = errors.New("cmd delete trainer workout group failure")
-	ErrDeleteTrainerWorkoutGroups               = errors.New("cmd delete trainer workout groups failure")
-	ErrUpsertTrainerWorkoutGroup                = errors.New("cmd upsert trainer workout group failure")
 	ErrQueryTrainerWorkoutGroup                 = errors.New("query trainer group failure")
-	ErrErrQueryTrainerWorkoutGroups             = errors.New("query trainer workout groups failure")
+	ErrQueryTrainerWorkoutGroups                = errors.New("query trainer workout groups failure")
 	ErrQueryTrainerWorkoutGroupWithCustomer     = errors.New("query trainer workout group with customer failure")
 	ErrQueryTrainerWorkoutGroupWithDateWithDate = errors.New("query trainer workout group with date failure")
+)
+
+var (
+	ErrDeleteTrainerWorkoutGroup  = errors.New("cmd delete trainer workout group failure")
+	ErrDeleteTrainerWorkoutGroups = errors.New("cmd delete trainer workout groups failure")
+	ErrUpsertTrainerWorkoutGroup  = errors.New("cmd upsert trainer workout group failure")
 )

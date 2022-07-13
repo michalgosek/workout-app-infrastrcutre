@@ -76,6 +76,11 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
 	}
+	getTrainerWorkoutGroupHandler, err := trainerqry.NewWorkoutGroupHandler(trainerService)
+	if err != nil {
+		return fmt.Errorf("creating get trainer workout group handler failed: %v", err)
+
+	}
 	getTrainerWorkoutGroupsHandler, err := trainerqry.NewWorkoutGroupsHandler(trainerService)
 	if err != nil {
 		return fmt.Errorf("creating get trainer workout groups handler failed: %v", err)
@@ -103,7 +108,7 @@ func execute() error {
 			CustomerScheduleWorkout: customerScheduleWorkoutHandler,
 		},
 		Queries: application.Queries{
-			GetTrainerWorkout:  trainerqry.NewWorkoutGroupHandler(trainerRepository),
+			GetTrainerWorkout:  getTrainerWorkoutGroupHandler,
 			GetTrainerWorkouts: getTrainerWorkoutGroupsHandler,
 		},
 	}

@@ -135,20 +135,14 @@ func TestService_ShouldAssignCustomerToWorkoutGroupWithSuccess_Unit(t *testing.T
 	repository := mocks.NewRepository(t)
 	SUT, _ := trainer.NewTrainerService(repository)
 
-	trainerWorkoutGroupWithoutCustomer := newTestTrainerWorkoutGroup(trainerUUID)
-	trainerWorkoutGroupWithCustomer := trainerWorkoutGroupWithoutCustomer
-	trainerWorkoutGroupWithCustomer.AssignCustomer(newTestCustomerDetails(customerUUID, customerName))
+	workoutGroup := newTestTrainerWorkoutGroup(trainerUUID)
+	groupUUID := workoutGroup.UUID()
+	expectedWorkoutGroupWithCustomer := workoutGroup
+	expectedWorkoutGroupWithCustomer.AssignCustomer(newTestCustomerDetails(customerUUID, customerName))
 
-	expectedWorkoutGroupDetails := trainer.AssignedCustomerWorkoutGroupDetails{
-		UUID:        trainerWorkoutGroupWithCustomer.UUID(),
-		TrainerUUID: trainerWorkoutGroupWithCustomer.TrainerUUID(),
-		Name:        trainerWorkoutGroupWithCustomer.Name(),
-		Date:        trainerWorkoutGroupWithCustomer.Date(),
-	}
-
-	groupUUID := trainerWorkoutGroupWithoutCustomer.UUID()
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(trainerWorkoutGroupWithoutCustomer, nil)
-	repository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutGroupWithCustomer).Return(nil)
+	repository.EXPECT().QueryCustomerWorkoutGroup(ctx, trainerUUID, groupUUID, customerUUID).Return(domain.WorkoutGroup{}, nil)
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(workoutGroup, nil)
+	repository.EXPECT().UpsertTrainerWorkoutGroup(ctx, expectedWorkoutGroupWithCustomer).Return(nil)
 
 	// when:
 	actualWorkoutGroupDetails, err := SUT.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
@@ -160,11 +154,11 @@ func TestService_ShouldAssignCustomerToWorkoutGroupWithSuccess_Unit(t *testing.T
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(expectedWorkoutGroupDetails, actualWorkoutGroupDetails)
+	assertions.Equal(expectedWorkoutGroupWithCustomer, actualWorkoutGroupDetails)
 	mock.AssertExpectationsForObjects(t, repository)
 }
 
-func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenGroupNotExist_Unit(t *testing.T) {
+func TestService_ShouldNotAssignDuplicatedCustomerToWorkoutGroup_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -178,7 +172,10 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenGroupNotExist_Unit(t *
 	repository := mocks.NewRepository(t)
 	SUT, _ := trainer.NewTrainerService(repository)
 
-	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(domain.WorkoutGroup{}, nil)
+	workoutGroupWithCustomer := newTestTrainerWorkoutGroup(trainerUUID)
+	workoutGroupWithCustomer.AssignCustomer(newTestCustomerDetails(customerUUID, customerName))
+
+	repository.EXPECT().QueryCustomerWorkoutGroup(ctx, trainerUUID, groupUUID, customerUUID).Return(workoutGroupWithCustomer, nil)
 
 	// when:
 	actualWorkoutGroupDetails, err := SUT.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
@@ -189,12 +186,12 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenGroupNotExist_Unit(t *
 	})
 
 	// then:
-	assertions.Equal(err, trainer.ErrResourceNotFound)
+	assertions.Equal(err, trainer.ErrResourceDuplicated)
 	assertions.Empty(actualWorkoutGroupDetails)
 	mock.AssertExpectationsForObjects(t, repository)
 }
 
-func TestService_ShouldNotAssignCustomerToWorkoutWhenQueryTrainerWorkoutGroupFailure_Unit(t *testing.T) {
+func TestService_ShouldNotAssignCustomerToWorkoutWhenQueryTrainerWorkoutGroupWithCustomerFailure_Unit(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -209,10 +206,42 @@ func TestService_ShouldNotAssignCustomerToWorkoutWhenQueryTrainerWorkoutGroupFai
 	SUT, _ := trainer.NewTrainerService(repository)
 
 	repositoryFailureErr := errors.New("repository failure")
+	repository.EXPECT().QueryCustomerWorkoutGroup(ctx, trainerUUID, groupUUID, customerUUID).Return(domain.WorkoutGroup{}, repositoryFailureErr)
+
+	// when:
+	actualWorkoutGroup, err := SUT.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
+		CustomerUUID: customerUUID,
+		TrainerUUID:  trainerUUID,
+		CustomerName: customerName,
+		GroupUUID:    groupUUID,
+	})
+
+	// then:
+	assertions.Equal(err, trainer.ErrQueryTrainerWorkoutGroupWithCustomer)
+	assertions.Empty(actualWorkoutGroup)
+	mock.AssertExpectationsForObjects(t, repository)
+}
+
+func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenQueryTrainerWorkoutGroupFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		trainerUUID  = "c262fca7-1364-4a05-bf4a-bffd3c28698e"
+		customerUUID = "cf12e268-3733-499e-84c1-b7e19095fb03"
+		groupUUID    = "de249017-9349-40fd-9e7c-ef1e27cc27ed"
+		customerName = "John Doe"
+	)
+	ctx := context.Background()
+	repository := mocks.NewRepository(t)
+	SUT, _ := trainer.NewTrainerService(repository)
+
+	repositoryFailureErr := errors.New("repository failure")
+	repository.EXPECT().QueryCustomerWorkoutGroup(ctx, trainerUUID, groupUUID, customerUUID).Return(domain.WorkoutGroup{}, nil)
 	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(domain.WorkoutGroup{}, repositoryFailureErr)
 
 	// when:
-	actualWorkoutGroupDetails, err := SUT.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
+	actualWorkoutGroup, err := SUT.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
 		CustomerUUID: customerUUID,
 		TrainerUUID:  trainerUUID,
 		CustomerName: customerName,
@@ -221,7 +250,7 @@ func TestService_ShouldNotAssignCustomerToWorkoutWhenQueryTrainerWorkoutGroupFai
 
 	// then:
 	assertions.Equal(err, trainer.ErrQueryTrainerWorkoutGroup)
-	assertions.Empty(actualWorkoutGroupDetails)
+	assertions.Empty(actualWorkoutGroup)
 	mock.AssertExpectationsForObjects(t, repository)
 }
 
@@ -243,8 +272,9 @@ func TestService_ShouldNotAssignCustomerToWorkoutWhenUpsertTrainerWorkoutGroupFa
 	trainerWorkoutGroupWithCustomer.AssignCustomer(newTestCustomerDetails(customerUUID, customerName))
 
 	groupUUID := trainerWorkoutGroupWithoutCustomer.UUID()
-	repositoryFailureErr := errors.New("repository failure")
 
+	repositoryFailureErr := errors.New("repository failure")
+	repository.EXPECT().QueryCustomerWorkoutGroup(ctx, trainerUUID, groupUUID, customerUUID).Return(domain.WorkoutGroup{}, nil)
 	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(trainerWorkoutGroupWithoutCustomer, nil)
 	repository.EXPECT().UpsertTrainerWorkoutGroup(ctx, trainerWorkoutGroupWithCustomer).Return(repositoryFailureErr)
 
@@ -619,8 +649,56 @@ func TestService_ShouldNotGetTrainerWorkoutGroupsWhenQueryTrainerWorkoutGroupsFa
 	actualGroups, err := SUT.GetTrainerWorkoutGroups(ctx, trainerUUID)
 
 	// then:
-	assertions.Equal(err, trainer.ErrErrQueryTrainerWorkoutGroups)
+	assertions.Equal(err, trainer.ErrQueryTrainerWorkoutGroups)
 	assertions.Nil(actualGroups)
+	mock.AssertExpectationsForObjects(t, repository)
+}
+
+func TestService_ShouldGetTrainerWorkoutGroupWithSuccess_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const trainerUUID = "647909be-5eba-4ae1-9d33-dda8b734a9cc"
+
+	ctx := context.Background()
+	repository := mocks.NewRepository(t)
+	SUT, _ := trainer.NewTrainerService(repository)
+
+	expectedGroup := newTestTrainerWorkoutGroup(trainerUUID)
+	groupUUID := expectedGroup.UUID()
+
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(expectedGroup, nil)
+
+	// when:
+	actualGroup, err := SUT.GetTrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
+
+	// then:
+	assertions.Nil(err)
+	assertions.Equal(expectedGroup, actualGroup)
+	mock.AssertExpectationsForObjects(t, repository)
+}
+
+func TestService_ShouldNotGetTrainerWorkoutGroupWhenQueryTrainerWorkoutGroupFailure_Unit(t *testing.T) {
+	assertions := assert.New(t)
+
+	// given:
+	const (
+		trainerUUID = "647909be-5eba-4ae1-9d33-dda8b734a9cc"
+		groupUUID   = "e6611759-0c3f-42b0-9314-99365da98b0d"
+	)
+	ctx := context.Background()
+	repository := mocks.NewRepository(t)
+	SUT, _ := trainer.NewTrainerService(repository)
+
+	repositoryFailureErr := errors.New("repository failure err")
+	repository.EXPECT().QueryTrainerWorkoutGroup(ctx, trainerUUID, groupUUID).Return(domain.WorkoutGroup{}, repositoryFailureErr)
+
+	// when:
+	actualGroup, err := SUT.GetTrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
+
+	// then:
+	assertions.Equal(err, trainer.ErrQueryTrainerWorkoutGroup)
+	assertions.Empty(actualGroup)
 	mock.AssertExpectationsForObjects(t, repository)
 }
 

@@ -7,6 +7,8 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings/mocks"
+	domain_customer "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
+	domain_trainer "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -137,13 +139,23 @@ func TestService_ShouldAssignCustomerToWorkoutGroupWithSuccess_Unit(t *testing.T
 	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
-	repositoryFailureErr := errors.New("repository failure")
+	workoutGroupWithCustomer := newTestTrainerWorkoutGroup(trainerUUID)
+	workoutGroupWithCustomer.AssignCustomer(newTestCustomerDetails(customerUUID, customerName))
+
 	trainerService.EXPECT().AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
 		CustomerUUID: customerUUID,
 		CustomerName: customerName,
 		GroupUUID:    groupUUID,
 		TrainerUUID:  trainerUUID,
-	}).Return(trainer.AssignedCustomerWorkoutGroupDetails{}, repositoryFailureErr)
+	}).Return(workoutGroupWithCustomer, nil)
+
+	customerService.EXPECT().ScheduleWorkoutDay(ctx, customer.ScheduleWorkoutDayArgs{
+		CustomerUUID: customerUUID,
+		CustomerName: customerName,
+		GroupUUID:    groupUUID,
+		TrainerUUID:  trainerUUID,
+		Date:         workoutGroupWithCustomer.Date(),
+	}).Return(nil)
 
 	// when:
 	err := SUT.AssignCustomerToWorkoutGroup(ctx, trainings.AssignCustomerToWorkoutArgs{
@@ -154,7 +166,7 @@ func TestService_ShouldAssignCustomerToWorkoutGroupWithSuccess_Unit(t *testing.T
 	})
 
 	// then:
-	assertions.ErrorIs(err, repositoryFailureErr)
+	assertions.Nil(err)
 	mock.AssertExpectationsForObjects(t, customerService, trainerService)
 }
 
@@ -180,7 +192,7 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenTrainerServiceFailure_
 		CustomerName: customerName,
 		GroupUUID:    groupUUID,
 		TrainerUUID:  trainerUUID,
-	}).Return(trainer.AssignedCustomerWorkoutGroupDetails{}, repositoryFailureErr)
+	}).Return(domain_trainer.WorkoutGroup{}, repositoryFailureErr)
 
 	// when:
 	err := SUT.AssignCustomerToWorkoutGroup(ctx, trainings.AssignCustomerToWorkoutArgs{
@@ -202,7 +214,6 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenCustomerServiceFailure
 	const (
 		customerUUID = "504868b4-89b8-48bc-9da3-213d90f0c91e"
 		customerName = "John Doe"
-		groupUUID    = "e233ef39-37df-492b-8736-a106b6f14363"
 		trainerUUID  = "2212d1aa-ce01-4f32-bbf1-240ed66da5d3"
 	)
 
@@ -211,18 +222,15 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenCustomerServiceFailure
 	trainerService := mocks.NewTrainerService(t)
 	SUT, _ := trainings.NewService(customerService, trainerService)
 
-	assignedWorkoutDetails := trainer.AssignedCustomerWorkoutGroupDetails{
-		UUID:        groupUUID,
-		TrainerUUID: trainerUUID,
-		Name:        "dummy",
-		Date:        time.Now().AddDate(0, 0, 1),
-	}
+	workoutGroup := newTestTrainerWorkoutGroup(trainerUUID)
+	groupUUID := workoutGroup.UUID()
+
 	trainerService.EXPECT().AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
 		CustomerUUID: customerUUID,
 		CustomerName: customerName,
 		GroupUUID:    groupUUID,
 		TrainerUUID:  trainerUUID,
-	}).Return(assignedWorkoutDetails, nil)
+	}).Return(workoutGroup, nil)
 
 	repositoryFailureErr := errors.New("repository failure")
 	customerService.EXPECT().ScheduleWorkoutDay(ctx, customer.ScheduleWorkoutDayArgs{
@@ -230,7 +238,7 @@ func TestService_ShouldNotAssignCustomerToWorkoutGroupWhenCustomerServiceFailure
 		CustomerName: customerName,
 		GroupUUID:    groupUUID,
 		TrainerUUID:  trainerUUID,
-		Date:         assignedWorkoutDetails.Date,
+		Date:         workoutGroup.Date(),
 	}).Return(repositoryFailureErr)
 
 	// when:
@@ -339,4 +347,21 @@ func TestService_ShouldNotCancelTrainerWorkoutGroupWhenCustomerServiceFailure_Un
 	// then:
 	assertions.ErrorIs(err, repositoryFailure)
 	mock.AssertExpectationsForObjects(t, customerService, trainerService)
+}
+
+func newTestTrainerWorkoutGroup(trainerUUID string) domain_trainer.WorkoutGroup {
+	schedule := time.Now().AddDate(0, 0, 1)
+	group, err := domain_trainer.NewWorkoutGroup(trainerUUID, "dummy_trainer", "dummy_group", "dummy_desc", schedule)
+	if err != nil {
+		panic(err)
+	}
+	return group
+}
+
+func newTestCustomerDetails(customerUUID, name string) domain_customer.Details {
+	details, err := domain_customer.NewCustomerDetails(customerUUID, name)
+	if err != nil {
+		panic(err)
+	}
+	return details
 }

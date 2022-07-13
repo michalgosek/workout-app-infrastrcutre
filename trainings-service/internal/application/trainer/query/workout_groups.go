@@ -2,16 +2,9 @@ package query
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 	"github.com/sirupsen/logrus"
 )
-
-//go:generate mockery --name=TrainerService --case underscore --with-expecter
-type TrainerService interface {
-	GetTrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]trainer.WorkoutGroup, error)
-}
 
 type WorkoutGroupsDetails struct {
 	WorkoutGroups []WorkoutGroupDetails
@@ -22,7 +15,7 @@ type WorkoutGroupsHandler struct {
 }
 
 func (w *WorkoutGroupsHandler) Do(ctx context.Context, trainerUUID string) (WorkoutGroupsDetails, error) {
-	logger := logrus.WithFields(logrus.Fields{"Trainer-QRY": "GetWorkoutsHandler"})
+	logger := logrus.WithFields(logrus.Fields{"trainer-query": "GetWorkoutsHandler"})
 	groups, err := w.trainerService.GetTrainerWorkoutGroups(ctx, trainerUUID)
 	if err != nil {
 		logger.Errorf("query - get trainer workout group failure: %s", err)
@@ -43,5 +36,3 @@ func NewWorkoutGroupsHandler(t TrainerService) (*WorkoutGroupsHandler, error) {
 	}
 	return &h, nil
 }
-
-var ErrNilTrainerService = errors.New("nil trainer service")

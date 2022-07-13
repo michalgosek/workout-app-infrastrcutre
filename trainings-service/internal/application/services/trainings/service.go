@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/customer"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainer"
+	domain "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
 
 type CancelCustomerWorkoutArgs struct {
@@ -35,7 +36,7 @@ type CustomerService interface {
 
 //go:generate mockery --name=TrainerService --case underscore --with-expecter
 type TrainerService interface {
-	AssignCustomerToWorkoutGroup(ctx context.Context, args trainer.AssignCustomerToWorkoutGroupArgs) (trainer.AssignedCustomerWorkoutGroupDetails, error)
+	AssignCustomerToWorkoutGroup(ctx context.Context, args trainer.AssignCustomerToWorkoutGroupArgs) (domain.WorkoutGroup, error)
 	CancelCustomerWorkoutParticipation(ctx context.Context, args trainer.CancelCustomerWorkoutParticipationArgs) error
 	CancelWorkoutGroup(ctx context.Context, args trainer.CancelWorkoutGroupArgs) error
 	CancelWorkoutGroups(ctx context.Context, trainerUUID string) error
@@ -92,9 +93,8 @@ func (s *Service) CancelCustomerWorkout(ctx context.Context, args CancelCustomer
 	return nil
 }
 
-// fixme! bug in assiging duplicated customer
 func (s *Service) AssignCustomerToWorkoutGroup(ctx context.Context, args AssignCustomerToWorkoutArgs) error {
-	details, err := s.trainerService.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
+	group, err := s.trainerService.AssignCustomerToWorkoutGroup(ctx, trainer.AssignCustomerToWorkoutGroupArgs{
 		TrainerUUID:  args.TrainerUUID,
 		GroupUUID:    args.GroupUUID,
 		CustomerUUID: args.CustomerUUID,
@@ -107,8 +107,8 @@ func (s *Service) AssignCustomerToWorkoutGroup(ctx context.Context, args AssignC
 		CustomerUUID: args.CustomerUUID,
 		CustomerName: args.CustomerName,
 		GroupUUID:    args.GroupUUID,
-		TrainerUUID:  args.TrainerUUID,
-		Date:         details.Date,
+		TrainerUUID:  group.TrainerUUID(),
+		Date:         group.Date(),
 	})
 	if err != nil {
 		return fmt.Errorf("customer service failure: %w", err)
