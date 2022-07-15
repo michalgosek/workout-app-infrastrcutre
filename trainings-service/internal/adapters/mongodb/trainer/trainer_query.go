@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
@@ -32,6 +33,79 @@ func NewQueryHandler(cli *mongo.Client, cfg QueryHandlerConfig) *QueryHandler {
 	return &t
 }
 
+func (t *QueryHandler) TrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]query.TrainerWorkoutGroup, error) {
+	f := bson.M{"trainer_uuid": trainerUUID}
+	db := t.cli.Database(t.cfg.Database)
+	coll := db.Collection(t.cfg.Collection)
+	res, err := coll.Find(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+
+	var docs []WorkoutGroupWriteModel
+	err = res.All(ctx, &docs)
+	if err != nil {
+		return nil, err
+	}
+	out := unmarshalTrainerWorkoutGroup(docs)
+	return out, nil
+}
+
+func (t *QueryHandler) TrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (query.TrainerWorkoutGroup, error) {
+	f := bson.M{"trainer_uuid": trainerUUID, "_id": groupUUID}
+	db := t.cli.Database(t.cfg.Database)
+	coll := db.Collection(t.cfg.Collection)
+
+	res := coll.FindOne(ctx, f)
+	if res.Err() != nil {
+		return query.TrainerWorkoutGroup{}, res.Err()
+	}
+
+	var dst WorkoutGroupWriteModel
+	err := res.Decode(&dst)
+	if err != nil {
+		return query.TrainerWorkoutGroup{}, err
+	}
+	out := query.TrainerWorkoutGroup{
+		TrainerUUID:  dst.TrainerUUID,
+		TrainerName:  dst.TrainerName,
+		GroupUUID:    dst.UUID,
+		GroupDesc:    dst.Description,
+		GroupName:    dst.Name,
+		Date:         dst.Date,
+		Participants: unmarshalWorkoutGroupParticipants(dst.Participants),
+	}
+	return out, nil
+}
+
+func unmarshalTrainerWorkoutGroup(docs []WorkoutGroupWriteModel) []query.TrainerWorkoutGroup {
+	var out []query.TrainerWorkoutGroup
+	for _, d := range docs {
+		out = append(out, query.TrainerWorkoutGroup{
+			TrainerUUID:  d.TrainerUUID,
+			TrainerName:  d.TrainerName,
+			GroupUUID:    d.UUID,
+			GroupDesc:    d.Description,
+			GroupName:    d.Name,
+			Date:         d.Date,
+			Participants: unmarshalWorkoutGroupParticipants(d.Participants),
+		})
+	}
+	return out
+}
+
+func unmarshalWorkoutGroupParticipants(docs []WorkoutGroupParticipantWriteModel) []query.TrainerWorkoutGroupParticipant {
+	var out []query.TrainerWorkoutGroupParticipant
+	for _, d := range docs {
+		out = append(out, query.TrainerWorkoutGroupParticipant{
+			UUID: d.UUID,
+			Name: d.Name,
+		})
+	}
+	return out
+}
+
+// ---> refactor ----<
 func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, filter bson.M) (trainer.WorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
@@ -43,7 +117,7 @@ func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, f
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("find one failed: %v", err)
 	}
-	var doc WorkoutGroupDocument
+	var doc WorkoutGroupWriteModel
 	err = res.Decode(&doc)
 	if err != nil {
 		return trainer.WorkoutGroup{}, fmt.Errorf("decoding failed: %v", err)
@@ -54,7 +128,7 @@ func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, f
 		return trainer.WorkoutGroup{}, fmt.Errorf("parsing date value from document failed: %v", err)
 	}
 	var cd []customer.Details
-	for _, c := range doc.CustomerDetails {
+	for _, c := range doc.Participants {
 		d, err := customer.UnmarshalCustomerDetails(c.UUID, c.Name)
 		if err != nil {
 			return trainer.WorkoutGroup{}, fmt.Errorf("unmarshal customer details failed: %v", err)
@@ -65,8 +139,8 @@ func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, f
 		UUID:        doc.UUID,
 		TrainerUUID: doc.TrainerUUID,
 		TrainerName: doc.TrainerName,
-		Name:        doc.WorkoutName,
-		Description: doc.WorkoutDesc,
+		Name:        doc.Name,
+		Description: doc.Description,
 		Date:        date,
 		Limit:       doc.Limit,
 	}, cd)
@@ -78,7 +152,7 @@ func (t *QueryHandler) queryTrainerWorkoutGroupWithFilter(ctx context.Context, f
 }
 
 func (t *QueryHandler) QueryCustomerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID, customerUUID string) (trainer.WorkoutGroup, error) {
-	f := bson.M{"_id": groupUUID, "trainer_uuid": trainerUUID, "customer_details.uuid": customerUUID}
+	f := bson.M{"_id": groupUUID, "trainer_uuid": trainerUUID, "participants.uuid": customerUUID}
 	return t.queryTrainerWorkoutGroupWithFilter(ctx, f)
 }
 
@@ -101,7 +175,7 @@ func (t *QueryHandler) QueryTrainerWorkoutGroups(ctx context.Context, trainerUUI
 		return nil, fmt.Errorf("find failed: %v", err)
 	}
 
-	var docs []WorkoutGroupDocument
+	var docs []WorkoutGroupWriteModel
 	err = cur.All(ctx, &docs)
 	if err != nil {
 		return nil, fmt.Errorf("decoding failed: %v", err)
@@ -114,7 +188,7 @@ func (t *QueryHandler) QueryTrainerWorkoutGroups(ctx context.Context, trainerUUI
 			return nil, fmt.Errorf("parsing date value from document failed: %v", err)
 		}
 		var details []customer.Details
-		for _, c := range d.CustomerDetails {
+		for _, c := range d.Participants {
 			d, err := customer.UnmarshalCustomerDetails(c.UUID, c.Name)
 			if err != nil {
 				return nil, fmt.Errorf("unmarshal customer details failed: %v", err)
@@ -126,8 +200,8 @@ func (t *QueryHandler) QueryTrainerWorkoutGroups(ctx context.Context, trainerUUI
 			UUID:        d.UUID,
 			TrainerUUID: d.TrainerUUID,
 			TrainerName: d.TrainerName,
-			Name:        d.WorkoutName,
-			Description: d.WorkoutDesc,
+			Name:        d.Name,
+			Description: d.Description,
 			Date:        date,
 			Limit:       d.Limit,
 		}, details)

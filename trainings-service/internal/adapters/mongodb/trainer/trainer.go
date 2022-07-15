@@ -3,6 +3,7 @@ package trainer
 import (
 	"context"
 	"fmt"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
 	"time"
 
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/common"
@@ -23,6 +24,14 @@ type Repository struct {
 	cfg      RepositoryConfig
 	commands *CommandHandler
 	queries  *QueryHandler
+}
+
+func (r *Repository) TrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (query.TrainerWorkoutGroup, error) {
+	return r.queries.TrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
+}
+
+func (r *Repository) TrainerWorkoutGroups(ctx context.Context, trainerUUID string) ([]query.TrainerWorkoutGroup, error) {
+	return r.queries.TrainerWorkoutGroups(ctx, trainerUUID)
 }
 
 func (r *Repository) UpsertTrainerWorkoutGroup(ctx context.Context, workoutGroup trainer.WorkoutGroup) error {

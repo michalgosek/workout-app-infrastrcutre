@@ -15,8 +15,8 @@ type Commands struct {
 }
 
 type Queries struct {
-	GetTrainerWorkout  *trainerqry.WorkoutGroupHandler
-	GetTrainerWorkouts *trainerqry.WorkoutGroupsHandler
+	GetTrainerWorkoutGroup  *trainerqry.TrainerWorkoutGroupHandler
+	GetTrainerWorkoutGroups *trainerqry.TrainerWorkoutGroupsHandler
 }
 
 type Application struct {

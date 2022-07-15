@@ -40,20 +40,20 @@ func (m *CommandHandler) DropCollection(ctx context.Context) error {
 }
 
 func (m *CommandHandler) UpsertTrainerWorkoutGroup(ctx context.Context, group trainer.WorkoutGroup) error {
-	var details []CustomerDetailsDocument
+	var details []WorkoutGroupParticipantWriteModel
 	for _, d := range group.CustomerDetails() {
-		details = append(details, CustomerDetailsDocument{UUID: d.UUID(), Name: d.Name()})
+		details = append(details, WorkoutGroupParticipantWriteModel{UUID: d.UUID(), Name: d.Name()})
 	}
 
-	doc := WorkoutGroupDocument{
-		UUID:            group.UUID(),
-		TrainerUUID:     group.TrainerUUID(),
-		TrainerName:     group.TrainerName(),
-		Limit:           group.Limit(),
-		CustomerDetails: details,
-		WorkoutName:     group.Name(),
-		WorkoutDesc:     group.Description(),
-		Date:            group.Date().Format(m.cfg.Format),
+	doc := WorkoutGroupWriteModel{
+		UUID:         group.UUID(),
+		TrainerUUID:  group.TrainerUUID(),
+		TrainerName:  group.TrainerName(),
+		Limit:        group.Limit(),
+		Participants: details,
+		Name:         group.Name(),
+		Description:  group.Description(),
+		Date:         group.Date().Format(m.cfg.Format),
 	}
 
 	db := m.cli.Database(m.cfg.Database)

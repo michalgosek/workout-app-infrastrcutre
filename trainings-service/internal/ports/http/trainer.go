@@ -9,7 +9,6 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
 )
 
 const (
@@ -102,10 +101,7 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroup() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.GetTrainerWorkout.Do(r.Context(), query.WorkoutGroupArgs{
-			TrainerUUID: trainerUUID,
-			GroupUUID:   groupUUID,
-		})
+		res, err := h.app.Queries.GetTrainerWorkoutGroup.Do(r.Context(), trainerUUID, groupUUID)
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
@@ -121,7 +117,7 @@ func (h *TrainerWorkoutGroups) GetTrainerWorkoutGroups() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.GetTrainerWorkouts.Do(r.Context(), trainerUUID)
+		res, err := h.app.Queries.GetTrainerWorkoutGroups.Do(r.Context(), trainerUUID)
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return

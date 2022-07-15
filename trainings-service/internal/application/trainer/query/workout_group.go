@@ -6,40 +6,31 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type WorkoutGroupArgs struct {
-	TrainerUUID string
-	GroupUUID   string
+//go:generate mockery --name=TrainerWorkoutGroupReadModel --case underscore --with-expecter
+type TrainerWorkoutGroupReadModel interface {
+	TrainerWorkoutGroup(ctx context.Context, trainerUUID, groupUUID string) (TrainerWorkoutGroup, error)
 }
 
-type WorkoutGroupHandler struct {
-	trainerService TrainerService
+type TrainerWorkoutGroupHandler struct {
+	read TrainerWorkoutGroupReadModel
 }
 
-func (t *WorkoutGroupHandler) Do(ctx context.Context, args WorkoutGroupArgs) (WorkoutGroupDetails, error) {
+func (t *TrainerWorkoutGroupHandler) Do(ctx context.Context, trainerUUID, groupUUID string) (TrainerWorkoutGroup, error) {
 	logger := logrus.WithFields(logrus.Fields{"trainer-query": "WorkoutGroupHandler"})
-	group, err := t.trainerService.GetTrainerWorkoutGroup(ctx, args.TrainerUUID, args.GroupUUID)
+	group, err := t.read.TrainerWorkoutGroup(ctx, trainerUUID, groupUUID)
 	if err != nil {
 		logger.Errorf("query - get trainer workout group failure: %s", err)
-		return WorkoutGroupDetails{}, fmt.Errorf("trainer service failure:%w", err)
+		return TrainerWorkoutGroup{}, fmt.Errorf("trainer service failure:%w", err)
 	}
-	out := WorkoutGroupDetails{
-		TrainerUUID: group.TrainerUUID(),
-		TrainerName: group.TrainerName(),
-		GroupUUID:   group.UUID(),
-		GroupDesc:   group.Description(),
-		GroupName:   group.Name(),
-		Date:        group.Date().String(),
-		Customers:   convertToCustomersData(group.CustomerDetails()),
-	}
-	return out, nil
+	return group, nil
 }
 
-func NewWorkoutGroupHandler(t TrainerService) (*WorkoutGroupHandler, error) {
+func NewTrainerWorkoutGroupHandler(t TrainerWorkoutGroupReadModel) *TrainerWorkoutGroupHandler {
 	if t == nil {
-		return nil, ErrNilTrainerService
+		panic("nil trainer workout group read model impl")
 	}
-	h := WorkoutGroupHandler{
-		trainerService: t,
+	h := TrainerWorkoutGroupHandler{
+		read: t,
 	}
-	return &h, nil
+	return &h
 }

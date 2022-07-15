@@ -323,5 +323,5 @@ func (m *TrainerTestSuite) TestShouldReturnWorkoutGroupWithSpecifiedCustomerUUID
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(actualGroup, trainerWorkoutGroup)
+	assertions.Equal(trainerWorkoutGroup, actualGroup)
 }
