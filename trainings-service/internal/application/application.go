@@ -1,22 +1,20 @@
 package application
 
 import (
-	custcmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
-	trainercmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
-	trainerqry "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 )
 
 type Commands struct {
-	CreateTrainerWorkout    *trainercmd.ScheduleWorkoutHandler
-	UnassignCustomer        *trainercmd.UnassignCustomerHandler
-	DeleteTrainerWorkout    *trainercmd.CancelWorkoutHandler
-	DeleteTrainerWorkouts   *trainercmd.CancelWorkoutsHandler
-	CustomerScheduleWorkout *custcmd.ScheduleWorkoutHandler
+	ScheduleTrainerWorkoutGroup         *command.ScheduleTrainerWorkoutGroupHandler
+	AssignParticipantToWorkoutGroup     *command.AssignParticipantHandler
+	UnassignParticipantFromWorkoutGroup *command.UnassignParticipantHandler
+	CancelTrainerWorkoutGroup           *command.CancelWorkoutGroupHandler
 }
 
 type Queries struct {
-	GetTrainerWorkoutGroup  *trainerqry.TrainerWorkoutGroupHandler
-	GetTrainerWorkoutGroups *trainerqry.TrainerWorkoutGroupsHandler
+	TrainerWorkoutGroup  *query.TrainerWorkoutGroupHandler
+	TrainerWorkoutGroups *query.TrainerWorkoutGroupsHandler
 }
 
 type Application struct {

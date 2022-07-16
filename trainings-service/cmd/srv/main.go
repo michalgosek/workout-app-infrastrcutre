@@ -5,15 +5,11 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/customer"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/trainer"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
-	customcmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/customer/command"
-	cservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/customer"
-	tservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainer"
-	trservice "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/services/trainings"
-	trainercmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/command"
-	trainerqry "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/trainer/query"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/service"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports/http"
 	"log"
 	"time"
@@ -26,90 +22,35 @@ func main() {
 }
 
 func execute() error {
-	customerRepository, err := customer.NewCustomerRepository(customer.RepositoryConfig{
-		Addr:               "mongodb://localhost:27017",
-		Database:           "trainings_service_test",
-		CustomerCollection: "customer_schedules",
-		CommandTimeout:     10 * time.Second,
-		QueryTimeout:       10 * time.Second,
-		ConnectionTimeout:  10 * time.Second,
-		Format:             "02/01/2006 15:04",
-	})
-	if err != nil {
-		return fmt.Errorf("creating customer repository failed: %v", err)
+	cfg := mongodb.Config{
+		Addr:       "mongodb://localhost:27017",
+		Database:   "trainings_service_db",
+		Collection: "customer_schedules",
+		Timeouts: mongodb.Timeouts{
+			CommandTimeout:    10 * time.Second,
+			QueryTimeout:      10 * time.Second,
+			ConnectionTimeout: 10 * time.Second,
+		},
 	}
-	trainerRepository, err := trainer.NewTrainerRepository(trainer.RepositoryConfig{
-		Addr:              "mongodb://localhost:27017",
-		Database:          "trainings_service_test",
-		TrainerCollection: "trainer_schedules",
-		CommandTimeout:    10 * time.Second,
-		QueryTimeout:      10 * time.Second,
-		ConnectionTimeout: 10 * time.Second,
-		Format:            "02/01/2006 15:04",
-	})
+	repository, err := mongodb.NewRepository(cfg)
 	if err != nil {
-		return fmt.Errorf("creating trainer repository failed: %v", err)
+		return fmt.Errorf("trainings repository creation failed: %s", err)
 	}
 
-	// services:
-	customerService, err := cservice.NewCustomerService(customerRepository)
-	if err != nil {
-		return fmt.Errorf("creating customer service failed: %v", err)
-	}
-	trainerService, err := tservice.NewTrainerService(trainerRepository)
-	if err != nil {
-		return fmt.Errorf("creating trainer service failed: %v", err)
-	}
-	trainingsService, err := trservice.NewService(customerService, trainerService)
-	if err != nil {
-		return fmt.Errorf("creating trainings service failed: %v", err)
-	}
+	trainingsService := service.NewTrainingsService(repository)
 
-	// customer
-	customerScheduleWorkoutHandler, err := customcmd.NewScheduleWorkoutHandler(trainingsService)
-	if err != nil {
-		return fmt.Errorf("creating customer schedule workout handler failed: %v", err)
-	}
-
-	// trainer
-	scheduleTrainerWorkoutHandler, err := trainercmd.NewScheduleWorkoutHandler(trainerService)
-	if err != nil {
-		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
-	}
-
-	if err != nil {
-		return fmt.Errorf("creating get trainer workout group handler failed: %v", err)
-
-	}
-
-	deleteTrainerWorkoutHandler, err := trainercmd.NewCancelWorkoutHandler(trainingsService)
-	if err != nil {
-		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
-	}
-	cancelTrainerWorkoutsHandler, err := trainercmd.NewCancelWorkoutsHandler(trainingsService)
-	if err != nil {
-		return fmt.Errorf("creating cancel trainer workout workout handler failed: %v", err)
-	}
-	unassignCustomerWorkoutHandler, err := trainercmd.NewUnassignCustomerHandler(trainingsService)
-	if err != nil {
-		return fmt.Errorf("creating unassign customer workout workout handler failed: %v", err)
-	}
-
-	app := application.Application{
+	HTTP := http.NewTrainingsHTTP(&application.Application{
 		Commands: application.Commands{
-			CreateTrainerWorkout:    scheduleTrainerWorkoutHandler,
-			DeleteTrainerWorkout:    deleteTrainerWorkoutHandler,
-			DeleteTrainerWorkouts:   cancelTrainerWorkoutsHandler,
-			UnassignCustomer:        unassignCustomerWorkoutHandler,
-			CustomerScheduleWorkout: customerScheduleWorkoutHandler,
+			ScheduleTrainerWorkoutGroup:         command.NewScheduleTrainerWorkoutGroupHandler(trainingsService),
+			CancelTrainerWorkoutGroup:           command.NewCancelTrainerWorkoutGroupHandler(trainingsService),
+			UnassignParticipantFromWorkoutGroup: command.NewUnassignParticipantHandler(trainingsService),
+			AssignParticipantToWorkoutGroup:     command.NewAssignParticipantHandler(trainingsService),
 		},
 		Queries: application.Queries{
-			GetTrainerWorkoutGroup:  trainerqry.NewTrainerWorkoutGroupHandler(trainerRepository),
-			GetTrainerWorkoutGroups: trainerqry.NewTrainerWorkoutGroupsHandler(trainerRepository),
+			TrainerWorkoutGroup:  query.NewTrainerWorkoutGroupHandler(repository),
+			TrainerWorkoutGroups: query.NewTrainerWorkoutGroupsHandler(repository),
 		},
-	}
-	HTTP := http.NewTrainerWorkoutGroupsHTTP(&app, "02/01/2006 15:04")
-	customerHTTP := http.NewCustomerHTTP(&app, "02/01/2006 15:04")
+	})
 
 	API := rest.NewRouter()
 	API.Route("/api/v1", func(r chi.Router) {
@@ -118,22 +59,15 @@ func execute() error {
 				r.Route("/workouts", func(r chi.Router) {
 					r.Get("/", HTTP.GetTrainerWorkoutGroups())
 					r.Post("/", HTTP.CreateTrainerWorkoutGroup())
-					r.Delete("/", HTTP.DeleteWorkoutGroups())
+					//r.Delete("/", HTTP.DeleteWorkoutGroups())
 					r.Route("/{groupUUID}", func(r chi.Router) {
 						r.Get("/", HTTP.GetTrainerWorkoutGroup())
-						r.Delete("/", HTTP.DeleteWorkoutGroup())
-						r.Route("/customers", func(r chi.Router) {
-							//r.Post("/", HTTP.AssignCustomer())
-							r.Delete("/{customerUUID}", HTTP.UnassignCustomer())
-						})
+						r.Delete("/", HTTP.DeleteTrainerWorkoutGroup())
+						//	r.Route("/customers", func(r chi.Router) {
+						r.Post("/", HTTP.AssignParticipantToWorkoutGroup())
+						//		r.Delete("/{customerUUID}", HTTP.UnassignCustomer())
+						//	})
 					})
-				})
-			})
-		})
-		r.Route("/customers", func(r chi.Router) {
-			r.Route("/{customerUUID}", func(r chi.Router) {
-				r.Route("/workouts", func(r chi.Router) {
-					r.Post("/", customerHTTP.CreateCustomerWorkout())
 				})
 			})
 		})

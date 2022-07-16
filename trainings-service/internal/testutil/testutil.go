@@ -1,11 +1,10 @@
 package testutil
 
 import (
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/customer"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainer"
 )
 
 func getStaticTime() time.Time {
@@ -13,26 +12,26 @@ func getStaticTime() time.Time {
 	return ts
 }
 
-func NewTrainerWorkoutGroup(trainerUUID string) trainer.WorkoutGroup {
+func NewTrainerWorkoutGroup(trainerUUID string) trainings.WorkoutGroup {
 	const (
 		groupName   = "dummy"
 		groupDesc   = "dummy"
 		trainerName = "John Doe"
 	)
 	ts := getStaticTime()
-	group, err := trainer.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, ts)
+	group, err := trainings.NewWorkoutGroup(trainerUUID, trainerName, groupName, groupDesc, ts)
 	if err != nil {
 		panic(err)
 	}
 	return group
 }
 
-func NewWorkoutDay(customerUUID string) customer.WorkoutDay {
+func NewWorkoutDay(customerUUID string) trainings.WorkoutDay {
 	ts := getStaticTime()
 	name := "John Doe"
 	trainerUUID := uuid.NewString()
 	groupUUID := uuid.NewString()
-	workoutDay, err := customer.NewWorkoutDay(customerUUID, name, groupUUID, trainerUUID, ts)
+	workoutDay, err := trainings.NewWorkoutDay(customerUUID, name, groupUUID, trainerUUID, ts)
 	if err != nil {
 		panic(err)
 	}
