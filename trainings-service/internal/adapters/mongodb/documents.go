@@ -7,18 +7,18 @@ type ParticipantWriteModel struct {
 	Name string `bson:"name"`
 }
 
-type TrainerWorkoutGroupsWriteModel struct {
-	UUID          string                   `bson:"_id"`
-	Name          string                   `bson:"name"`
-	WorkoutGroups []WorkoutGroupWriteModel `bson:"workout_groups,omitempty"`
+type TrainerWriteModel struct {
+	UUID           string                    `bson:"_id"`
+	Name           string                    `bson:"name"`
+	TrainingGroups []TrainingGroupWriteModel `bson:"training_groups,omitempty"`
 }
 
-type WorkoutGroupWriteModel struct {
-	UUID         string                         `bson:"_id"`
-	Name         string                         `bson:"name"`
-	Description  string                         `bson:"description"`
-	Date         time.Time                      `bson:"date"`
-	Trainer      TrainerWorkoutGroupsWriteModel `bson:"trainer"`
-	Limit        int                            `bson:"limit"`
-	Participants []ParticipantWriteModel        `bson:"participants"`
+type TrainingGroupWriteModel struct {
+	UUID         string                  `bson:"_id"`
+	Name         string                  `bson:"name"`
+	Description  string                  `bson:"description"`
+	Date         time.Time               `bson:"date"`
+	Trainer      TrainerWriteModel       `bson:"trainer"`
+	Limit        int                     `bson:"limit"`
+	Participants []ParticipantWriteModel `bson:"participants"`
 }

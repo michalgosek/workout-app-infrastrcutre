@@ -2,15 +2,15 @@ package http
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 	"net/http"
 	"time"
-
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 )
 
 const (
@@ -20,11 +20,12 @@ const (
 )
 
 type Trainings struct {
+	addr   string
 	app    *application.Application
 	format string
 }
 
-func (h *Trainings) CreateTrainerWorkoutGroup() http.HandlerFunc {
+func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
 	type HTTPRequestBody struct {
 		TrainerUUID string `json:"trainer_uuid"`
 		TrainerName string `json:"trainer_name"`
@@ -45,7 +46,7 @@ func (h *Trainings) CreateTrainerWorkoutGroup() http.HandlerFunc {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		err = h.app.Commands.ScheduleTrainerWorkoutGroup.Do(r.Context(), command.ScheduleTrainerWorkoutGroup{
+		UUID, err := h.app.Commands.PlanTrainingGroup.Do(r.Context(), command.PlanTrainingGroup{
 			UUID:        uuid.NewString(),
 			TrainerUUID: payload.TrainerUUID,
 			TrainerName: payload.TrainerName,
@@ -59,13 +60,14 @@ func (h *Trainings) CreateTrainerWorkoutGroup() http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
+		w.Header().Add("Location:", fmt.Sprintf("%s/v1/trainings/%s", h.addr, UUID))
 	}
 }
 
-func (h *Trainings) GetTrainerWorkoutGroup() http.HandlerFunc {
+func (h *Trainings) GetTrainerGroup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		groupUUID := chi.URLParam(r, "groupUUID")
-		if groupUUID == "" {
+		trainingUUID := chi.URLParam(r, "trainingUUID")
+		if trainingUUID == "" {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing groupUUID in path"}, http.StatusBadRequest)
 			return
 		}
@@ -74,7 +76,7 @@ func (h *Trainings) GetTrainerWorkoutGroup() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.TrainerWorkoutGroup.Do(r.Context(), groupUUID, trainerUUID)
+		res, err := h.app.Queries.TrainingGroup.Do(r.Context(), trainingUUID, trainerUUID)
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
@@ -83,15 +85,15 @@ func (h *Trainings) GetTrainerWorkoutGroup() http.HandlerFunc {
 	}
 }
 
-func (h *Trainings) AssignParticipantToWorkoutGroup() http.HandlerFunc {
+func (h *Trainings) AssignParticipant() http.HandlerFunc {
 	type HTTPRequestBody struct {
 		ParticipantUUID string `json:"participant_uuid"`
 		ParticipantName string `json:"participant_name"`
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		groupUUID := chi.URLParam(r, "groupUUID")
-		if groupUUID == "" {
+		trainingUUID := chi.URLParam(r, "trainingUUID")
+		if trainingUUID == "" {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing groupUUID in path"}, http.StatusBadRequest)
 			return
 		}
@@ -115,10 +117,10 @@ func (h *Trainings) AssignParticipantToWorkoutGroup() http.HandlerFunc {
 			return
 		}
 
-		err = h.app.Commands.AssignParticipantToWorkoutGroup.Do(r.Context(), command.AssignParticipant{
-			TrainerUUID: trainerUUID,
-			GroupUUID:   groupUUID,
-			Participant: p,
+		err = h.app.Commands.AssignParticipant.Do(r.Context(), command.AssignParticipant{
+			TrainerUUID:  trainerUUID,
+			TrainingUUID: trainingUUID,
+			Participant:  p,
 		})
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
@@ -127,45 +129,44 @@ func (h *Trainings) AssignParticipantToWorkoutGroup() http.HandlerFunc {
 	}
 }
 
-//func (h *Trainings) UnassignCustomer() http.HandlerFunc {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//		groupUUID := chi.URLParam(r, "groupUUID")
-//		if groupUUID == "" {
-//			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing groupUUID in path"}, http.StatusBadRequest)
-//			return
-//		}
-//		trainerUUID := chi.URLParam(r, "trainerUUID")
-//		if trainerUUID == "" {
-//			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
-//			return
-//		}
-//		customerUUID := chi.URLParam(r, "customerUUID")
-//		if customerUUID == "" {
-//			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing customerUUID in path"}, http.StatusBadRequest)
-//			return
-//		}
-//		err := h.app.Commands.UnassignCustomer.Do(r.Context(), command.UnassignCustomerArgs{
-//			CustomerUUID: customerUUID,
-//			GroupUUID:    groupUUID,
-//			TrainerUUID:  trainerUUID,
-//		})
-//		if err != nil {
-//			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
-//			return
-//		}
-//		w.WriteHeader(http.StatusOK)
-//	}
-//}
-//
+func (h *Trainings) UnassignParticipant() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		trainingUUID := chi.URLParam(r, "trainingUUID")
+		if trainingUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainingUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		participantUUID := chi.URLParam(r, "participantUUID")
+		if participantUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing participantUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		err := h.app.Commands.UnassignParticipant.Do(r.Context(), command.UnassignParticipant{
+			ParticipantUUID: participantUUID,
+			TrainingUUID:    trainingUUID,
+			TrainerUUID:     trainerUUID,
+		})
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
+}
 
-func (h *Trainings) GetTrainerWorkoutGroups() http.HandlerFunc {
+func (h *Trainings) GetTrainerGroups() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		trainerUUID := chi.URLParam(r, "trainerUUID")
 		if trainerUUID == "" {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.TrainerWorkoutGroups.Do(r.Context(), trainerUUID)
+		res, err := h.app.Queries.TrainingGroups.Do(r.Context(), trainerUUID)
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
@@ -174,11 +175,11 @@ func (h *Trainings) GetTrainerWorkoutGroups() http.HandlerFunc {
 	}
 }
 
-func (h *Trainings) DeleteTrainerWorkoutGroup() http.HandlerFunc {
+func (h *Trainings) DeleteTrainerGroup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		groupUUID := chi.URLParam(r, "groupUUID")
-		if groupUUID == "" {
-			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing groupUUID in path"}, http.StatusBadRequest)
+		trainingUUID := chi.URLParam(r, "trainingUUID")
+		if trainingUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainingUUID in path"}, http.StatusBadRequest)
 			return
 		}
 		trainerUUID := chi.URLParam(r, "trainerUUID")
@@ -186,9 +187,9 @@ func (h *Trainings) DeleteTrainerWorkoutGroup() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		err := h.app.Commands.CancelTrainerWorkoutGroup.Do(r.Context(), command.CancelWorkoutGroup{
-			GroupUUID:   groupUUID,
-			TrainerUUID: trainerUUID,
+		err := h.app.Commands.CancelTrainingGroup.Do(r.Context(), command.CancelWorkoutGroup{
+			TrainingUUID: trainingUUID,
+			TrainerUUID:  trainerUUID,
 		})
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
@@ -198,24 +199,26 @@ func (h *Trainings) DeleteTrainerWorkoutGroup() http.HandlerFunc {
 	}
 }
 
-//func (h *Trainings) DeleteWorkoutGroups() http.HandlerFunc {
-//	return func(w http.ResponseWriter, r *http.Request) {
-//		trainerUUID := chi.URLParam(r, "trainerUUID")
-//		if trainerUUID == "" {
-//			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
-//			return
-//		}
-//		err := h.app.Commands.DeleteTrainerWorkouts.Do(r.Context(), trainerUUID)
-//		if err != nil {
-//			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
-//			return
-//		}
-//		w.WriteHeader(http.StatusNoContent)
-//	}
-//}
+func (h *Trainings) DeleteTrainerGroups() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		err := h.app.Commands.CancelTrainingGroups.Do(r.Context(), trainerUUID)
+		if err != nil {
+			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
 
-func NewTrainingsHTTP(app *application.Application) *Trainings {
+func NewTrainingsHTTP(app *application.Application, addr string) *Trainings {
 	return &Trainings{
-		app: app,
+		app:    app,
+		addr:   addr,
+		format: "02/01/2006 15:04",
 	}
 }

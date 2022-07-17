@@ -25,7 +25,7 @@ func execute() error {
 	cfg := mongodb.Config{
 		Addr:       "mongodb://localhost:27017",
 		Database:   "trainings_service_db",
-		Collection: "customer_schedules",
+		Collection: "trainings",
 		Timeouts: mongodb.Timeouts{
 			CommandTimeout:    10 * time.Second,
 			QueryTimeout:      10 * time.Second,
@@ -38,42 +38,51 @@ func execute() error {
 	}
 
 	trainingsService := service.NewTrainingsService(repository)
+	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
 
 	HTTP := http.NewTrainingsHTTP(&application.Application{
 		Commands: application.Commands{
-			ScheduleTrainerWorkoutGroup:         command.NewScheduleTrainerWorkoutGroupHandler(trainingsService),
-			CancelTrainerWorkoutGroup:           command.NewCancelTrainerWorkoutGroupHandler(trainingsService),
-			UnassignParticipantFromWorkoutGroup: command.NewUnassignParticipantHandler(trainingsService),
-			AssignParticipantToWorkoutGroup:     command.NewAssignParticipantHandler(trainingsService),
+			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(trainingsService),
+			CancelTrainingGroup:  command.NewCancelTrainingGroupHandler(trainingsService),
+			CancelTrainingGroups: command.NewCancelTrainingGroupsHandler(trainingsService),
+			UnassignParticipant:  command.NewUnassignParticipantHandler(trainingsService),
+			AssignParticipant:    command.NewAssignParticipantHandler(trainingsService),
 		},
 		Queries: application.Queries{
-			TrainerWorkoutGroup:  query.NewTrainerWorkoutGroupHandler(repository),
-			TrainerWorkoutGroups: query.NewTrainerWorkoutGroupsHandler(repository),
+			TrainingGroup:  query.NewTrainingGroupHandler(repository),
+			TrainingGroups: query.NewTrainingGroupsHandlerHandler(repository),
 		},
-	})
+	}, serverCfg.Addr)
 
 	API := rest.NewRouter()
 	API.Route("/api/v1", func(r chi.Router) {
+		r.Route("/trainings", func(r chi.Router) {
+			r.Post("/", HTTP.CreateTrainingGroup())
+		})
+
 		r.Route("/trainers", func(r chi.Router) {
+
 			r.Route("/{trainerUUID}", func(r chi.Router) {
-				r.Route("/workouts", func(r chi.Router) {
-					r.Get("/", HTTP.GetTrainerWorkoutGroups())
-					r.Post("/", HTTP.CreateTrainerWorkoutGroup())
-					//r.Delete("/", HTTP.DeleteWorkoutGroups())
-					r.Route("/{groupUUID}", func(r chi.Router) {
-						r.Get("/", HTTP.GetTrainerWorkoutGroup())
-						r.Delete("/", HTTP.DeleteTrainerWorkoutGroup())
-						//	r.Route("/customers", func(r chi.Router) {
-						r.Post("/", HTTP.AssignParticipantToWorkoutGroup())
-						//		r.Delete("/{customerUUID}", HTTP.UnassignCustomer())
-						//	})
+				r.Get("/", HTTP.GetTrainerGroups())
+				r.Delete("/", HTTP.DeleteTrainerGroups())
+				r.Route("/trainings", func(r chi.Router) {
+
+					r.Route("/{trainingUUID}", func(r chi.Router) {
+						r.Get("/", HTTP.GetTrainerGroup())
+						r.Delete("/", HTTP.DeleteTrainerGroup())
+
+						r.Route("/participants", func(r chi.Router) {
+							r.Post("/", HTTP.AssignParticipant())
+							r.Route("/{participantUUID}", func(r chi.Router) {
+								r.Delete("/", HTTP.UnassignParticipant())
+							})
+						})
 					})
 				})
 			})
 		})
 	})
 
-	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
 	srv := server.NewHTTP(API, serverCfg)
 	srv.StartHTTPServer()
 	return nil

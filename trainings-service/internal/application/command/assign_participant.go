@@ -6,7 +6,7 @@ import (
 )
 
 type AssignParticipantService interface {
-	AssignParticipant(ctx context.Context, groupUUID, trainerUUID string, p trainings.Participant) error
+	AssignParticipant(ctx context.Context, trainingUUID, trainerUUID string, p trainings.Participant) error
 }
 
 type AssignParticipantHandler struct {
@@ -14,13 +14,13 @@ type AssignParticipantHandler struct {
 }
 
 type AssignParticipant struct {
-	TrainerUUID string
-	GroupUUID   string
-	Participant trainings.Participant
+	TrainerUUID  string
+	TrainingUUID string
+	Participant  trainings.Participant
 }
 
 func (a *AssignParticipantHandler) Do(ctx context.Context, cmd AssignParticipant) error {
-	err := a.service.AssignParticipant(ctx, cmd.GroupUUID, cmd.TrainerUUID, cmd.Participant)
+	err := a.service.AssignParticipant(ctx, cmd.TrainingUUID, cmd.TrainerUUID, cmd.Participant)
 	if err != nil {
 		return err
 	}

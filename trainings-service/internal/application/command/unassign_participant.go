@@ -5,7 +5,7 @@ import (
 )
 
 type UnassignParticipantService interface {
-	UnassignParticipant(ctx context.Context, groupUUID, trainerUUID, participantUUID string) error
+	UnassignParticipant(ctx context.Context, trainingUUID, trainerUUID, participantUUID string) error
 }
 
 type UnassignParticipantHandler struct {
@@ -13,13 +13,13 @@ type UnassignParticipantHandler struct {
 }
 
 type UnassignParticipant struct {
-	GroupUUID       string
+	TrainingUUID    string
 	TrainerUUID     string
 	ParticipantUUID string
 }
 
 func (u *UnassignParticipantHandler) Do(ctx context.Context, cmd UnassignParticipant) error {
-	err := u.service.UnassignParticipant(ctx, cmd.GroupUUID, cmd.TrainerUUID, cmd.ParticipantUUID)
+	err := u.service.UnassignParticipant(ctx, cmd.TrainingUUID, cmd.TrainerUUID, cmd.ParticipantUUID)
 	if err != nil {
 		return err
 	}

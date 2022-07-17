@@ -6,15 +6,16 @@ import (
 )
 
 type Commands struct {
-	ScheduleTrainerWorkoutGroup         *command.ScheduleTrainerWorkoutGroupHandler
-	AssignParticipantToWorkoutGroup     *command.AssignParticipantHandler
-	UnassignParticipantFromWorkoutGroup *command.UnassignParticipantHandler
-	CancelTrainerWorkoutGroup           *command.CancelWorkoutGroupHandler
+	PlanTrainingGroup    *command.PlanTrainingGroupHandler
+	AssignParticipant    *command.AssignParticipantHandler
+	UnassignParticipant  *command.UnassignParticipantHandler
+	CancelTrainingGroup  *command.CancelTrainingGroupHandler
+	CancelTrainingGroups *command.CancelTrainingGroupsHandler
 }
 
 type Queries struct {
-	TrainerWorkoutGroup  *query.TrainerWorkoutGroupHandler
-	TrainerWorkoutGroups *query.TrainerWorkoutGroupsHandler
+	TrainingGroup  *query.TrainingGroupHandler
+	TrainingGroups *query.TrainingGroupsHandler
 }
 
 type Application struct {

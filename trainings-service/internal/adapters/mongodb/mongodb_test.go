@@ -52,58 +52,49 @@ func (m *MongoDBTestSuite) TearDownSuite() {
 	}
 }
 
-func (m *MongoDBTestSuite) TestShouldInsertTrainerWorkoutGroupWithSuccess() {
+func (m *MongoDBTestSuite) TestShouldInsertTrainingGroupWithSuccess() {
 	assertions := m.Assert()
 
 	// given:
 	ctx := context.Background()
-	trainer, _ := trainings.NewTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
-	staticTime, _ := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
-	expectedWorkoutGroup, _ := trainings.NewWorkoutGroup("76740131-ff8c-477b-895e-c9b80b08858c", "dummy name", "dummy desc", staticTime, trainer)
+	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	date := newTestStaticTime()
+	trainingGroup := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
 
 	// when:
-	err := m.SUT.InsertTrainerWorkoutGroup(ctx, expectedWorkoutGroup)
+	err := m.SUT.InsertTrainingGroup(ctx, &trainingGroup)
 
 	// then:
 	assertions.Nil(err)
 
-	writeModel, err := m.findTrainerWorkoutGroupWriteModel(expectedWorkoutGroup.UUID())
+	writeModel, err := m.findTrainingGroup(trainingGroup.UUID())
 	assertions.Nil(err)
 	assertions.NotEmpty(writeModel)
 
-	actualWorkoutDomainGroup, err := m.convertTrainerWorkoutGroupWriteModelToDomain(writeModel)
-	assertions.Nil(err)
-	assertions.Equal(*expectedWorkoutGroup, actualWorkoutDomainGroup)
+	actualWorkoutDomainGroup := mongodb.ConvertToDomainTrainingGroup(writeModel)
+	assertions.Equal(trainingGroup, actualWorkoutDomainGroup)
 }
 
-func (m *MongoDBTestSuite) TestShouldQueryTrainerWorkoutGroupWithSuccess() {
+func (m *MongoDBTestSuite) TestShouldQueryTrainingGroupWithSuccess() {
 	assertions := m.Assert()
 
 	// given:
 	ctx := context.Background()
-	trainer, _ := trainings.NewTrainer("914c6f44-8715-4ca2-9e35-0bae22ac52c3", "John Doe")
-	staticTime, _ := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
-	expectedWorkoutGroup, _ := trainings.NewWorkoutGroup("6b8e54fe-8727-463d-8ff3-7f1003eeee87", "dummy name", "dummy desc", staticTime, trainer)
+	trainer := newTestTrainer("cd2c48da-ec19-4c32-8846-9aa85d1eeff3", "John Doe")
+	date := newTestStaticTime()
+	trainingGroup := newTestTrainingGroup("7f340572-654f-4280-a0ad-b66bb70bd1ac", trainer, date)
 
-	_ = m.SUT.InsertTrainerWorkoutGroup(ctx, expectedWorkoutGroup)
+	_ = m.SUT.InsertTrainingGroup(ctx, &trainingGroup)
 
 	// when:
-	actualWorkoutGroup, err := m.SUT.QueryTrainerWorkoutGroup(ctx, expectedWorkoutGroup.UUID(), expectedWorkoutGroup.Trainer().UUID())
+	actualWorkoutGroup, err := m.SUT.QueryTrainingGroup(ctx, trainingGroup.UUID(), trainingGroup.Trainer().UUID())
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(*expectedWorkoutGroup, actualWorkoutGroup)
-
-	writeModel, err := m.findTrainerWorkoutGroupWriteModel(expectedWorkoutGroup.UUID())
-	assertions.Nil(err)
-	assertions.NotEmpty(writeModel)
-
-	actualWorkoutDomainGroup, err := m.convertTrainerWorkoutGroupWriteModelToDomain(writeModel)
-	assertions.Nil(err)
-	assertions.Equal(*expectedWorkoutGroup, actualWorkoutDomainGroup)
+	assertions.Equal(trainingGroup, actualWorkoutGroup)
 }
 
-func (m *MongoDBTestSuite) TestShouldReturnEmptyScheduledTrainerWorkoutGroupWhenNotScheduledBefore() {
+func (m *MongoDBTestSuite) TestShouldReturnErrorWhenQueryNonExistingTrainingGroup() {
 	assertions := m.Assert()
 
 	// given:
@@ -112,74 +103,131 @@ func (m *MongoDBTestSuite) TestShouldReturnEmptyScheduledTrainerWorkoutGroupWhen
 	const groupUUID = "6b8e54fe-8727-463d-8ff3-7f1003eeee87"
 
 	// when:
-	actualWorkoutGroup, err := m.SUT.QueryTrainerWorkoutGroup(ctx, groupUUID, trainerUUID)
+	actualQueryTrainingGroup, err := m.SUT.QueryTrainingGroup(ctx, groupUUID, trainerUUID)
 
 	// then:
-	assertions.Nil(err)
-	assertions.Empty(actualWorkoutGroup)
-
-	writeModel, err := m.findTrainerWorkoutGroupWriteModel(groupUUID)
-	assertions.Equal(err, mongo.ErrNoDocuments)
-	assertions.Empty(writeModel)
+	assertions.True(trainings.IsErrResourceNotFound(err))
+	assertions.Empty(actualQueryTrainingGroup)
 }
 
-func (m *MongoDBTestSuite) TestShouldReturnTrainerWorkoutGroupQueryReadModelWithSuccess() {
+func (m *MongoDBTestSuite) TestShouldReturnTrainingGroupReadModelWithSuccess() {
 	assertions := m.Assert()
 
 	// given:
 	ctx := context.Background()
-	trainer, _ := trainings.NewTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
-	staticTime, _ := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
-	group, _ := trainings.NewWorkoutGroup("76740131-ff8c-477b-895e-c9b80b08858c", "dummy name", "dummy desc", staticTime, trainer)
+	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	date := newTestStaticTime()
+	trainingGroup := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
 
-	_ = m.SUT.InsertTrainerWorkoutGroup(ctx, group)
-	expectedReadModel := m.createQueryWorkoutGroupReadModel(group.UUID())
+	_ = m.SUT.InsertTrainingGroup(ctx, &trainingGroup)
+	expectedReadModel := m.createTrainingGroupReadModel(trainingGroup.UUID())
 
 	// when:
-	actualReadModel, err := m.SUT.TrainerWorkoutGroup(ctx, group.UUID(), group.Trainer().UUID())
+	actualReadModel, err := m.SUT.TrainingGroup(ctx, trainingGroup.UUID(), trainingGroup.Trainer().UUID())
 
 	// then:
 	assertions.Nil(err)
 	assertions.Equal(expectedReadModel, actualReadModel)
 }
 
-func (m *MongoDBTestSuite) TestShouldUpdateTrainerWorkoutGroupWithSuccess() {
+func (m *MongoDBTestSuite) TestShouldUpdateTrainingGroupWithSuccess() {
 	assertions := m.Assert()
 
 	// given:
 	ctx := context.Background()
-	trainer, _ := trainings.NewTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
-	staticTime, _ := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
-	workoutGroup, _ := trainings.NewWorkoutGroup("76740131-ff8c-477b-895e-c9b80b08858c", "dummy name", "dummy desc", staticTime, trainer)
+	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	date := newTestStaticTime()
+	trainingGroup := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
 
-	updatedWorkoutGroup := workoutGroup
-	participant, _ := trainings.NewParticipant("#0a4e9c95-1e13-491a-b8ff-c0536b5f8dd6", "Jerry Smith")
-	_ = updatedWorkoutGroup.AssignParticipant(participant)
-
-	_ = m.SUT.InsertTrainerWorkoutGroup(ctx, workoutGroup)
+	_ = m.SUT.InsertTrainingGroup(ctx, &trainingGroup)
+	_ = trainingGroup.AssignParticipant(newTestParticipant("c6975a21-a098-4c94-a7de-de01a731b57a"))
 
 	// when:
-	err := m.SUT.UpdateTrainerWorkoutGroup(ctx, updatedWorkoutGroup)
+	err := m.SUT.UpdateTrainingGroup(ctx, &trainingGroup)
 
 	// then:
 	assertions.Nil(err)
 
-	writeModel, err := m.findTrainerWorkoutGroupWriteModel(updatedWorkoutGroup.UUID())
+	writeModel, err := m.findTrainingGroup(trainingGroup.UUID())
 	assertions.Nil(err)
 	assertions.NotEmpty(writeModel)
 
-	actualWorkoutDomainGroup, err := m.convertTrainerWorkoutGroupWriteModelToDomain(writeModel)
-	assertions.Nil(err)
-	assertions.Equal(*updatedWorkoutGroup, actualWorkoutDomainGroup)
+	actualWorkoutDomainGroup := mongodb.ConvertToDomainTrainingGroup(writeModel)
+	assertions.Equal(trainingGroup, actualWorkoutDomainGroup)
 }
 
-func (m *MongoDBTestSuite) createQueryWorkoutGroupReadModel(groupUUID string) query.TrainerWorkoutGroup {
-	writeModel, _ := m.findTrainerWorkoutGroupWriteModel(groupUUID)
+func (m *MongoDBTestSuite) TestShouldDeleteTrainingGroupWithSuccess() {
+	assertions := m.Assert()
+
+	// given:
+	ctx := context.Background()
+	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	date := newTestStaticTime()
+	trainingGroup := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
+
+	_ = m.SUT.InsertTrainingGroup(ctx, &trainingGroup)
+
+	// when:
+	err := m.SUT.DeleteTrainingGroup(ctx, trainingGroup.UUID(), trainer.UUID())
+
+	// then:
+	assertions.Nil(err)
+
+	writeModel, err := m.findTrainingGroup(trainingGroup.UUID())
+	assertions.Equal(err, mongo.ErrNoDocuments)
+	assertions.Empty(writeModel)
+}
+
+func (m *MongoDBTestSuite) TestShouldDeleteTrainingGroupsWithSuccess() {
+	assertions := m.Assert()
+
+	// given:
+	ctx := context.Background()
+	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	date := newTestStaticTime()
+	firstTrainingGroup := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
+	secondTrainingGroup := newTestTrainingGroup("76275b9a-2c9c-4d96-adb7-ab44ad2ab8ee", trainer, date)
+
+	_ = m.SUT.InsertTrainingGroup(ctx, &firstTrainingGroup)
+	_ = m.SUT.InsertTrainingGroup(ctx, &secondTrainingGroup)
+
+	// when:
+	err := m.SUT.DeleteTrainingGroups(ctx, trainer.UUID())
+
+	// then:
+	assertions.Nil(err)
+
+	writeModel, err := m.findTrainingGroups(trainer.UUID())
+	assertions.Nil(err)
+	assertions.Empty(writeModel)
+}
+
+func (m *MongoDBTestSuite) createTrainingGroupReadModel(groupUUID string) query.TrainerWorkoutGroup {
+	writeModel, _ := m.findTrainingGroup(groupUUID)
 	readModel := mongodb.UnmarshalToQueryTrainerWorkoutGroup(writeModel)
 	return readModel
 }
 
-func (m *MongoDBTestSuite) findTrainerWorkoutGroupWriteModel(uuid string) (mongodb.WorkoutGroupWriteModel, error) {
+func (m *MongoDBTestSuite) findTrainingGroups(trainerUUID string) ([]mongodb.TrainingGroupWriteModel, error) {
+	db := m.testCli.Database(m.cfg.Database)
+	coll := db.Collection(m.cfg.Collection)
+	f := bson.M{"trainer._id": trainerUUID}
+	ctx, cancel := context.WithTimeout(context.Background(), m.cfg.Timeouts.QueryTimeout)
+	defer cancel()
+
+	curr, err := coll.Find(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+	var dst []mongodb.TrainingGroupWriteModel
+	err = curr.All(ctx, &dst)
+	if err != nil {
+		return nil, err
+	}
+	return dst, nil
+}
+
+func (m *MongoDBTestSuite) findTrainingGroup(uuid string) (mongodb.TrainingGroupWriteModel, error) {
 	db := m.testCli.Database(m.cfg.Database)
 	coll := db.Collection(m.cfg.Collection)
 	f := bson.M{"_id": uuid}
@@ -187,35 +235,15 @@ func (m *MongoDBTestSuite) findTrainerWorkoutGroupWriteModel(uuid string) (mongo
 	defer cancel()
 	res := coll.FindOne(ctx, f)
 	if res.Err() != nil {
-		return mongodb.WorkoutGroupWriteModel{}, res.Err()
+		return mongodb.TrainingGroupWriteModel{}, res.Err()
 	}
 
-	var doc mongodb.WorkoutGroupWriteModel
+	var doc mongodb.TrainingGroupWriteModel
 	err := res.Decode(&doc)
 	if err != nil {
-		return mongodb.WorkoutGroupWriteModel{}, err
+		return mongodb.TrainingGroupWriteModel{}, err
 	}
 	return doc, nil
-}
-
-func (m *MongoDBTestSuite) convertTrainerWorkoutGroupWriteModelToDomain(d mongodb.WorkoutGroupWriteModel) (trainings.WorkoutGroup, error) {
-	var pp []trainings.DatabaseWorkoutGroupParticipant
-	for _, p := range d.Participants {
-		pp = append(pp, trainings.DatabaseWorkoutGroupParticipant{UUID: p.UUID, Name: p.Name})
-	}
-	g := trainings.UnmarshalWorkoutGroupFromDatabase(trainings.DatabaseWorkoutGroup{
-		UUID:        d.UUID,
-		Name:        d.Name,
-		Description: d.Description,
-		Limit:       d.Limit,
-		Date:        d.Date,
-		Trainer: trainings.DatabaseWorkoutGroupTrainer{
-			UUID: d.Trainer.UUID,
-			Name: d.Trainer.Name,
-		},
-		Participants: pp,
-	})
-	return g, nil
 }
 
 // In order for 'go test' to run this suite, we need to create
@@ -224,7 +252,7 @@ func TestMongoDBTestSuite_Integration(t *testing.T) {
 	cfg := mongodb.Config{
 		Addr:       "mongodb://localhost:27017",
 		Database:   "trainings_service_test",
-		Collection: "customer_schedules",
+		Collection: "trainings",
 		Timeouts: mongodb.Timeouts{
 			CommandTimeout:    10 * time.Second,
 			QueryTimeout:      10 * time.Second,
@@ -236,16 +264,46 @@ func TestMongoDBTestSuite_Integration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("creating mongo client failed: %s", err)
 	}
-
 	SUT, err := mongodb.NewRepository(cfg)
 	if err != nil {
 		t.Fatalf("creating mongo repository  failed: %s", err)
 	}
-
 	ts := MongoDBTestSuite{
 		cfg:     cfg,
 		testCli: cli,
 		SUT:     SUT,
 	}
 	suite.Run(t, &ts)
+}
+
+func newTestTrainer(UUID, name string) trainings.Trainer {
+	t, err := trainings.NewTrainer(UUID, name)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
+
+func newTestParticipant(UUID string) trainings.Participant {
+	p, err := trainings.NewParticipant("0a4e9c95-1e13-491a-b8ff-c0536b5f8dd6", "Jerry Smith")
+	if err != nil {
+		panic(err)
+	}
+	return p
+}
+
+func newTestStaticTime() time.Time {
+	ts, err := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
+	if err != nil {
+		panic(err)
+	}
+	return ts
+}
+
+func newTestTrainingGroup(UUID string, trainer trainings.Trainer, date time.Time) trainings.TrainingGroup {
+	t, err := trainings.NewTrainingGroup(UUID, "dummy name", "dummy desc", date, trainer)
+	if err != nil {
+		panic(err)
+	}
+	return *t
 }

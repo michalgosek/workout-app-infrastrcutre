@@ -3,9 +3,9 @@ package trainings
 import "errors"
 
 type Trainer struct {
-	uuid          string
-	name          string
-	workoutGroups []WorkoutGroup
+	uuid           string
+	name           string
+	trainingGroups []TrainingGroup
 }
 
 func (t Trainer) UUID() string {
@@ -16,8 +16,8 @@ func (t Trainer) Name() string {
 	return t.name
 }
 
-func (t Trainer) WorkoutGroups() []WorkoutGroup {
-	return t.workoutGroups
+func (t Trainer) TrainingGroups() []TrainingGroup {
+	return t.trainingGroups
 }
 
 func NewTrainer(uuid, name string) (Trainer, error) {
