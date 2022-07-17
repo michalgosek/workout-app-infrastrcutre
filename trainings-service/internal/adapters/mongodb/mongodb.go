@@ -74,9 +74,9 @@ func (r *Repository) InsertTrainingGroup(ctx context.Context, g *trainings.Train
 func (r *Repository) UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
 	ctx, cancel := context.WithTimeout(ctx, r.cfg.Timeouts.QueryTimeout)
 	defer cancel()
-	_, err := r.QueryTrainingGroup(ctx, g.UUID(), g.Trainer().UUID())
+	_, err := r.QueryTrainingGroup(ctx, g.UUID())
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return trainings.NewError("resource not found", true)
+		return nil
 	}
 	if err != nil {
 		return err
@@ -107,6 +107,18 @@ func (r *Repository) UpdateTrainingGroup(ctx context.Context, g *trainings.Train
 	return nil
 }
 
+func (r *Repository) IsTrainingGroupDuplicated(ctx context.Context, g *trainings.TrainingGroup) (bool, error) {
+	f := bson.M{"trainer._id": g.Trainer().UUID(), "description": g.Description(), "name": g.Name(), "date": g.Date()}
+	_, err := r.findTrainingGroupWithFilter(ctx, f)
+	if errors.Is(err, mongo.ErrNoDocuments) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
 func (r *Repository) DeleteTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) error {
 	f := bson.M{"_id": trainingUUID, "trainer._id": trainerUUID}
 	ctx, cancel := context.WithTimeout(ctx, r.cfg.Timeouts.CommandTimeout)
@@ -135,11 +147,11 @@ func (r *Repository) DeleteTrainingGroups(ctx context.Context, trainerUUID strin
 	return nil
 }
 
-func (r *Repository) QueryTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) (trainings.TrainingGroup, error) {
-	f := bson.M{"_id": trainingUUID, "trainer._id": trainerUUID}
+func (r *Repository) QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error) {
+	f := bson.M{"_id": trainingUUID}
 	doc, err := r.findTrainingGroupWithFilter(ctx, f)
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return trainings.TrainingGroup{}, trainings.NewError("resource not found", true)
+		return trainings.TrainingGroup{}, nil
 	}
 	if err != nil {
 		return trainings.TrainingGroup{}, err

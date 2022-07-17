@@ -15,69 +15,69 @@ type TrainingGroup struct {
 	participants []Participant
 }
 
-func (w *TrainingGroup) UUID() string {
-	return w.uuid
+func (t *TrainingGroup) UUID() string {
+	return t.uuid
 }
 
-func (w *TrainingGroup) Name() string {
-	return w.name
+func (t *TrainingGroup) Name() string {
+	return t.name
 }
 
-func (w *TrainingGroup) Description() string {
-	return w.description
+func (t *TrainingGroup) Description() string {
+	return t.description
 }
 
-func (w *TrainingGroup) Date() time.Time {
-	return w.date
+func (t *TrainingGroup) Date() time.Time {
+	return t.date
 }
 
-func (w *TrainingGroup) Trainer() Trainer {
-	return w.trainer
+func (t *TrainingGroup) Trainer() Trainer {
+	return t.trainer
 }
 
-func (w *TrainingGroup) Limit() int {
-	return w.limit
+func (t *TrainingGroup) Limit() int {
+	return t.limit
 }
 
-func (w *TrainingGroup) IsTrainingDateDuplicated(date time.Time) bool {
-	return w.date.Equal(date)
+func (t *TrainingGroup) IsOwnedByTrainer(UUID string) bool {
+	return UUID == t.trainer.uuid
 }
 
-func (w *TrainingGroup) Participants() []Participant {
-	return w.participants
+func (t *TrainingGroup) Participants() []Participant {
+	return t.participants
 }
 
-func (w *TrainingGroup) AssignParticipant(p Participant) error {
-	if w.limit == 0 {
+func (t *TrainingGroup) AssignParticipant(p Participant) error {
+	if t.limit == 0 {
 		return errors.New("workout group participants limit exceeded")
 	}
-	if len(w.participants) == 0 {
-		w.participants = append(w.participants, p)
-		w.limit--
+	if len(t.participants) == 0 {
+		t.participants = append(t.participants, p)
+		t.limit--
 		return nil
 	}
-	for _, c := range w.participants {
+	for _, c := range t.participants {
 		if c.UUID() == p.uuid {
 			return errors.New("participant with specified uuid already assigned to workout group")
 		}
 	}
-	w.participants = append(w.participants, p)
-	w.limit--
+	t.participants = append(t.participants, p)
+	t.limit--
 	return nil
 }
 
-func (w *TrainingGroup) UnassignParticipant(UUID string) error {
-	if len(w.participants) == 0 {
+func (t *TrainingGroup) UnassignParticipant(UUID string) error {
+	if len(t.participants) == 0 {
 		return errors.New("workout group participants not found")
 	}
 	var filtered []Participant
-	for _, c := range w.participants {
+	for _, c := range t.participants {
 		if c.UUID() != UUID {
 			filtered = append(filtered, c)
 		}
 	}
-	w.participants = filtered
-	w.limit += 1
+	t.participants = filtered
+	t.limit += 1
 	return nil
 }
 

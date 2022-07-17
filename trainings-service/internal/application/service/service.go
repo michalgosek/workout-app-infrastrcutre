@@ -9,32 +9,31 @@ import (
 type Command interface {
 	InsertTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
 	UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
-	DeleteTrainingGroup(ctx context.Context, groupUUID, trainerUUID string) error
+	DeleteTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) error
 	DeleteTrainingGroups(ctx context.Context, trainerUUID string) error
 }
 
 type Queries interface {
-	QueryTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) (trainings.TrainingGroup, error)
+	QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
 }
 
 type Repository interface {
 	Command
 	Queries
+	IsTrainingGroupDuplicated(ctx context.Context, g *trainings.TrainingGroup) (bool, error)
 }
 
 type Trainings struct {
 	repo Repository
 }
 
-func (t *Trainings) CreateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
-	got, err := t.repo.QueryTrainingGroup(ctx, g.UUID(), g.Trainer().UUID())
-	if !trainings.IsErrResourceNotFound(err) {
-		return err
-	}
-	if got.IsTrainingDateDuplicated(g.Date()) {
-		return errors.New("training group with specified date already exists")
-	}
+var ErrTrainingDuplicated = errors.New("training group duplicated")
 
+func (t *Trainings) CreateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
+	duplicate, err := t.repo.IsTrainingGroupDuplicated(ctx, g)
+	if duplicate {
+		return ErrTrainingDuplicated
+	}
 	err = t.repo.InsertTrainingGroup(ctx, g)
 	if err != nil {
 		return err
@@ -42,20 +41,20 @@ func (t *Trainings) CreateTrainingGroup(ctx context.Context, g *trainings.Traini
 	return nil
 }
 
-func (t *Trainings) AssignParticipant(ctx context.Context, groupUUID, trainerUUID string, p trainings.Participant) error {
-	group, err := t.repo.QueryTrainingGroup(ctx, groupUUID, trainerUUID)
+func (t *Trainings) AssignParticipant(ctx context.Context, trainingUUID, trainerUUID string, p trainings.Participant) error {
+	training, err := t.repo.QueryTrainingGroup(ctx, trainingUUID)
 	if err != nil {
 		return err
 	}
-	if group.UUID() == "" {
-		return nil
+	if !training.IsOwnedByTrainer(trainerUUID) {
+		return errors.New("training not owned by trainer")
 	}
-	err = group.AssignParticipant(p)
+	err = training.AssignParticipant(p)
 	if err != nil {
 		return err
 	}
 
-	err = t.repo.UpdateTrainingGroup(ctx, &group)
+	err = t.repo.UpdateTrainingGroup(ctx, &training)
 	if err != nil {
 		return err
 	}
@@ -63,27 +62,35 @@ func (t *Trainings) AssignParticipant(ctx context.Context, groupUUID, trainerUUI
 }
 
 func (t *Trainings) UnassignParticipant(ctx context.Context, trainingUUID, trainerUUID, participantUUID string) error {
-	group, err := t.repo.QueryTrainingGroup(ctx, trainingUUID, trainerUUID)
+	training, err := t.repo.QueryTrainingGroup(ctx, trainingUUID)
 	if err != nil {
 		return err
 	}
-	if group.UUID() == "" {
-		return nil
-	}
-	err = group.UnassignParticipant(participantUUID)
-	if err != nil {
-		return err
+	if !training.IsOwnedByTrainer(trainerUUID) {
+		return errors.New("training not owned by trainer")
 	}
 
-	err = t.repo.UpdateTrainingGroup(ctx, &group)
+	err = training.UnassignParticipant(participantUUID)
+	if err != nil {
+		return err
+	}
+	err = t.repo.UpdateTrainingGroup(ctx, &training)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (t *Trainings) CancelTrainingGroup(ctx context.Context, groupUUID, trainerUUID string) error {
-	err := t.repo.DeleteTrainingGroup(ctx, groupUUID, trainerUUID)
+func (t *Trainings) CancelTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) error {
+	training, err := t.repo.QueryTrainingGroup(ctx, trainingUUID)
+	if err != nil {
+		return err
+	}
+	if !training.IsOwnedByTrainer(trainerUUID) {
+		return errors.New("training not owned by trainer")
+	}
+
+	err = t.repo.DeleteTrainingGroup(ctx, trainingUUID, trainerUUID)
 	if err != nil {
 		return err
 	}

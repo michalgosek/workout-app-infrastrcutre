@@ -87,26 +87,25 @@ func (m *MongoDBTestSuite) TestShouldQueryTrainingGroupWithSuccess() {
 	_ = m.SUT.InsertTrainingGroup(ctx, &trainingGroup)
 
 	// when:
-	actualWorkoutGroup, err := m.SUT.QueryTrainingGroup(ctx, trainingGroup.UUID(), trainingGroup.Trainer().UUID())
+	actualWorkoutGroup, err := m.SUT.QueryTrainingGroup(ctx, trainingGroup.UUID())
 
 	// then:
 	assertions.Nil(err)
 	assertions.Equal(trainingGroup, actualWorkoutGroup)
 }
 
-func (m *MongoDBTestSuite) TestShouldReturnErrorWhenQueryNonExistingTrainingGroup() {
+func (m *MongoDBTestSuite) TestShouldReturnEmptyTrainingGroupReadModelWhenNonExist() {
 	assertions := m.Assert()
 
 	// given:
 	ctx := context.Background()
-	const trainerUUID = "914c6f44-8715-4ca2-9e35-0bae22ac52c3"
 	const groupUUID = "6b8e54fe-8727-463d-8ff3-7f1003eeee87"
 
 	// when:
-	actualQueryTrainingGroup, err := m.SUT.QueryTrainingGroup(ctx, groupUUID, trainerUUID)
+	actualQueryTrainingGroup, err := m.SUT.QueryTrainingGroup(ctx, groupUUID)
 
 	// then:
-	assertions.True(trainings.IsErrResourceNotFound(err))
+	assertions.Nil(err)
 	assertions.Empty(actualQueryTrainingGroup)
 }
 

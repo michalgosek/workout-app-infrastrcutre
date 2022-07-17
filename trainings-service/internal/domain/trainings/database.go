@@ -1,36 +1,6 @@
 package trainings
 
-import (
-	"time"
-)
-
-type Error struct {
-	resource bool
-	message  string
-}
-
-func (e Error) Resource() bool {
-	return e.resource
-}
-
-func (e Error) Error() string {
-	return e.message
-}
-
-func NewError(msg string, resource bool) Error {
-	return Error{
-		resource: resource,
-		message:  msg,
-	}
-}
-
-func IsErrResourceNotFound(err error) bool {
-	type resource interface {
-		Resource() bool
-	}
-	re, ok := err.(resource)
-	return ok && re.Resource()
-}
+import "time"
 
 type DatabaseTrainingGroup struct {
 	UUID         string

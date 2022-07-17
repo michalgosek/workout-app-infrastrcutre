@@ -39,7 +39,6 @@ func execute() error {
 
 	trainingsService := service.NewTrainingsService(repository)
 	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
-
 	HTTP := http.NewTrainingsHTTP(&application.Application{
 		Commands: application.Commands{
 			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(trainingsService),
@@ -59,18 +58,15 @@ func execute() error {
 		r.Route("/trainings", func(r chi.Router) {
 			r.Post("/", HTTP.CreateTrainingGroup())
 		})
-
 		r.Route("/trainers", func(r chi.Router) {
-
 			r.Route("/{trainerUUID}", func(r chi.Router) {
 				r.Get("/", HTTP.GetTrainerGroups())
 				r.Delete("/", HTTP.DeleteTrainerGroups())
 				r.Route("/trainings", func(r chi.Router) {
-
+					r.Delete("/", HTTP.DeleteTrainerGroups())
 					r.Route("/{trainingUUID}", func(r chi.Router) {
 						r.Get("/", HTTP.GetTrainerGroup())
 						r.Delete("/", HTTP.DeleteTrainerGroup())
-
 						r.Route("/participants", func(r chi.Router) {
 							r.Post("/", HTTP.AssignParticipant())
 							r.Route("/{participantUUID}", func(r chi.Router) {
