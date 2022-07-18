@@ -71,7 +71,7 @@ func (m *MongoDBTestSuite) TestShouldInsertTrainingGroupWithSuccess() {
 	assertions.Nil(err)
 	assertions.NotEmpty(writeModel)
 
-	actualWorkoutDomainGroup := mongodb.ConvertToDomainTrainingGroup(writeModel)
+	actualWorkoutDomainGroup := mongodb.UnmarshalToTrainingGroup(writeModel)
 	assertions.Equal(trainingGroup, actualWorkoutDomainGroup)
 }
 
@@ -151,7 +151,7 @@ func (m *MongoDBTestSuite) TestShouldUpdateTrainingGroupWithSuccess() {
 	assertions.Nil(err)
 	assertions.NotEmpty(writeModel)
 
-	actualWorkoutDomainGroup := mongodb.ConvertToDomainTrainingGroup(writeModel)
+	actualWorkoutDomainGroup := mongodb.UnmarshalToTrainingGroup(writeModel)
 	assertions.Equal(trainingGroup, actualWorkoutDomainGroup)
 }
 

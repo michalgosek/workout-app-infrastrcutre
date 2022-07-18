@@ -27,8 +27,6 @@ type Trainings struct {
 	repo Repository
 }
 
-var ErrTrainingDuplicated = errors.New("training group duplicated")
-
 func (t *Trainings) CreateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
 	duplicate, err := t.repo.IsTrainingGroupDuplicated(ctx, g)
 	if duplicate {
@@ -47,7 +45,7 @@ func (t *Trainings) AssignParticipant(ctx context.Context, trainingUUID, trainer
 		return err
 	}
 	if !training.IsOwnedByTrainer(trainerUUID) {
-		return errors.New("training not owned by trainer")
+		return ErrTrainingNotOwnedByTrainer
 	}
 	err = training.AssignParticipant(p)
 	if err != nil {
@@ -67,7 +65,7 @@ func (t *Trainings) UnassignParticipant(ctx context.Context, trainingUUID, train
 		return err
 	}
 	if !training.IsOwnedByTrainer(trainerUUID) {
-		return errors.New("training not owned by trainer")
+		return ErrTrainingNotOwnedByTrainer
 	}
 
 	err = training.UnassignParticipant(participantUUID)
@@ -87,7 +85,7 @@ func (t *Trainings) CancelTrainingGroup(ctx context.Context, trainingUUID, train
 		return err
 	}
 	if !training.IsOwnedByTrainer(trainerUUID) {
-		return errors.New("training not owned by trainer")
+		return ErrTrainingNotOwnedByTrainer
 	}
 
 	err = t.repo.DeleteTrainingGroup(ctx, trainingUUID, trainerUUID)
@@ -112,3 +110,8 @@ func NewTrainingsService(r Repository) *Trainings {
 	s := Trainings{repo: r}
 	return &s
 }
+
+var (
+	ErrTrainingDuplicated        = errors.New("training group duplicated")
+	ErrTrainingNotOwnedByTrainer = errors.New("training not owned by trainer")
+)

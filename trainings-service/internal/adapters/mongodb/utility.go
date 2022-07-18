@@ -32,7 +32,7 @@ func NewClient(addr string, d time.Duration) (*mongo.Client, error) {
 	return cli, nil
 }
 
-func ConvertToDomainTrainingGroup(d TrainingGroupWriteModel) trainings.TrainingGroup {
+func UnmarshalToTrainingGroup(d TrainingGroupWriteModel) trainings.TrainingGroup {
 	var pp []trainings.DatabaseTrainingGroupParticipant
 	for _, p := range d.Participants {
 		pp = append(pp, trainings.DatabaseTrainingGroupParticipant{UUID: p.UUID, Name: p.Name})
@@ -52,7 +52,7 @@ func ConvertToDomainTrainingGroup(d TrainingGroupWriteModel) trainings.TrainingG
 	return g
 }
 
-func ConvertToWriteModelParticipants(pp ...trainings.Participant) []ParticipantWriteModel {
+func UnmarshalToWriteModelParticipants(pp ...trainings.Participant) []ParticipantWriteModel {
 	var out []ParticipantWriteModel
 	for _, p := range pp {
 		out = append(out, ParticipantWriteModel{

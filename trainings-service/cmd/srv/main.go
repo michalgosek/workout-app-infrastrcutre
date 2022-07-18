@@ -36,6 +36,12 @@ func execute() error {
 	if err != nil {
 		return fmt.Errorf("trainings repository creation failed: %s", err)
 	}
+	defer func() {
+		err := repository.Disconnect()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	trainingsService := service.NewTrainingsService(repository)
 	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
@@ -53,6 +59,13 @@ func execute() error {
 		},
 	}, serverCfg.Addr)
 
+	API := newAPI(HTTP)
+	srv := server.NewHTTP(API, serverCfg)
+	srv.StartHTTPServer()
+	return nil
+}
+
+func newAPI(HTTP *http.Trainings) chi.Router {
 	API := rest.NewRouter()
 	API.Route("/api/v1", func(r chi.Router) {
 		r.Route("/trainings", func(r chi.Router) {
@@ -78,8 +91,5 @@ func execute() error {
 			})
 		})
 	})
-
-	srv := server.NewHTTP(API, serverCfg)
-	srv.StartHTTPServer()
-	return nil
+	return API
 }

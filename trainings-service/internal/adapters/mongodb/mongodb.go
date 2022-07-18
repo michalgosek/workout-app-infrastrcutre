@@ -3,7 +3,6 @@ package mongodb
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 	"go.mongodb.org/mongo-driver/bson"
@@ -27,6 +26,16 @@ type Config struct {
 type Repository struct {
 	cli *mongo.Client
 	cfg Config
+}
+
+func (r *Repository) Disconnect() error {
+	ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Timeouts.ConnectionTimeout)
+	defer cancel()
+	err := r.cli.Disconnect(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *Repository) findTrainingGroupWithFilter(ctx context.Context, f bson.M) (TrainingGroupWriteModel, error) {
@@ -96,7 +105,7 @@ func (r *Repository) UpdateTrainingGroup(ctx context.Context, g *trainings.Train
 			Name: g.Trainer().Name(),
 		},
 		Limit:        g.Limit(),
-		Participants: ConvertToWriteModelParticipants(g.Participants()...),
+		Participants: UnmarshalToWriteModelParticipants(g.Participants()...),
 	}
 	filter := bson.M{"_id": g.UUID(), "trainer._id": g.Trainer().UUID()}
 	update := bson.M{"$set": doc}
@@ -212,7 +221,7 @@ func (r *Repository) TrainingGroups(ctx context.Context, trainerUUID string) ([]
 func NewRepository(cfg Config) (*Repository, error) {
 	cli, err := NewClient(cfg.Addr, cfg.Timeouts.ConnectionTimeout)
 	if err != nil {
-		return nil, fmt.Errorf("mongo cli creation failed: %w", err)
+		return nil, err
 	}
 	m := Repository{
 		cli: cli,
