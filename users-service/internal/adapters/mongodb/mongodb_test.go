@@ -112,6 +112,7 @@ func (m *MongoDBTestSuite) findUser(uuid string) (domain.User, error) {
 		Active:         dst.Active,
 		Role:           dst.Role,
 		Name:           dst.Name,
+		Email:          dst.Email,
 		LastActiveDate: dst.LastActiveDate,
 	})
 	return u, nil
@@ -149,8 +150,9 @@ func TestMongoDBTestSuite_Integration(t *testing.T) {
 
 func newTestUser(UUID, role string) domain.User {
 	n := rand.Int()
+	email := fmt.Sprintf("email%d@email.com", n)
 	name := fmt.Sprintf("test_user_%d", n)
-	u, err := domain.NewUser(UUID, role, name)
+	u, err := domain.NewUser(UUID, role, name, email)
 	if err != nil {
 		panic(err)
 	}

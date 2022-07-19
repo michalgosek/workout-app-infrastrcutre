@@ -37,6 +37,7 @@ func UnmarshalToUserWriteModel(u domain.User) UserWriteModel {
 		Active:         u.Active(),
 		Role:           u.Role(),
 		Name:           u.Name(),
+		Email:          u.Email(),
 		LastActiveDate: u.LastActiveDate(),
 	}
 	return doc

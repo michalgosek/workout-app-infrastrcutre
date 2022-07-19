@@ -7,6 +7,7 @@ type DatabaseUser struct {
 	Active         bool
 	Role           string
 	Name           string
+	Email          string
 	LastActiveDate time.Time
 }
 
@@ -15,6 +16,7 @@ func UnmarshalUserFromDatabase(d DatabaseUser) User {
 		uuid:           d.UUID,
 		name:           d.Name,
 		lastActiveDate: d.LastActiveDate,
+		email:          d.Email,
 		role:           d.Role,
 		active:         d.Active,
 	}

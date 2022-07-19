@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"context"
+	"github.com/michalgosek/workout-app-infrastrcutre/users-service/internal/application/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/users-service/internal/domain"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -26,6 +27,16 @@ type Repository struct {
 	cli *mongo.Client
 }
 
+func (r *Repository) Disconnect() error {
+	ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Timeouts.ConnectionTimeout)
+	defer cancel()
+	err := r.cli.Disconnect(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *Repository) InsertUser(ctx context.Context, u *domain.User) error {
 	db := r.cli.Database(r.cfg.Database)
 	coll := db.Collection(r.cfg.Collection)
@@ -39,6 +50,40 @@ func (r *Repository) InsertUser(ctx context.Context, u *domain.User) error {
 		return nil
 	}
 	return nil
+}
+
+func (r *Repository) findOne(ctx context.Context, f bson.M) (UserWriteModel, error) {
+	db := r.cli.Database(r.cfg.Database)
+	coll := db.Collection(r.cfg.Collection)
+
+	ctx, cancel := context.WithTimeout(context.Background(), r.cfg.Timeouts.QueryTimeout)
+	defer cancel()
+
+	res := coll.FindOne(ctx, f)
+	if res.Err() != nil {
+		return UserWriteModel{}, res.Err()
+	}
+
+	var dst UserWriteModel
+	err := res.Decode(&dst)
+	if err != nil {
+		return UserWriteModel{}, nil
+	}
+	return dst, nil
+}
+
+func (r *Repository) User(ctx context.Context, UUID string) (query.User, error) {
+	f := bson.M{"_id": UUID}
+	doc, err := r.findOne(ctx, f)
+	if err != nil {
+		return query.User{}, nil
+	}
+	u := query.User{
+		Name:  doc.Name,
+		Role:  doc.Role,
+		Email: doc.Email,
+	}
+	return u, nil
 }
 
 func (r *Repository) QueryUser(ctx context.Context, UUID string) (domain.User, error) {
@@ -65,6 +110,7 @@ func (r *Repository) QueryUser(ctx context.Context, UUID string) (domain.User, e
 		Active:         dst.Active,
 		Role:           dst.Role,
 		Name:           dst.Name,
+		Email:          dst.Email,
 		LastActiveDate: dst.LastActiveDate,
 	})
 	return u, nil

@@ -21,7 +21,6 @@ func TestHealthCheckShouldReturnHTTPStatusOKUnit(t *testing.T) {
 
 	expectedResponse := rest.JSONResponse{
 		Message: "OK",
-		Code:    http.StatusOK,
 	}
 
 	req := httptest.NewRequest(http.MethodGet, rest.HealthEndpoint, nil)
