@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestShouldDeleteTrainingsWithSuccess(t *testing.T) {
+func TestShouldDeleteTrainingsWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:

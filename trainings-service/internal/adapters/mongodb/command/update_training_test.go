@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestShouldUpdateTrainingWithSuccess(t *testing.T) {
+func TestShouldUpdateTrainingWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:

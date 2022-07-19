@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestShouldReturnTrainingReadModelWithSuccess(t *testing.T) {
+func TestShouldReturnTrainingReadModelWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
