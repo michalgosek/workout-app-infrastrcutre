@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
@@ -22,7 +21,7 @@ func main() {
 }
 
 func execute() error {
-	cfg := mongodb.Config{
+	repository := mongodb.NewRepository(mongodb.Config{
 		Addr:       "mongodb://localhost:27017",
 		Database:   "trainings_service_db",
 		Collection: "trainings",
@@ -31,11 +30,7 @@ func execute() error {
 			QueryTimeout:      10 * time.Second,
 			ConnectionTimeout: 10 * time.Second,
 		},
-	}
-	repository, err := mongodb.NewRepository(cfg)
-	if err != nil {
-		return fmt.Errorf("trainings repository creation failed: %s", err)
-	}
+	})
 	defer func() {
 		err := repository.Disconnect()
 		if err != nil {

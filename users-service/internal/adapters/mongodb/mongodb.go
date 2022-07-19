@@ -72,6 +72,23 @@ func (r *Repository) findOne(ctx context.Context, f bson.M) (UserWriteModel, err
 	return dst, nil
 }
 
+func (r *Repository) QueryUserWithEmail(ctx context.Context, email string) (domain.User, error) {
+	f := bson.M{"email": email}
+	doc, err := r.findOne(ctx, f)
+	if err != nil {
+		return domain.User{}, nil
+	}
+	user := domain.UnmarshalUserFromDatabase(domain.DatabaseUser{
+		UUID:           doc.UUID,
+		Active:         doc.Active,
+		Role:           doc.Role,
+		Name:           doc.Name,
+		Email:          doc.Email,
+		LastActiveDate: doc.LastActiveDate,
+	})
+	return user, nil
+}
+
 func (r *Repository) User(ctx context.Context, UUID string) (query.User, error) {
 	f := bson.M{"_id": UUID}
 	doc, err := r.findOne(ctx, f)

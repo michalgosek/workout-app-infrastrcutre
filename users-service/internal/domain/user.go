@@ -14,6 +14,10 @@ type User struct {
 	lastActiveDate time.Time
 }
 
+func (u *User) IsEmailAlreadyRegistered(email string) bool {
+	return u.email == email
+}
+
 func (u *User) Email() string {
 	return u.email
 }
