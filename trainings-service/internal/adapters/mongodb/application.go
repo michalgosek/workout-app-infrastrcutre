@@ -142,10 +142,10 @@ func (r *Repository) Disconnect() error {
 	return nil
 }
 
-func NewRepository(cfg Config) *Repository {
+func NewRepository(cfg Config) (*Repository, error) {
 	cli, err := NewClient(cfg.Addr, cfg.Timeouts.ConnectionTimeout)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	commandCfg := command.Config{
 		Database:       cfg.Database,
@@ -171,7 +171,7 @@ func NewRepository(cfg Config) *Repository {
 			TrainingsHandler: query.NewTrainingsHandler(cli, queryCfg),
 		},
 	}
-	return &r
+	return &r, nil
 }
 
 func NewClient(addr string, d time.Duration) (*mongo.Client, error) {

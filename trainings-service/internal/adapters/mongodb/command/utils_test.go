@@ -32,7 +32,7 @@ func findTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupW
 }
 
 func newTestParticipant(UUID string) trainings.Participant {
-	p, err := trainings.NewParticipant("0a4e9c95-1e13-491a-b8ff-c0536b5f8dd6", "Jerry Smith")
+	p, err := trainings.NewParticipant(UUID, "Jerry Smith")
 	if err != nil {
 		panic(err)
 	}

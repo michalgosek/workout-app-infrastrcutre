@@ -21,7 +21,7 @@ func main() {
 }
 
 func execute() error {
-	repository := mongodb.NewRepository(mongodb.Config{
+	repository, err := mongodb.NewRepository(mongodb.Config{
 		Addr:       "mongodb://localhost:27017",
 		Database:   "trainings_service_db",
 		Collection: "trainings",
@@ -31,6 +31,9 @@ func execute() error {
 			ConnectionTimeout: 10 * time.Second,
 		},
 	})
+	if err != nil {
+		return err
+	}
 	defer func() {
 		err := repository.Disconnect()
 		if err != nil {
