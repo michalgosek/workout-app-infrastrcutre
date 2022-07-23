@@ -1,6 +1,8 @@
-package mongodb
+package documents
 
-import "time"
+import (
+	"time"
+)
 
 type UserWriteModel struct {
 	UUID           string    `bson:"_id"`

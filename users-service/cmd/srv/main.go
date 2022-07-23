@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/go-chi/chi"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
+	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/users-service/internal/adapters/mongodb"
 	"github.com/michalgosek/workout-app-infrastrcutre/users-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/users-service/internal/application/command"
@@ -10,9 +12,6 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/users-service/internal/ports/http"
 	"log"
 	"time"
-
-	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
-	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 )
 
 func main() {
@@ -23,8 +22,7 @@ func main() {
 
 func execute() error {
 	API := rest.NewRouter()
-
-	cfg := mongodb.Config{
+	repository, err := mongodb.NewRepository(mongodb.Config{
 		Addr:       "mongodb://localhost:27017",
 		Database:   "users_service",
 		Collection: "users",
@@ -33,8 +31,7 @@ func execute() error {
 			QueryTimeout:      10 * time.Second,
 			ConnectionTimeout: 10 * time.Second,
 		},
-	}
-	repository, err := mongodb.NewRepository(cfg)
+	})
 	if err != nil {
 		return fmt.Errorf("users repository creation failed: %s", err)
 	}
