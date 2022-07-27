@@ -13,12 +13,6 @@ import (
 	"time"
 )
 
-const (
-	InternalMessageErrorMsg = "Internal Message Error."
-	ResourceNotFoundMsg     = "Resource not found."
-	ServiceUnavailable      = "Service currently unavailable."
-)
-
 type Trainings struct {
 	addr   string
 	app    *application.Application
@@ -26,37 +20,42 @@ type Trainings struct {
 }
 
 func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
-	type HTTPRequestBody struct {
-		TrainerUUID string `json:"trainer_uuid"`
-		TrainerName string `json:"trainer_name"`
-		GroupName   string `json:"group_name"`
-		GroupDesc   string `json:"group_desc"`
-		Date        string `json:"date"`
-	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		var payload HTTPRequestBody
+		var payload TrainingGroupPost
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&payload)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
+		if !trainings.IsUserTrainerRole(payload.User.Role) {
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
+		}
+
+		t, err := trainings.NewTrainer(payload.User.UUID, payload.User.Name)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
 		date, err := time.Parse(h.format, payload.Date)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+
 		UUID, err := h.app.Commands.PlanTrainingGroup.Do(r.Context(), command.PlanTrainingGroup{
 			UUID:        uuid.NewString(),
-			TrainerUUID: payload.TrainerUUID,
-			TrainerName: payload.TrainerName,
+			Trainer:     t,
 			Name:        payload.GroupName,
 			Description: payload.GroupDesc,
 			Date:        date,
 		})
 
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
@@ -78,7 +77,7 @@ func (h *Trainings) GetTrainerGroup() http.HandlerFunc {
 		}
 		res, err := h.app.Queries.TrainingGroup.Do(r.Context(), trainingUUID, trainerUUID)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		rest.SendJSONResponse(w, res, http.StatusOK)
@@ -107,7 +106,7 @@ func (h *Trainings) AssignParticipant() http.HandlerFunc {
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&payload)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 
@@ -123,7 +122,7 @@ func (h *Trainings) AssignParticipant() http.HandlerFunc {
 			Participant:  p,
 		})
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -152,7 +151,7 @@ func (h *Trainings) UnassignParticipant() http.HandlerFunc {
 			TrainerUUID:     trainerUUID,
 		})
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusOK)
@@ -168,7 +167,7 @@ func (h *Trainings) GetTrainerGroups() http.HandlerFunc {
 		}
 		res, err := h.app.Queries.TrainingGroups.Do(r.Context(), trainerUUID)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		rest.SendJSONResponse(w, res, http.StatusOK)
@@ -192,7 +191,7 @@ func (h *Trainings) DeleteTrainerGroup() http.HandlerFunc {
 			TrainerUUID:  trainerUUID,
 		})
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
@@ -208,7 +207,7 @@ func (h *Trainings) DeleteTrainerGroups() http.HandlerFunc {
 		}
 		err := h.app.Commands.CancelTrainingGroups.Do(r.Context(), trainerUUID)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)

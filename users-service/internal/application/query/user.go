@@ -9,9 +9,10 @@ type UserHandlerRepository interface {
 }
 
 type User struct {
-	Role  string `json:"role"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
+	UUID  string
+	Role  string
+	Name  string
+	Email string
 }
 
 type UserHandler struct {

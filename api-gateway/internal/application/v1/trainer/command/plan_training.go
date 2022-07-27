@@ -1,63 +1,46 @@
 package command
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"net/http"
 )
 
-type PlanTraining struct {
-	TrainerUUID string `json:"trainer_uuid"`
-	TrainerName string `json:"trainer_name"`
-	GroupName   string `json:"group_name"`
-	GroupDesc   string `json:"group_desc"`
-	Date        string `json:"date"`
-}
-
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
 type PlanTrainingHandler struct {
-	url string
-	cli HTTPClient
+	trainings TrainingsService
+	users     UsersService
 }
 
-func (p *PlanTrainingHandler) Do(ctx context.Context, t PlanTraining) error {
-	bb, err := json.Marshal(t)
+func (p *PlanTrainingHandler) Do(ctx context.Context, r PlanTraining) error {
+	user, err := p.users.User(ctx, r.UserUUID)
 	if err != nil {
 		return err
 	}
-	body := bytes.NewBuffer(bb)
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, p.url, body)
+	err = p.trainings.PlanTraining(ctx, PlanTrainingCommand{
+		User: User{
+			UUID: user.UUID,
+			Name: user.Name,
+			Role: user.Role,
+		},
+		GroupName: r.GroupName,
+		GroupDesc: r.GroupDesc,
+		Date:      r.Date,
+	})
 	if err != nil {
 		return err
-	}
-
-	res, err := p.cli.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	httpSuccessfulResponse := res.StatusCode >= 200 && res.StatusCode <= 299
-	if !httpSuccessfulResponse {
-		msg := fmt.Sprintf("request call failure, status code: %d", res.StatusCode)
-		return errors.New(msg)
 	}
 	return nil
 }
 
-func NewPlanTrainingHandler(c HTTPClient) *PlanTrainingHandler {
-	if c == nil {
-		panic("nil http client implementation")
+func NewPlanTrainingHandler(u UsersService, t TrainingsService) (*PlanTrainingHandler, error) {
+	if u == nil {
+		return nil, errors.New("nil user service")
+	}
+	if t == nil {
+		return nil, errors.New("nil trainings service")
 	}
 	h := PlanTrainingHandler{
-		url: "http://localhost:8070/api/v1/trainings",
-		cli: c,
+		trainings: t,
+		users:     u,
 	}
-	return &h
+	return &h, nil
 }

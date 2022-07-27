@@ -38,3 +38,7 @@ var (
 	ErrEmptyTrainerUUID = errors.New("empty trainer uuid")
 	ErrEmptyTrainerName = errors.New("empty trainer name")
 )
+
+func IsUserTrainerRole(role string) bool {
+	return role == "trainer"
+}

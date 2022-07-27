@@ -11,8 +11,7 @@ type PlanTrainingGroup struct {
 	Name        string
 	Description string
 	Date        time.Time
-	TrainerUUID string
-	TrainerName string
+	Trainer     trainings.Trainer
 }
 
 type CreateTrainingGroupService interface {
@@ -24,11 +23,7 @@ type PlanTrainingGroupHandler struct {
 }
 
 func (p *PlanTrainingGroupHandler) Do(ctx context.Context, cmd PlanTrainingGroup) (string, error) {
-	t, err := trainings.NewTrainer(cmd.TrainerUUID, cmd.TrainerName)
-	if err != nil {
-		return "", err
-	}
-	g, err := trainings.NewTrainingGroup(cmd.UUID, cmd.Name, cmd.Description, cmd.Date, t)
+	g, err := trainings.NewTrainingGroup(cmd.UUID, cmd.Name, cmd.Description, cmd.Date, cmd.Trainer)
 	if err != nil {
 		return "", err
 	}

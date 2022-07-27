@@ -2,7 +2,10 @@ package ports
 
 import (
 	"encoding/json"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
+	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/chi"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/auth"
 	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/query"
@@ -20,13 +23,20 @@ type TrainerHTTP struct {
 
 func (t *TrainerHTTP) CreateTraining() http.HandlerFunc {
 	type HTTPRequestBody struct {
-		TrainerUUID string `json:"trainer_uuid"`
-		TrainerName string `json:"trainer_name"`
-		GroupName   string `json:"group_name"`
-		GroupDesc   string `json:"group_desc"`
-		Date        string `json:"date"`
+		UserUUID  string `json:"user_uuid"`
+		GroupName string `json:"group_name"`
+		GroupDesc string `json:"group_desc"`
+		Date      string `json:"date"`
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
+		claims := token.CustomClaims.(*auth.CustomClaims)
+		if !claims.HasScope("create:training-group") {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte(`{"message":"Insufficient scope."}`))
+			return
+		}
+
 		var payload HTTPRequestBody
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&payload)
@@ -35,11 +45,10 @@ func (t *TrainerHTTP) CreateTraining() http.HandlerFunc {
 			return
 		}
 		err = t.trainerAPI.Commands.Do(r.Context(), command.PlanTraining{
-			TrainerUUID: payload.TrainerUUID,
-			TrainerName: payload.TrainerName,
-			GroupName:   payload.GroupName,
-			GroupDesc:   payload.GroupDesc,
-			Date:        payload.Date,
+			UserUUID:  payload.UserUUID,
+			GroupName: payload.GroupName,
+			GroupDesc: payload.GroupDesc,
+			Date:      payload.Date,
 		})
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
@@ -56,14 +65,14 @@ func (t *TrainerHTTP) GetTraining() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing groupUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		trainerUUID := chi.URLParam(r, "trainerUUID")
-		if trainerUUID == "" {
+		userUUID := chi.URLParam(r, "userUUID")
+		if userUUID == "" {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
 		res, err := t.trainerAPI.Queries.Do(r.Context(), query.Training{
-			UUID:        trainingUUID,
-			TrainerUUID: trainerUUID,
+			UserUUID:     userUUID,
+			TrainingUUID: trainingUUID,
 		})
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)

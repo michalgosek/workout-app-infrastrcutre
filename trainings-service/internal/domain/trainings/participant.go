@@ -33,3 +33,7 @@ var (
 	ErrEmptyParticipantUUID = errors.New("specified empty participant uuid")
 	ErrEmptyParticipantName = errors.New("specified empty participant name")
 )
+
+func IsUserParticipantRole(role string) bool {
+	return role == "participant"
+}

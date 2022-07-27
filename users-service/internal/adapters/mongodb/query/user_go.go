@@ -47,6 +47,7 @@ func (u *UserHandler) User(ctx context.Context, UUID string) (query.User, error)
 		return query.User{}, nil
 	}
 	g := query.User{
+		UUID:  doc.UUID,
 		Name:  doc.Name,
 		Role:  doc.Role,
 		Email: doc.Email,

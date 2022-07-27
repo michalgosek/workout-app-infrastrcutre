@@ -11,10 +11,6 @@ import (
 	"net/http"
 )
 
-const (
-	InternalMessageErrorMsg = "Internal Message Error."
-)
-
 type HTTP struct {
 	addr string
 	app  *application.Application
@@ -31,22 +27,23 @@ func (h *HTTP) CreateUser() http.HandlerFunc {
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&payload)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
-		userUUID := uuid.NewString()
+
+		UUID := uuid.NewString()
 		err = h.app.Commands.RegisterUser.Do(r.Context(), command.RegisterUser{
-			UUID:  userUUID,
+			UUID:  UUID,
 			Role:  payload.Role,
 			Name:  payload.Name,
 			Email: payload.Email,
 		})
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+		w.Header().Set("Location:", fmt.Sprintf("%s/v1/users/%s", h.addr, UUID))
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Add("Location:", fmt.Sprintf("%s/v1/users/%s", h.addr, userUUID))
 	}
 }
 
@@ -59,7 +56,7 @@ func (h *HTTP) GetUser() http.HandlerFunc {
 		}
 		user, err := h.app.Queries.User.Do(r.Context(), UUID)
 		if err != nil {
-			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
 		rest.SendJSONResponse(w, user, http.StatusOK)
