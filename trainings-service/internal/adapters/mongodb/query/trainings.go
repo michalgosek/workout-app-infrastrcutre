@@ -43,12 +43,3 @@ func NewTrainingsHandler(cli *mongo.Client, cfg Config) *TrainingsHandler {
 	}
 	return &h
 }
-
-func UnmarshalToQueryTrainerWorkoutGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainerWorkoutGroup {
-	var out []query.TrainerWorkoutGroup
-	for _, d := range dd {
-		g := UnmarshalToQueryTrainerWorkoutGroup(d)
-		out = append(out, g)
-	}
-	return out
-}

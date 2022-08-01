@@ -29,11 +29,6 @@ func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
 			return
 		}
 
-		if !trainings.IsUserTrainerRole(payload.User.Role) {
-			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-			return
-		}
-
 		t, err := trainings.NewTrainer(payload.User.UUID, payload.User.Name)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
@@ -211,6 +206,17 @@ func (h *Trainings) DeleteTrainerGroups() http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
+func (h *Trainings) GetAllTrainingGroups() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		groups, err := h.app.AllTrainingGroups.Do(r.Context())
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		rest.SendJSONResponse(w, groups, http.StatusOK)
 	}
 }
 

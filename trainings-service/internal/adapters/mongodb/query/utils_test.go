@@ -19,6 +19,38 @@ func createTrainingGroupReadModel(cli *mongo.Client, groupUUID string) rm.Traine
 	return readModel
 }
 
+func createAllTrainingGroupReadModels(cli *mongo.Client) ([]rm.TrainingWorkoutGroup, error) {
+	writeModels, err := findAllTrainingGroups(cli)
+	if err != nil {
+		return nil, err
+	}
+	allTrainingGroups := query.UnmarshalToQueryTrainingGroups(writeModels...)
+	return allTrainingGroups, nil
+}
+
+func findAllTrainingGroups(cli *mongo.Client) ([]documents.TrainingGroupWriteModel, error) {
+	db := cli.Database("insert_training_db")
+	coll := db.Collection("trainings")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	f := bson.D{}
+	cur, err := coll.Find(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var docs []documents.TrainingGroupWriteModel
+	err = cur.All(ctx, &docs)
+	if err != nil {
+		return nil, err
+	}
+	return docs, nil
+}
+
 func findTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupWriteModel, error) {
 	db := cli.Database("insert_training_db")
 	coll := db.Collection("trainings")

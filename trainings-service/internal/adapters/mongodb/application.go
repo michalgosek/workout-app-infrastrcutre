@@ -25,6 +25,7 @@ type Commands struct {
 type Queries struct {
 	*query.TrainingHandler
 	*query.TrainingsHandler
+	*query.AllTrainingsHandler
 }
 
 type Timeouts struct {
@@ -64,6 +65,10 @@ func (r *Repository) findTrainingGroupWithFilter(ctx context.Context, f bson.M) 
 		return documents.TrainingGroupWriteModel{}, err
 	}
 	return doc, nil
+}
+
+func (r *Repository) AllTrainingGroups(ctx context.Context) ([]readm.TrainingWorkoutGroup, error) {
+	return r.queries.AllTrainingsHandler.Do(ctx)
 }
 
 func (r *Repository) TrainingGroups(ctx context.Context, trainerUUID string) ([]readm.TrainerWorkoutGroup, error) {
@@ -167,8 +172,9 @@ func NewRepository(cfg Config) (*Repository, error) {
 			UpdateTrainingHandler:  command.NewUpdateTrainingHandler(cli, commandCfg),
 		},
 		queries: &Queries{
-			TrainingHandler:  query.NewTrainingHandler(cli, queryCfg),
-			TrainingsHandler: query.NewTrainingsHandler(cli, queryCfg),
+			TrainingHandler:     query.NewTrainingHandler(cli, queryCfg),
+			TrainingsHandler:    query.NewTrainingsHandler(cli, queryCfg),
+			AllTrainingsHandler: query.NewAllTrainingsHandler(cli, queryCfg),
 		},
 	}
 	return &r, nil

@@ -23,3 +23,28 @@ func UnmarshalToQueryTrainerWorkoutGroup(d documents.TrainingGroupWriteModel) qu
 	}
 	return g
 }
+
+func UnmarshalToQueryTrainerWorkoutGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainerWorkoutGroup {
+	var out []query.TrainerWorkoutGroup
+	for _, d := range dd {
+		g := UnmarshalToQueryTrainerWorkoutGroup(d)
+		out = append(out, g)
+	}
+	return out
+}
+
+func UnmarshalToQueryTrainingGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainingWorkoutGroup {
+	var out []query.TrainingWorkoutGroup
+	for _, d := range dd {
+		out = append(out, query.TrainingWorkoutGroup{
+			UUID:         d.UUID,
+			TrainerName:  d.Trainer.Name,
+			Name:         d.Name,
+			Description:  d.Description,
+			Date:         d.Date,
+			Limit:        d.Limit,
+			Participants: len(d.Participants),
+		})
+	}
+	return out
+}

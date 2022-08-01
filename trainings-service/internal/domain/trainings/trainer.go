@@ -40,5 +40,5 @@ var (
 )
 
 func IsUserTrainerRole(role string) bool {
-	return role == "trainer"
+	return role == "Trainer"
 }

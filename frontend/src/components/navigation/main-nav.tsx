@@ -1,6 +1,8 @@
 import { GetLinkClassName } from './utils';
 import { NavLink } from 'react-router-dom';
 import { useGetAuthorization } from '../../authorization/role-authorization-hook';
+import TrainerNav from "./trainer-nav";
+
 
 const MainNav: React.FC = () => {
     const isTrainer = useGetAuthorization(["Trainer"])
@@ -16,10 +18,7 @@ const MainNav: React.FC = () => {
                 Trainings
             </NavLink>
             {isTrainer ?
-                <NavLink to="/trainer/plan-group" className={({ isActive }) => GetLinkClassName(isActive)}>
-                    Plan Training Group
-                </NavLink>
-
+                    <TrainerNav />
                 : null}
         </div >
     );

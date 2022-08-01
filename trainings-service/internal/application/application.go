@@ -14,8 +14,9 @@ type Commands struct {
 }
 
 type Queries struct {
-	TrainingGroup  *query.TrainingGroupHandler
-	TrainingGroups *query.TrainingGroupsHandler
+	TrainingGroup     *query.TrainingGroupHandler
+	TrainingGroups    *query.TrainingGroupsHandler
+	AllTrainingGroups *query.AllTrainingGroupsHandler
 }
 
 type Application struct {

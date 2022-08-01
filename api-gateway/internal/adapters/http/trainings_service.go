@@ -6,10 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/command"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/query"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/query"
 	"net/http"
 )
+
+type Client interface {
+	Do(req *http.Request) (*http.Response, error)
+}
 
 type TrainingsService struct {
 	cli Client

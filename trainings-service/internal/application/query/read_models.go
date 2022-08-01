@@ -15,3 +15,13 @@ type TrainerWorkoutGroup struct {
 	Limit        int           `json:"limit"`
 	Participants []Participant `json:"participants"`
 }
+
+type TrainingWorkoutGroup struct {
+	UUID         string    `json:"uuid"`
+	TrainerName  string    `json:"trainer_name"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	Date         time.Time `json:"date"`
+	Limit        int       `json:"limit"`
+	Participants int       `json:"participants"`
+}

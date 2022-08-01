@@ -1,9 +1,8 @@
 package trainer
 
 import (
-	adapters "github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/adapters/http"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/command"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/query"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/query"
 	"net/http"
 )
 
@@ -22,25 +21,4 @@ type Queries struct {
 type Application struct {
 	Commands
 	Queries
-}
-
-func NewApplication(t *adapters.TrainingsService, u *adapters.UsersService) (*Application, error) {
-	planTraining, err := command.NewPlanTrainingHandler(u, t)
-	if err != nil {
-		return nil, err
-	}
-	training, err := query.NewTrainingHandler(u, t)
-	if err != nil {
-		return nil, err
-	}
-
-	a := Application{
-		Commands: Commands{
-			PlanTrainingHandler: planTraining,
-		},
-		Queries: Queries{
-			TrainingHandler: training,
-		},
-	}
-	return &a, nil
 }

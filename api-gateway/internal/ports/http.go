@@ -5,10 +5,10 @@ import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 	"github.com/go-chi/chi"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/auth"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/command"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"net/http"
 )
@@ -22,12 +22,18 @@ type TrainerHTTP struct {
 }
 
 func (t *TrainerHTTP) CreateTraining() http.HandlerFunc {
-	type HTTPRequestBody struct {
-		UserUUID  string `json:"user_uuid"`
+	type User struct {
+		UserUUID string `json:"uuid"`
+		Role     string `json:"role"`
+		Name     string `json:"name"`
+	}
+	type TrainingGroup struct {
+		User      User   `json:"user"`
 		GroupName string `json:"group_name"`
 		GroupDesc string `json:"group_desc"`
 		Date      string `json:"date"`
 	}
+
 	return func(w http.ResponseWriter, r *http.Request) {
 		token := r.Context().Value(jwtmiddleware.ContextKey{}).(*validator.ValidatedClaims)
 		claims := token.CustomClaims.(*auth.CustomClaims)
@@ -37,15 +43,19 @@ func (t *TrainerHTTP) CreateTraining() http.HandlerFunc {
 			return
 		}
 
-		var payload HTTPRequestBody
+		var payload TrainingGroup
 		dec := json.NewDecoder(r.Body)
 		err := dec.Decode(&payload)
 		if err != nil {
 			http.Error(w, InternalMessageErrorMsg, http.StatusInternalServerError)
 			return
 		}
-		err = t.trainerAPI.Commands.Do(r.Context(), command.PlanTraining{
-			UserUUID:  payload.UserUUID,
+		err = t.trainerAPI.Commands.Do(r.Context(), command.PlanTrainingCommand{
+			User: command.User{
+				UUID: payload.User.UserUUID,
+				Role: payload.User.Role,
+				Name: payload.User.Name,
+			},
 			GroupName: payload.GroupName,
 			GroupDesc: payload.GroupDesc,
 			Date:      payload.Date,

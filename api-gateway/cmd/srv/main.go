@@ -3,9 +3,11 @@ package main
 import (
 	"github.com/go-chi/chi"
 	adapters "github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/adapters/http"
+	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer"
+	trainercmd "github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/command"
+	trainerquery "github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/api/v1/rest/trainer/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/server/rest"
-	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/application/v1/trainer"
 	"github.com/michalgosek/workout-app-infrastrcutre/api-gateway/internal/ports"
 	"log"
 )
@@ -24,12 +26,17 @@ func execute() error {
 	if err != nil {
 		return err
 	}
-	u, err := adapters.NewUsersService(HTTPCli)
-	if err != nil {
-		return err
+
+	trainerApp := trainer.Application{
+		Commands: trainer.Commands{
+			PlanTrainingHandler: trainercmd.NewPlanTrainingHandler(t),
+		},
+		Queries: trainer.Queries{
+			TrainingHandler: trainerquery.NewTrainingHandler(t),
+		},
 	}
 
-	err = setTrainerRoutes(API, t, u)
+	err = setTrainerRoutes(API, &trainerApp)
 	if err != nil {
 		return err
 	}
@@ -38,13 +45,8 @@ func execute() error {
 	return nil
 }
 
-func setTrainerRoutes(r chi.Router, t *adapters.TrainingsService, u *adapters.UsersService) error {
-	API, err := trainer.NewApplication(t, u)
-	if err != nil {
-		return err
-	}
-
-	HTTP := ports.NewTrainerHTTP(API)
+func setTrainerRoutes(r chi.Router, t *trainer.Application) error {
+	HTTP := ports.NewTrainerHTTP(t)
 
 	r.Route("/api/v1/trainings", func(r chi.Router) {
 		r.Route("/trainer", func(r chi.Router) {

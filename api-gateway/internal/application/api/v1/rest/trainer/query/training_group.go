@@ -2,11 +2,9 @@ package query
 
 import (
 	"context"
-	"errors"
 )
 
 type TrainingHandler struct {
-	users     UsersService
 	trainings TrainingsService
 }
 
@@ -21,17 +19,7 @@ type TrainingQuery struct {
 }
 
 func (t *TrainingHandler) Do(ctx context.Context, q Training) (TrainingGroup, error) {
-	user, err := t.users.User(ctx, q.UserUUID)
-	if err != nil {
-		return TrainingGroup{}, err
-	}
-
 	training, err := t.trainings.TrainingGroup(ctx, TrainingQuery{
-		User: User{
-			UUID: user.UUID,
-			Role: user.Role,
-			Name: user.Name,
-		},
 		TrainingUUID: q.TrainingUUID,
 	})
 	if err != nil {
@@ -40,17 +28,13 @@ func (t *TrainingHandler) Do(ctx context.Context, q Training) (TrainingGroup, er
 	return training, nil
 }
 
-func NewTrainingHandler(u UsersService, t TrainingsService) (*TrainingHandler, error) {
-	if u == nil {
-		return nil, errors.New("nil users service")
-	}
+func NewTrainingHandler(t TrainingsService) *TrainingHandler {
 	if t == nil {
-		return nil, errors.New("nil trainings service")
+		panic("nil trainings service")
 	}
 
 	h := TrainingHandler{
-		users:     u,
 		trainings: t,
 	}
-	return &h, nil
+	return &h
 }
