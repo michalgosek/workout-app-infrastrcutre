@@ -9,27 +9,30 @@ body {
   overflow-y: scroll;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
-}
-
 .navbar {
   background-color: black;
   padding: 1.375rem 0;
-  box-shadow: 0px 1px 2px 0px #dfe3ec; }
+  box-shadow: 0px 1px 2px 0px #dfe3ec;
+}
+
 .navbar .router-link-exact-active {
   color: #041433;
-  border-bottom: 3px solid #0066f9; }
+  border-bottom: 3px solid #0066f9;
+}
 
 .profile-header {
   text-align: center;
-  margin-bottom: 3rem; }
+  margin-bottom: 3rem;
+}
+
 .profile-header .lead {
-  font-size: 1.25rem; }
+  font-size: 1.25rem;
+}
+
 .profile-header .profile-picture {
   box-shadow: 0px 0px 3px 0px #b3bac7;
-  margin-bottom: 1.5rem; }
+  margin-bottom: 1.5rem;
+}
 
 
 .navbar-nav .nav-link {
@@ -37,20 +40,24 @@ code {
   padding: 0 0 0.5rem 0;
   box-sizing: border-box;
   margin: 0 40px 0 0;
-  font-weight: 350; }
+  font-weight: 350;
+}
+
 .navbar-nav .nav-link:hover {
-  color: #000104; }
-
-
+  color: #000104;
+}
 
 footer {
   background: #eff1f5;
   box-shadow: 0px -2px 2px 0px #dfe3ec;
   min-height: 130px;
   text-align: center;
-  padding: 32px; }
+  padding: 32px;
+}
+
 footer .logo {
-  margin: 0 auto 20px auto; }
+  margin: 0 auto 20px auto;
+}
 
 
 @media (max-width: 768px) {

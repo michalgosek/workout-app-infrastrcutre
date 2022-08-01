@@ -1,4 +1,4 @@
-import React, { Fragment, PropsWithChildren } from "react";
+import React, { PropsWithChildren } from "react";
 import { TrainingGroup, TrainingsService } from "../../services/trainings-service";
 import { useEffect, useState } from "react";
 
@@ -15,12 +15,12 @@ const TrainingsTable: React.FC<PropsWithChildren<TrainingsTableProps>> = ({ trai
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Training group name</th>
-                        <th>description</th>
-                        <th>trainer name</th>
-                        <th>date</th>
-                        <th>limit</th>
-                        <th>participants</th>
+                        <th>Group name</th>
+                        <th>Description</th>
+                        <th>Trainer</th>
+                        <th>Date</th>
+                        <th>Limit</th>
+                        <th>Participants</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -54,12 +54,14 @@ const NoTrainingsData: React.FC = () => {
 const Trainings: React.FC = () => {
     const [trainings, setTrainings] = useState<[] | TrainingGroup[]>([]);
     useEffect(() => {
-        (async () => {
+        const fetchAllTraininigs = async () => {
             const trainings = await TrainingsService.getAllTrainings();
+            if (!trainings) return
             setTrainings(trainings);
-        })();
-    }, []);
-    return ( trainings.length === 0 ? <NoTrainingsData /> : <TrainingsTable trainings={trainings} /> );
+        }
+        fetchAllTraininigs();
+    })
+    return (trainings.length === 0 ? <NoTrainingsData /> : <TrainingsTable trainings={trainings} />);
 };
 
 export default Trainings;

@@ -1,7 +1,7 @@
-import "react-datepicker/dist/react-datepicker.css";
+import { PlanTrainingGroupPOST, TrainingsService } from "../../../services/trainings-service";
+import React, { FC, Fragment, useState } from "react";
+import { SubmitHandler, useForm } from 'react-hook-form';
 
-import React, {Fragment, useState} from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import Button from 'react-bootstrap/Button';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -9,9 +9,7 @@ import Form from 'react-bootstrap/Form';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import {TrainingsService, PlanTrainingGroupPOST, TrainerPOST} from "../../../services/trainings-service";
-import {useAuth0} from "@auth0/auth0-react";
-
+import { useAuth0 } from "@auth0/auth0-react";
 
 type FormValues = {
     groupName: string;
@@ -19,10 +17,10 @@ type FormValues = {
     description: string;
 };
 
-const TrainingPlanningForm: React.FC = () => {
+const TrainingPlanningForm: FC = () => {
     const [value, setValue] = useState<Date | null>(new Date());
-    const { handleSubmit, register } = useForm<FormValues>();
-    const {user} = useAuth0();
+    const { handleSubmit, register, formState: { errors } } = useForm<FormValues>();
+    const { user } = useAuth0();
     if (!user) {
         return null;
     }
@@ -44,8 +42,8 @@ const TrainingPlanningForm: React.FC = () => {
                 group_desc: data.description,
                 date: data.appointment.toString(),
             }
-            const res = await TrainingsService.createTrainingGroup(training);
-            console.error(res)
+            await TrainingsService.createTrainingGroup(training);
+            window.location.reload();
         })();
     }
     return (
@@ -55,8 +53,9 @@ const TrainingPlanningForm: React.FC = () => {
                 <Form.Control
                     type="text"
                     placeholder="Training group name"
-                    {...register("groupName", { required: "This value is obligatory!" })}
+                    {...register("groupName", { required: "training group name is obligatory!" })}
                 />
+                {errors?.groupName && <p>{errors.groupName.message}</p>}
                 <Form.Text className="text-muted">
                     This will be used as group name description.
                 </Form.Text>
@@ -65,7 +64,7 @@ const TrainingPlanningForm: React.FC = () => {
                 <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <Stack spacing={3}>
                         <DateTimePicker
-                            {...register('appointment')}
+                            {...register('appointment', { required: "appointment date for training group is obligatory!" })}
                             label="Training appointment"
                             value={value}
                             onChange={onHandleChange}
@@ -84,11 +83,12 @@ const TrainingPlanningForm: React.FC = () => {
                     style={{ height: '100px' }}
                 />
             </Form.Group>
-                <Button className="btn btn-primary me-2" type="submit">Plan</Button>
-                <Button className="btn btn-secondary" type="reset" >Clear</Button>
+            <Button className="btn btn-primary me-2" type="submit">Plan</Button>
+            <Button className="btn btn-secondary" type="reset" >Clear</Button>
         </Form >
     );
 };
+
 
 
 const PlanTraining: React.FC = () => {

@@ -1,4 +1,4 @@
-import './styles/app.css';
+import './assets/styles/app.css';
 
 import { Hero, Loading, } from './components';
 import { NotAuthorized, NotFound } from './views/errors';
