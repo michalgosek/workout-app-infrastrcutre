@@ -1,4 +1,4 @@
-import PageLayout from './page-layout';
+import { Fragment } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 
 const Profile: React.FC = () => {
@@ -7,7 +7,7 @@ const Profile: React.FC = () => {
         return null
     }
     return (
-        <PageLayout>
+        <Fragment>
             <div className="row algin-items-center profile-header">
                 <div className="col-md-3 mb-3">
                     <img
@@ -20,7 +20,7 @@ const Profile: React.FC = () => {
                     <p className="lead text-muted">{user.email}</p>
                 </div>
             </div>
-        </PageLayout>
+        </Fragment>
     );
 };
 

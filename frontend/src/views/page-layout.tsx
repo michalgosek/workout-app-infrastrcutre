@@ -1,21 +1,18 @@
 import { Footer, NavBar } from "../components";
-import React, { PropsWithChildren } from "react";
+import { Outlet } from "react-router-dom";
+import React from "react";
 
-interface PageLayoutProps {
-    children: React.ReactNode;
-}
-
-const PageLayout: React.FC<PropsWithChildren<PageLayoutProps>> = ({ children }) => {
+const PageLayout: React.FC = () => {
     return (
         <div id="app" className="d-flex flex-column h-100">
             <NavBar />
             <div className="container flex-grow-1">
                 <div className="mt-5">
-                    {children}
+                    < Outlet />
                 </div>
             </div>
             <Footer />
-        </div>
+        </div >
     );
 };
 

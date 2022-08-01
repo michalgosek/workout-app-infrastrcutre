@@ -23,7 +23,7 @@ const Auth0ProviderWithConfig = ({ children }: PropsWithChildren<Auth0ProviderWi
     if (isEnvsMissing) {
         return (
             <StartupFailed />
-        )
+        );
     }
     return (
         <Auth0Provider
@@ -31,6 +31,7 @@ const Auth0ProviderWithConfig = ({ children }: PropsWithChildren<Auth0ProviderWi
             clientId={AUTH0_CLIENT_ID}
             redirectUri={AUTH0_CALLBACK_URL}
             audience={AUTH0_AUDIENCE}
+            scope={"read:current_user update:current_user_metadata"}
         >
             {children}
         </Auth0Provider>

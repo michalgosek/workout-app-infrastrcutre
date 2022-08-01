@@ -1,7 +1,11 @@
-import { ENDPOINTS } from './consts';
 import axios from 'axios';
 
-export interface TrainigGroup {
+const ENDPOINTS = {
+    ALL_TRAININGS: "http://localhost:8070/api/v1/trainings"
+}
+
+export interface TrainingGroup {
+    uuid: string
     date: string;
     description: string;
     limit: number;
@@ -10,19 +14,20 @@ export interface TrainigGroup {
     trainer_name: string;
 };
 
-const getAllTrainingGroups = async (): Promise<TrainigGroup[]> => {
+const getAllTrainingGroups = async (): Promise<TrainingGroup[]> => {
     try {
-        const response = await axios.get<TrainigGroup[]>(ENDPOINTS.ALL_TRAININGS);
+        const response = await axios.get<TrainingGroup[]>(ENDPOINTS.ALL_TRAININGS);
         return response.data;
     } catch (err) {
+        console.error(err);
         return [];
     }
 }
 
 const TrainingsServiceAPI = {
-    GetAllTrainings: getAllTrainingGroups
+    getAllTrainings: getAllTrainingGroups
 };
 
 export {
     TrainingsServiceAPI,
-}; 
+};

@@ -11,7 +11,7 @@ const NavBar: React.FC = () => {
                     <AuthNav />
                 </div>
             </nav>
-        </div>
+        </div >
     );
 };
 
