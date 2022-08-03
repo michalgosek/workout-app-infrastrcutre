@@ -105,3 +105,8 @@ footer .logo {
 .app-logo {
   max-width: 25rem;
 }
+
+td,
+th {
+  vertical-align: middle;
+}

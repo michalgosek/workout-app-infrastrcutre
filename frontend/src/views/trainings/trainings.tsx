@@ -1,8 +1,9 @@
 import React, { PropsWithChildren } from "react";
-import { TrainingGroup, TrainingsService } from "../../services/trainings-service";
-import { useEffect, useState } from "react";
 
+import NoTrainingsAvailable from "./no-trainings-availabe";
 import { Table } from "react-bootstrap";
+import { TrainingGroup } from "../../services/trainings-service";
+import { useGetAllTrainings } from "./hooks";
 
 interface TrainingsTableProps {
     trainings: TrainingGroup[];
@@ -43,25 +44,10 @@ const TrainingsTable: React.FC<PropsWithChildren<TrainingsTableProps>> = ({ trai
     );
 };
 
-const NoTrainingsData: React.FC = () => {
-    return (
-        <div>
-            <h1>There is no trainings available.</h1>
-        </div>
-    )
-};
-
 const Trainings: React.FC = () => {
-    const [trainings, setTrainings] = useState<[] | TrainingGroup[]>([]);
-    useEffect(() => {
-        const fetchAllTraininigs = async () => {
-            const trainings = await TrainingsService.getAllTrainings();
-            if (!trainings) return
-            setTrainings(trainings);
-        }
-        fetchAllTraininigs();
-    })
-    return (trainings.length === 0 ? <NoTrainingsData /> : <TrainingsTable trainings={trainings} />);
+    const trainings = useGetAllTrainings()
+    if (!trainings?.length) return (<NoTrainingsAvailable />);
+    return (<TrainingsTable trainings={trainings} />);
 };
 
 export default Trainings;

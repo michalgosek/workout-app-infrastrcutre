@@ -1,9 +1,9 @@
-import React, { FC, PropsWithChildren } from 'react';
+import { FC, PropsWithChildren } from 'react';
 import { TrainerGroup, TrainingsService } from '../../../services/trainings-service';
-import { useEffect, useState } from 'react';
 
+import NoTrainingsAvailable from "../no-trainings-availabe";
 import { Table } from "react-bootstrap";
-import { useAuth0 } from '@auth0/auth0-react';
+import { useGetAllTrainerGroups } from '../hooks';
 
 type TrainingsTableProps = {
     trainings: TrainerGroup[];
@@ -11,17 +11,10 @@ type TrainingsTableProps = {
 };
 
 const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string) => {
-    await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);;
+    await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
     window.location.reload();
 };
 
-const NoTrainingsData: React.FC = () => {
-    return (
-        <div>
-            <h1>There is no trainings available.</h1>
-        </div>
-    );
-};
 
 const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings, trainerUUID }) => {
     return (
@@ -59,24 +52,8 @@ const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings,
 };
 
 const TrainerTrainingGroups: FC = () => {
-    const [trainings, setTrainings] = useState<[] | TrainerGroup[]>([]);
-    const [trainerUUID, setTrainerUUID] = useState("");
-    const { user } = useAuth0();
-
-    useEffect(() => {
-        const fetchAllTraininigs = async () => {
-            if (!user || !user.sub) return
-            const uuid = user.sub as string
-
-            const trainings = await TrainingsService.getAllTrainerGroups(uuid);
-            if (!trainings) return
-
-            setTrainerUUID(uuid);
-            setTrainings(trainings);
-        }
-        fetchAllTraininigs();
-    })
-    return (trainings.length === 0 ? <NoTrainingsData /> : <TrainingsTable trainings={trainings} trainerUUID={trainerUUID} />);
+    const { trainerUUID, trainings } = useGetAllTrainerGroups()
+    return (trainings.length === 0 ? <NoTrainingsAvailable /> : <TrainingsTable trainings={trainings} trainerUUID={trainerUUID} />);
 }
 
 export default TrainerTrainingGroups;
