@@ -1,4 +1,4 @@
-import { FC, PropsWithChildren, useState } from 'react';
+import { FC, PropsWithChildren } from 'react';
 
 import DropButton from 'components/buttons/drop-button';
 import NoTrainingsAvailable from 'views/trainings/no-trainings-availabe';
@@ -51,12 +51,12 @@ const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings,
 
 // react query 
 const TrainerTrainingGroups: FC = () => {
-    const [signal, setSignal] = useState(false);
     const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string) => {
-        await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
-        setSignal(prev => !prev);
+        const res = await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
+        console.log(res);
+        window.location.reload();
     };
-    const { trainerUUID, trainings } = useGetAllTrainerGroups(signal)
+    const { trainerUUID, trainings } = useGetAllTrainerGroups();
     return (trainings.length === 0) ? <NoTrainingsAvailable /> : <TrainingsTable trainings={trainings} trainerUUID={trainerUUID} deleteTrainingCallback={deleteTrainerGroupCallback} />;
 }
 

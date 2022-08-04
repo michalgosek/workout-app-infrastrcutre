@@ -4,13 +4,12 @@ import { useEffect, useState } from 'react';
 import { TrainingsService } from 'services/trainings-service';
 import { useAuth0 } from '@auth0/auth0-react';
 
-const useGetAllTrainerGroups = (signal: boolean) => {
+const useGetAllTrainerGroups = () => {
     const [trainings, setTrainings] = useState<[] | TrainerGroupReadModel[]>([]);
     const [trainerUUID, setTrainerUUID] = useState("");
     const { user } = useAuth0();
 
     useEffect(() => {
-        debugger
         const fetchAllTraininigs = async () => {
             if (!user || !user.sub) return
             const uuid = user.sub as string
@@ -19,7 +18,7 @@ const useGetAllTrainerGroups = (signal: boolean) => {
             setTrainings(trainings);
         }
         fetchAllTraininigs();
-    }, [user, signal])
+    }, [user]);
     return { trainings, trainerUUID }
 }
 
