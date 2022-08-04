@@ -14,7 +14,7 @@ func TestShouldInsertTrainerGroupWithSuccess_Integration(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	trainer := newTestTrainer("c732d4a5-d3c3-432e-bf2a-221d5a87b531", "John Doe")
 	date := newTestStaticTime()
 	training := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
 

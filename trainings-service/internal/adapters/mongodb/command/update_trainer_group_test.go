@@ -14,9 +14,9 @@ func TestShouldUpdateTrainerGroupWithSuccess_Integration(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	trainer := newTestTrainer("efa9510c-f3ef-4942-9f6f-c71ecccd4790", "John Doe")
 	date := newTestStaticTime()
-	training := newTestTrainingGroup("860da5fd-3346-4b71-b579-b5daf8897f05", trainer, date)
+	training := newTestTrainingGroup("cd91677d-5aaa-404c-ab5c-3218f92fa580", trainer, date)
 
 	cli := newTestMongoClient()
 	commandCfg := command.Config{
@@ -36,7 +36,7 @@ func TestShouldUpdateTrainerGroupWithSuccess_Integration(t *testing.T) {
 	}()
 
 	_ = insertTrainingHandler.Do(ctx, &training)
-	_ = training.AssignParticipant(newTestParticipant("c6975a21-a098-4c94-a7de-de01a731b57a"))
+	_ = training.AssignParticipant(newTestParticipant("4af091ed-fd0f-4fa9-bcc9-e57989e6a458"))
 
 	// when:
 	err := SUT.Do(ctx, &training)
