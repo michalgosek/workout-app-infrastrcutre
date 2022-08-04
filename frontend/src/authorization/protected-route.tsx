@@ -10,7 +10,8 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: FC<ProtectedRouteProps> = ({ component }) => {
     const Component = withAuthenticationRequired(component, {
         onRedirecting: () => (<Loading />
-        )
+        ),
+        
     });
     return (
         <Component />

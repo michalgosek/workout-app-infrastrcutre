@@ -1,10 +1,11 @@
-import React from "react";
+import { Container } from 'react-bootstrap';
+import React from 'react';
 
 const NotAuthorized: React.FC = () => {
     return (
-        <div className="row">
-            <h2>You're not authorized :( </h2>
-        </div>
+       <Container>
+            <h2>You're not authorized 🤥 ⛔️ </h2>
+        </Container>
     );
 };
 

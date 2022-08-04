@@ -1,10 +1,11 @@
-import AuthenticationButton from "../buttons/authentication-button"
+import AuthenticationButton from 'components/buttons/authentication-button';
+import { Nav } from 'react-bootstrap';
 
 const AuthNav: React.FC = () => {
     return (
-        <div className="navbar-nav ml-auto">
-            <AuthenticationButton />
-        </div>
+        <Nav className='navbar-nav ml-auto'>
+                <AuthenticationButton />
+        </Nav>
     );
 };
 

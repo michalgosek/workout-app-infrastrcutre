@@ -1,17 +1,51 @@
-import React, { PropsWithChildren } from "react";
+import React, { FC, PropsWithChildren } from 'react';
 
-import NoTrainingsAvailable from "./no-trainings-availabe";
-import { Table } from "react-bootstrap";
-import { TrainingGroup } from "../../services/trainings-service";
-import { useGetAllTrainings } from "./hooks";
+import NoTrainingsAvailable from './no-trainings-availabe';
+import { Table } from 'react-bootstrap';
+import { TrainingGroupReadModel } from 'services/models';
+import TrainingScheduleButton from 'components/buttons/training-schedule-button';
+import { useAuth0 } from '@auth0/auth0-react';
+import { useGetAllTrainings } from './hooks';
 
-interface TrainingsTableProps {
-    trainings: TrainingGroup[];
+type TrainingsTableProps = {
+    trainings: TrainingGroupReadModel[];
+};
+
+type TrainingsTableBodyProps = {
+    trainingGroups: TrainingGroupReadModel[];
+};
+
+const TrainingsTableBody: FC<PropsWithChildren<TrainingsTableBodyProps>> = ({ trainingGroups }) => {
+    const { user } = useAuth0();
+    const userUUID = user?.sub ?? "";
+    return (
+        <>
+            {trainingGroups.map((training, index) => (
+                <tr key={training.uuid}>
+                    <td>{index + 1}</td>
+                    <td>{training.name}</td>
+                    <td>{training.description}</td>
+                    <td>{training.trainer_name}</td>
+                    <td>{training.date}</td>
+                    <td>{training.limit}</td>
+                    <td>{training.participants}</td>
+                    <td>
+                        {
+                            training.trainer_uuid === userUUID ?
+                                <p>Training Group Owner</p>
+                                :
+                                training.limit !== 0 ? <TrainingScheduleButton trainerUUID={training.trainer_uuid} trainingUUID={training.uuid} /> : <b>Full</b>
+                        }
+                    </td>
+                </tr>
+            ))}
+        </>
+    );
 };
 
 const TrainingsTable: React.FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings }) => {
     return (
-        <div className="row">
+        <div className='row text-center'>
             <Table striped bordered hover>
                 <thead>
                     <tr>
@@ -22,32 +56,21 @@ const TrainingsTable: React.FC<PropsWithChildren<TrainingsTableProps>> = ({ trai
                         <th>Date</th>
                         <th>Limit</th>
                         <th>Participants</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {
-                        trainings.map((t, index) => (
-                            <tr key={t.uuid}>
-                                <td>{index + 1}</td>
-                                <td>{t.name}</td>
-                                <td>{t.description}</td>
-                                <td>{t.trainer_name}</td>
-                                <td>{t.date}</td>
-                                <td>{t.limit}</td>
-                                <td>{t.participants}</td>
-                            </tr>
-                        ))
-                    }
+                    <TrainingsTableBody trainingGroups={trainings} />
                 </tbody>
             </Table>
         </div>
     );
 };
 
-const Trainings: React.FC = () => {
+const TrainingGroups: React.FC = () => {
     const trainings = useGetAllTrainings()
-    if (!trainings?.length) return (<NoTrainingsAvailable />);
-    return (<TrainingsTable trainings={trainings} />);
+    if (!trainings?.length) return <NoTrainingsAvailable />;
+    return <TrainingsTable trainings={trainings} />;
 };
 
-export default Trainings;
+export default TrainingGroups;

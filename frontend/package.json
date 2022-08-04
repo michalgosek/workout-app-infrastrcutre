@@ -34,6 +34,7 @@
     "react-hook-form": "^7.34.0",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
+    "reactjs-popup": "^2.0.5",
     "typescript": "^4.7.4",
     "web-vitals": "^2.1.4",
     "yup": "^0.32.11"
@@ -63,6 +64,10 @@
     ]
   },
   "devDependencies": {
-    "@types/react-datepicker": "^4.4.2"
+    "@types/react-datepicker": "^4.4.2",
+    "install": "^0.13.0",
+    "node-sass": "^7.0.1",
+    "npm": "^8.16.0",
+    "sass-loader": "^13.0.2"
   }
 }

@@ -1,36 +1,24 @@
+import { ParticipantAssignWriteModel, PlanTrainingGroupWriteModel, TrainerGroupReadModel, TrainingGroupReadModel } from './models';
+
 import axios from 'axios';
 
 const ENDPOINTS = {
-    TRAININGS: "http://localhost:8070/api/v1/trainings",
-    TRAINERS: "http://localhost:8070/api/v1/trainers"
-};
-
-export type TrainingGroup = {
-    uuid: string
-    date: string;
-    description: string;
-    limit: number;
-    name: string;
-    participants: number;
-    trainer_name: string;
+    TRAININGS: 'http://localhost:8070/api/v1/trainings',
+    TRAINERS: 'http://localhost:8070/api/v1/trainers'
 };
 
 
-type Trainer = {
-    uuid: string;
-    name: string;
-    role: "Trainer";
-}
+const signupParticipant = async (props: ParticipantAssignWriteModel) => {
+    try {
+        const endpoint = `${ENDPOINTS.TRAINERS}/${props.trainer_uuid}/trainings/${props.trainer_group_uuid}/participants`
+        const response = await axios.post(endpoint, props.participant)
+        return response.data;
+    } catch (err) {
+        console.error(err);
+    }
+};
 
-
-export type PlanTrainingGroupPOST = {
-    user: Trainer;
-    group_name: string;
-    group_desc: string;
-    date: string;
-}
-
-const createTrainingGroup = async (training: PlanTrainingGroupPOST) => {
+const createTrainingGroup = async (training: PlanTrainingGroupWriteModel) => {
     try {
         const response = await axios.post(ENDPOINTS.TRAININGS, training)
         return response.status
@@ -40,25 +28,9 @@ const createTrainingGroup = async (training: PlanTrainingGroupPOST) => {
     }
 }
 
-
-type Participant = {
-    uuid: string;
-    name: string;
-}
-
-export type TrainerGroup = {
-    uuid: string;
-    name: string;
-    description: string;
-    date: string;
-    limit: number;
-    participant: Participant[];
-}
-
-
-const getAllTrainingGroups = async (): Promise<TrainingGroup[]> => {
+const getAllTrainingGroups = async (): Promise<TrainingGroupReadModel[]> => {
     try {
-        const response = await axios.get<TrainingGroup[]>(ENDPOINTS.TRAININGS);
+        const response = await axios.get<TrainingGroupReadModel[]>(ENDPOINTS.TRAININGS);
         return response.data;
     } catch (err) {
         console.error(err);
@@ -66,10 +38,10 @@ const getAllTrainingGroups = async (): Promise<TrainingGroup[]> => {
     }
 }
 
-const getAllTrainerGroups = async (groupUUID: string): Promise<TrainerGroup[]> => {
+const getAllTrainerGroups = async (groupUUID: string): Promise<TrainerGroupReadModel[]> => {
     try {
         const endpoint = `${ENDPOINTS.TRAINERS}/${groupUUID}`
-        const response = await axios.get<TrainerGroup[]>(endpoint)
+        const response = await axios.get<TrainerGroupReadModel[]>(endpoint)
         return response.data;
     } catch (err) {
         console.error(err);
@@ -87,16 +59,14 @@ const deleteTrainerGroup = async (groupUUID: string, trainerUUID: string) => {
     }
 }
 
-
-
-
 const TrainingsService = {
     getAllTrainings: getAllTrainingGroups,
     createTrainingGroup: createTrainingGroup,
     getAllTrainerGroups: getAllTrainerGroups,
     deleteTrainerGroup: deleteTrainerGroup,
+    signupParticipant: signupParticipant,
 };
 
 export {
-    TrainingsService,
+    TrainingsService
 };

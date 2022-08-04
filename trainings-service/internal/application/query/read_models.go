@@ -19,6 +19,7 @@ type TrainerWorkoutGroup struct {
 type TrainingWorkoutGroup struct {
 	UUID         string    `json:"uuid"`
 	TrainerName  string    `json:"trainer_name"`
+	TrainerUUID  string    `json:"trainer_uuid"`
 	Name         string    `json:"name"`
 	Description  string    `json:"description"`
 	Date         time.Time `json:"date"`

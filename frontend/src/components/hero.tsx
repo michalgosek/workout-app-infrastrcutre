@@ -1,13 +1,15 @@
-import logo from '../assets/hero.jpg';
+import { Container, Image } from 'react-bootstrap';
+
+import logo from 'assets/hero.jpg';
 
 const Hero = () => {
     return (
-        <div className="text-center">
+        <Container className='text-center'>
             <p className="lead">
                  "What hurts today makes you stronger tomorrow..." 🏋️‍
             </p>
-            <img className="mb-2 app-logo" src={logo} alt="React logo" width="400" />
-        </div>
+            <Image className="mb-2 app-logo" src={logo} alt="React logo" width="400" />
+        </Container>
     )
 };
 

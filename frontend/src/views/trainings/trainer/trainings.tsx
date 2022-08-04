@@ -1,24 +1,21 @@
-import { FC, PropsWithChildren } from 'react';
-import { TrainerGroup, TrainingsService } from '../../../services/trainings-service';
+import { FC, PropsWithChildren, useState } from 'react';
 
-import NoTrainingsAvailable from "../no-trainings-availabe";
-import { Table } from "react-bootstrap";
-import { useGetAllTrainerGroups } from '../hooks';
+import DropButton from 'components/buttons/drop-button';
+import NoTrainingsAvailable from 'views/trainings/no-trainings-availabe';
+import { Table } from 'react-bootstrap';
+import { TrainerGroupReadModel } from 'services/models';
+import { TrainingsService } from 'services/trainings-service';
+import { useGetAllTrainerGroups } from 'views/trainings/hooks';
 
 type TrainingsTableProps = {
-    trainings: TrainerGroup[];
+    trainings: TrainerGroupReadModel[];
     trainerUUID: string;
+    deleteTrainingCallback: (groupUUID: string, trainerUUID: string) => Promise<void>;
 };
 
-const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string) => {
-    await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
-    window.location.reload();
-};
-
-
-const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings, trainerUUID }) => {
+const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings, trainerUUID, deleteTrainingCallback }) => {
     return (
-        <div className="row">
+        <div className='row'>
             <Table striped bordered hover>
                 <thead>
                     <tr>
@@ -40,7 +37,7 @@ const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings,
                                 <td>{t.date}</td>
                                 <td>{t.limit}</td>
                                 <td>
-                                    <button type="button" className="btn btn-danger" onClick={() => deleteTrainerGroupCallback(t.uuid, trainerUUID)}>Drop</button>
+                                    <DropButton onClickHandle={() => deleteTrainingCallback(t.uuid, trainerUUID)} />
                                 </td>
                             </tr>
                         ))
@@ -51,9 +48,16 @@ const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings,
     );
 };
 
+
+// react query 
 const TrainerTrainingGroups: FC = () => {
-    const { trainerUUID, trainings } = useGetAllTrainerGroups()
-    return (trainings.length === 0 ? <NoTrainingsAvailable /> : <TrainingsTable trainings={trainings} trainerUUID={trainerUUID} />);
+    const [signal, setSignal] = useState(false);
+    const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string) => {
+        await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
+        setSignal(prev => !prev);
+    };
+    const { trainerUUID, trainings } = useGetAllTrainerGroups(signal)
+    return (trainings.length === 0) ? <NoTrainingsAvailable /> : <TrainingsTable trainings={trainings} trainerUUID={trainerUUID} deleteTrainingCallback={deleteTrainerGroupCallback} />;
 }
 
 export default TrainerTrainingGroups;

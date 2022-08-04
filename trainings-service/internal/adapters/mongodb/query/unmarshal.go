@@ -38,6 +38,7 @@ func UnmarshalToQueryTrainingGroups(dd ...documents.TrainingGroupWriteModel) []q
 	for _, d := range dd {
 		out = append(out, query.TrainingWorkoutGroup{
 			UUID:         d.UUID,
+			TrainerUUID:  d.Trainer.UUID,
 			TrainerName:  d.Trainer.Name,
 			Name:         d.Name,
 			Description:  d.Description,

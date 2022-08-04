@@ -1,10 +1,11 @@
-import { useAuth0 } from "@auth0/auth0-react";
+import { Button } from "react-bootstrap";
 import React from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const LogouButton: React.FC = () => {
     const { logout } = useAuth0();
     return (
-        <button
+        <Button
             className="btn btn-danger btn-block"
             onClick={() =>
                 logout({
@@ -13,7 +14,7 @@ const LogouButton: React.FC = () => {
             }
         >
             Log Out
-        </button>
+        </Button>
     );
 };
 

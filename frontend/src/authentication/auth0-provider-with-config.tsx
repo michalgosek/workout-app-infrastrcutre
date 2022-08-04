@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from "react";
 
 import { Auth0Provider } from "@auth0/auth0-react";
-import StartupFailed from "../views/startup-failed";
+import StartupFailed from "views/startup-failed";
 
 interface Auth0ProviderWithRedirectCallbackProps {
     children: React.ReactNode;

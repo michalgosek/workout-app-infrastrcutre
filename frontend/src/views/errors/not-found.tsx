@@ -1,10 +1,13 @@
-import React from "react";
+import { Container } from 'react-bootstrap';
+import React from 'react';
 
 const NotFound: React.FC = () => {
     return (
+        <Container className='text-center'>
         <h1>
-            Not found :(
+            Page Not found 🤔
         </h1>
+       </Container>  
     );
 };
 
