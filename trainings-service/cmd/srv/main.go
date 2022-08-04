@@ -52,9 +52,10 @@ func execute() error {
 			AssignParticipant:    command.NewAssignParticipantHandler(trainingsService),
 		},
 		Queries: application.Queries{
-			TrainingGroup:     query.NewTrainingGroupHandler(repository),
-			TrainingGroups:    query.NewTrainingGroupsHandlerHandler(repository),
+			TrainerGroup:      query.NewTrainerGroupHandler(repository),
+			TrainerGroups:     query.NewTrainerGroupsHandler(repository),
 			AllTrainingGroups: query.NewAllTrainingGroupsHandler(repository),
+			ParticipantGroups: query.NewParticipantGroupsHandler(repository),
 		},
 	}, serverCfg.Addr)
 
@@ -71,6 +72,12 @@ func newAPI(HTTP *http.Trainings) chi.Router {
 			r.Post("/", HTTP.CreateTrainingGroup())
 			r.Get("/", HTTP.GetAllTrainingGroups())
 		})
+		r.Route("/participants", func(r chi.Router) {
+			r.Route("/{participantUUID}", func(r chi.Router) {
+				r.Get("/", HTTP.GetParticipantGroups())
+			})
+		})
+
 		r.Route("/trainers", func(r chi.Router) {
 			r.Route("/{trainerUUID}", func(r chi.Router) {
 				r.Get("/", HTTP.GetTrainerGroups())

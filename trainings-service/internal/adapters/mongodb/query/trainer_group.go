@@ -16,12 +16,12 @@ type Config struct {
 	QueryTimeout time.Duration
 }
 
-type TrainingHandler struct {
+type TrainerGroupHandler struct {
 	cli *mongo.Client
 	cfg Config
 }
 
-func (t *TrainingHandler) Do(ctx context.Context, trainingUUID, trainerUUID string) (query.TrainerWorkoutGroup, error) {
+func (t *TrainerGroupHandler) Do(ctx context.Context, trainingUUID, trainerUUID string) (query.TrainerWorkoutGroup, error) {
 	f := bson.M{"_id": trainingUUID, "trainer._id": trainerUUID}
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
@@ -48,11 +48,11 @@ func (t *TrainingHandler) Do(ctx context.Context, trainingUUID, trainerUUID stri
 	return m, nil
 }
 
-func NewTrainingHandler(cli *mongo.Client, cfg Config) *TrainingHandler {
+func NewTrainerGroupHandler(cli *mongo.Client, cfg Config) *TrainerGroupHandler {
 	if cli == nil {
 		panic("nil mongo client")
 	}
-	h := TrainingHandler{
+	h := TrainerGroupHandler{
 		cfg: cfg,
 		cli: cli,
 	}

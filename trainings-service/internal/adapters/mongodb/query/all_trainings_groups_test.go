@@ -4,13 +4,12 @@ import (
 	"context"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/query"
-	rm "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
-func TestShouldReturnTrainingReadModelsWithSuccess_Integration(t *testing.T) {
+func TestShouldReturnAllTrainingGroupsWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -21,7 +20,7 @@ func TestShouldReturnTrainingReadModelsWithSuccess_Integration(t *testing.T) {
 	secondTraining := newTestTrainingGroup("619a0b4d-5509-40bf-b7ff-704f15adc406", trainer, date)
 
 	cli := newTestMongoClient()
-	insertTrainingHandler := command.NewInsertTrainingHandler(cli, command.Config{
+	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, command.Config{
 		Database:       "insert_training_db",
 		Collection:     "trainings",
 		CommandTimeout: 5 * time.Second,
@@ -29,7 +28,7 @@ func TestShouldReturnTrainingReadModelsWithSuccess_Integration(t *testing.T) {
 	_ = insertTrainingHandler.Do(ctx, &firstTraining)
 	_ = insertTrainingHandler.Do(ctx, &secondTraining)
 
-	SUT := query.NewTrainingsHandler(cli, query.Config{
+	SUT := query.NewAllTrainingsHandler(cli, query.Config{
 		Database:     "insert_training_db",
 		Collection:   "trainings",
 		QueryTimeout: 5 * time.Second,
@@ -43,15 +42,13 @@ func TestShouldReturnTrainingReadModelsWithSuccess_Integration(t *testing.T) {
 		}
 	}()
 
-	expectedReadModels := []rm.TrainerWorkoutGroup{
-		createTrainingGroupReadModel(cli, firstTraining.UUID()),
-		createTrainingGroupReadModel(cli, secondTraining.UUID()),
-	}
+	expectedGroups, err := createExpectedAllTrainingGroups(cli)
+	assertions.Nil(err)
 
 	// when:
-	trainings, err := SUT.Do(ctx, trainer.UUID())
+	trainingGroups, err := SUT.Do(ctx)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(expectedReadModels, trainings)
+	assertions.Equal(expectedGroups, trainingGroups)
 }

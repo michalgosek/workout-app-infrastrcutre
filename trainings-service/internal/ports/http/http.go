@@ -70,7 +70,7 @@ func (h *Trainings) GetTrainerGroup() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.TrainingGroup.Do(r.Context(), trainingUUID, trainerUUID)
+		res, err := h.app.Queries.TrainerGroup.Do(r.Context(), trainingUUID, trainerUUID)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -160,7 +160,7 @@ func (h *Trainings) GetTrainerGroups() http.HandlerFunc {
 			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		res, err := h.app.Queries.TrainingGroups.Do(r.Context(), trainerUUID)
+		res, err := h.app.Queries.TrainerGroups.Do(r.Context(), trainerUUID)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -217,6 +217,22 @@ func (h *Trainings) GetAllTrainingGroups() http.HandlerFunc {
 			return
 		}
 		rest.SendJSONResponse(w, groups, http.StatusOK)
+	}
+}
+
+func (h *Trainings) GetParticipantGroups() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		participantUUID := chi.URLParam(r, "participantUUID")
+		if participantUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing participantUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		res, err := h.app.Queries.ParticipantGroups.Do(r.Context(), participantUUID)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		rest.SendJSONResponse(w, res, http.StatusOK)
 	}
 }
 

@@ -10,6 +10,15 @@ export type TrainingGroupReadModel = {
     trainer_uuid: string;
 };
 
+export type ParticipantGroupReadModel = {
+    uuid: string;
+    trainer_name: string;
+    trainer_uuid: string;
+    name: string;
+    description: string;
+    date: string;
+};
+
 
 type TrainerWriteModel = {
     uuid: string;
@@ -17,7 +26,7 @@ type TrainerWriteModel = {
     role: 'Trainer';
 };
 
-export type PlanTrainingGroupWriteModel = {
+export type TrainingGroupWriteModel = {
     user: TrainerWriteModel;
     group_name: string;
     group_desc: string;

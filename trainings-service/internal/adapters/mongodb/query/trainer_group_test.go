@@ -9,26 +9,24 @@ import (
 	"time"
 )
 
-func TestShouldReturnAllTrainingGroupsReadModelsWithSuccess_Integration(t *testing.T) {
+func TestShouldReturnTrainerGroupWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
 	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
 	date := newTestStaticTime()
-	firstTraining := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
-	secondTraining := newTestTrainingGroup("619a0b4d-5509-40bf-b7ff-704f15adc406", trainer, date)
+	training := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
 
 	cli := newTestMongoClient()
-	insertTrainingHandler := command.NewInsertTrainingHandler(cli, command.Config{
+	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, command.Config{
 		Database:       "insert_training_db",
 		Collection:     "trainings",
 		CommandTimeout: 5 * time.Second,
 	})
-	_ = insertTrainingHandler.Do(ctx, &firstTraining)
-	_ = insertTrainingHandler.Do(ctx, &secondTraining)
+	_ = insertTrainingHandler.Do(ctx, &training)
 
-	SUT := query.NewAllTrainingsHandler(cli, query.Config{
+	SUT := query.NewTrainerGroupHandler(cli, query.Config{
 		Database:     "insert_training_db",
 		Collection:   "trainings",
 		QueryTimeout: 5 * time.Second,
@@ -42,13 +40,12 @@ func TestShouldReturnAllTrainingGroupsReadModelsWithSuccess_Integration(t *testi
 		}
 	}()
 
-	expectedReadModels, err := createAllTrainingGroupReadModels(cli)
-	assertions.Nil(err)
+	expectedGroup := createExpectedTrainerGroup(cli, training.UUID())
 
 	// when:
-	trainings, err := SUT.Do(ctx)
+	trainingGroup, err := SUT.Do(ctx, training.UUID(), trainer.UUID())
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(expectedReadModels, trainings)
+	assertions.Equal(expectedGroup, trainingGroup)
 }

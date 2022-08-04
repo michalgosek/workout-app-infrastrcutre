@@ -7,9 +7,9 @@ import Button from 'react-bootstrap/Button';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import Form from 'react-bootstrap/Form';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { PlanTrainingGroupWriteModel } from 'services/models';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import { TrainingGroupWriteModel } from 'services/models';
 import { TrainingsService } from 'services/trainings-service';
 
 type PlanTrainingGroupFormValues = {
@@ -18,12 +18,12 @@ type PlanTrainingGroupFormValues = {
     description: string;
 };
 
-type PlanTrainingData = {
+type TrainingGroupData = {
     formValues: PlanTrainingGroupFormValues;
     user: User;
 };
 
-const validateTrainingGroupData = (data: PlanTrainingData) => {
+const validateTrainingGroupData = (data: TrainingGroupData) => {
     const got: string[] = [
         data.user.name ?? '',
         data.user.sub ?? '',
@@ -34,8 +34,8 @@ const validateTrainingGroupData = (data: PlanTrainingData) => {
     return !got.some(p => p === "");
 };
 
-const createTrainingGroup = async (data: PlanTrainingData) => {
-    const training: PlanTrainingGroupWriteModel = {
+const createTrainingGroup = async (data: TrainingGroupData) => {
+    const training: TrainingGroupWriteModel = {
         user: {
             role: 'Trainer',
             uuid: data.user.sub as string,
@@ -63,7 +63,7 @@ const TrainingPlanningForm: FC = () => {
         setValue(newValue);
     };
     const onSubmitHandle: SubmitHandler<PlanTrainingGroupFormValues> = (data) => {
-        const trainingGroupData: PlanTrainingData = {
+        const trainingGroupData: TrainingGroupData = {
             formValues: {
                 appointment: data.appointment,
                 groupName: data.groupName,

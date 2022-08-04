@@ -16,16 +16,17 @@ import (
 )
 
 type Commands struct {
-	*command.InsertTrainingHandler
-	*command.UpdateTrainingHandler
-	*command.DeleteTrainingHandler
-	*command.DeleteTrainingsHandler
+	*command.InsertTrainerGroupHandler
+	*command.UpdateTrainerGroupHandler
+	*command.DeleteTrainerGroupsHandler
+	*command.DeleteTrainerGroupHandler
 }
 
 type Queries struct {
-	*query.TrainingHandler
-	*query.TrainingsHandler
+	*query.TrainerGroupHandler
+	*query.TrainerGroupsHandler
 	*query.AllTrainingsHandler
+	*query.ParticipantGroupsHandler
 }
 
 type Timeouts struct {
@@ -46,6 +47,10 @@ type Repository struct {
 	cli      *mongo.Client
 	commands *Commands
 	queries  *Queries
+}
+
+func (r *Repository) ParticipantGroups(ctx context.Context, UUID string) ([]readm.ParticipantGroup, error) {
+	return r.queries.ParticipantGroupsHandler.Do(ctx, UUID)
 }
 
 func (r *Repository) findTrainingGroupWithFilter(ctx context.Context, f bson.M) (documents.TrainingGroupWriteModel, error) {
@@ -71,28 +76,28 @@ func (r *Repository) AllTrainingGroups(ctx context.Context) ([]readm.TrainingWor
 	return r.queries.AllTrainingsHandler.Do(ctx)
 }
 
-func (r *Repository) TrainingGroups(ctx context.Context, trainerUUID string) ([]readm.TrainerWorkoutGroup, error) {
-	return r.queries.TrainingsHandler.Do(ctx, trainerUUID)
+func (r *Repository) TrainerGroups(ctx context.Context, trainerUUID string) ([]readm.TrainerWorkoutGroup, error) {
+	return r.queries.TrainerGroupsHandler.Do(ctx, trainerUUID)
 }
 
-func (r *Repository) TrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) (readm.TrainerWorkoutGroup, error) {
-	return r.queries.TrainingHandler.Do(ctx, trainingUUID, trainerUUID)
+func (r *Repository) TrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) (readm.TrainerWorkoutGroup, error) {
+	return r.queries.TrainerGroupHandler.Do(ctx, trainingUUID, trainerUUID)
 }
 
-func (r *Repository) InsertTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
-	return r.commands.InsertTrainingHandler.Do(ctx, g)
+func (r *Repository) InsertTrainerGroup(ctx context.Context, g *trainings.TrainingGroup) error {
+	return r.commands.InsertTrainerGroupHandler.Do(ctx, g)
 }
 
-func (r *Repository) UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
-	return r.commands.UpdateTrainingHandler.Do(ctx, g)
+func (r *Repository) UpdateTrainerGroup(ctx context.Context, g *trainings.TrainingGroup) error {
+	return r.commands.UpdateTrainerGroupHandler.Do(ctx, g)
 }
 
-func (r *Repository) DeleteTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) error {
-	return r.commands.DeleteTrainingHandler.Do(ctx, trainingUUID, trainerUUID)
+func (r *Repository) DeleteTrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) error {
+	return r.commands.DeleteTrainerGroupHandler.Do(ctx, trainingUUID, trainerUUID)
 }
 
-func (r *Repository) DeleteTrainingGroups(ctx context.Context, trainerUUID string) error {
-	return r.commands.DeleteTrainingsHandler.Do(ctx, trainerUUID)
+func (r *Repository) DeleteTrainerGroups(ctx context.Context, trainerUUID string) error {
+	return r.commands.DeleteTrainerGroupsHandler.Do(ctx, trainerUUID)
 }
 
 func (r Repository) QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error) {
@@ -166,15 +171,16 @@ func NewRepository(cfg Config) (*Repository, error) {
 		cfg: cfg,
 		cli: cli,
 		commands: &Commands{
-			InsertTrainingHandler:  command.NewInsertTrainingHandler(cli, commandCfg),
-			DeleteTrainingHandler:  command.NewDeleteTrainingHandler(cli, commandCfg),
-			DeleteTrainingsHandler: command.NewDeleteTrainingsHandler(cli, commandCfg),
-			UpdateTrainingHandler:  command.NewUpdateTrainingHandler(cli, commandCfg),
+			InsertTrainerGroupHandler:  command.NewInsertTrainerGroupHandler(cli, commandCfg),
+			DeleteTrainerGroupHandler:  command.NewDeleteTrainerGroupHandler(cli, commandCfg),
+			DeleteTrainerGroupsHandler: command.NewDeleteTrainerGroupsHandler(cli, commandCfg),
+			UpdateTrainerGroupHandler:  command.NewUpdateTrainerGroupHandler(cli, commandCfg),
 		},
 		queries: &Queries{
-			TrainingHandler:     query.NewTrainingHandler(cli, queryCfg),
-			TrainingsHandler:    query.NewTrainingsHandler(cli, queryCfg),
-			AllTrainingsHandler: query.NewAllTrainingsHandler(cli, queryCfg),
+			TrainerGroupHandler:      query.NewTrainerGroupHandler(cli, queryCfg),
+			TrainerGroupsHandler:     query.NewTrainerGroupsHandler(cli, queryCfg),
+			AllTrainingsHandler:      query.NewAllTrainingsHandler(cli, queryCfg),
+			ParticipantGroupsHandler: query.NewParticipantGroupsHandler(cli, queryCfg),
 		},
 	}
 	return &r, nil

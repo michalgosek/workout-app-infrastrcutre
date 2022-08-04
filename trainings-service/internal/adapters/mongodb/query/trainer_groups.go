@@ -8,12 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type TrainingsHandler struct {
+type TrainerGroupsHandler struct {
 	cli *mongo.Client
 	cfg Config
 }
 
-func (t *TrainingsHandler) Do(ctx context.Context, trainerUUID string) ([]query.TrainerWorkoutGroup, error) {
+func (t *TrainerGroupsHandler) Do(ctx context.Context, trainerUUID string) ([]query.TrainerWorkoutGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	ctx, cancel := context.WithTimeout(ctx, t.cfg.QueryTimeout)
@@ -29,15 +29,15 @@ func (t *TrainingsHandler) Do(ctx context.Context, trainerUUID string) ([]query.
 	if err != nil {
 		return nil, err
 	}
-	gg := UnmarshalToQueryTrainerWorkoutGroups(dd...)
+	gg := UnmarshalToTrainerWorkoutGroups(dd...)
 	return gg, nil
 }
 
-func NewTrainingsHandler(cli *mongo.Client, cfg Config) *TrainingsHandler {
+func NewTrainerGroupsHandler(cli *mongo.Client, cfg Config) *TrainerGroupsHandler {
 	if cli == nil {
 		panic("nil mongo client")
 	}
-	h := TrainingsHandler{
+	h := TrainerGroupsHandler{
 		cfg: cfg,
 		cli: cli,
 	}

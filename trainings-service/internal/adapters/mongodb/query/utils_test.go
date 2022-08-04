@@ -13,19 +13,51 @@ import (
 	"time"
 )
 
-func createTrainingGroupReadModel(cli *mongo.Client, groupUUID string) rm.TrainerWorkoutGroup {
+func createExpectedParticipantTrainingGroups(cli *mongo.Client, UUID string) ([]rm.ParticipantGroup, error) {
+	writeModels, err := findAllTrainingGroupsWithParticipant(cli, UUID)
+	if err != nil {
+		return nil, err
+	}
+	participantTrainingGroups := query.UnmarshalToParticipantGroups(writeModels...)
+	return participantTrainingGroups, nil
+}
+
+func createExpectedTrainerGroup(cli *mongo.Client, groupUUID string) rm.TrainerWorkoutGroup {
 	writeModel, _ := findTrainingGroup(cli, groupUUID)
 	readModel := query.UnmarshalToQueryTrainerWorkoutGroup(writeModel)
 	return readModel
 }
 
-func createAllTrainingGroupReadModels(cli *mongo.Client) ([]rm.TrainingWorkoutGroup, error) {
+func createExpectedAllTrainingGroups(cli *mongo.Client) ([]rm.TrainingWorkoutGroup, error) {
 	writeModels, err := findAllTrainingGroups(cli)
 	if err != nil {
 		return nil, err
 	}
 	allTrainingGroups := query.UnmarshalToQueryTrainingGroups(writeModels...)
 	return allTrainingGroups, nil
+}
+
+func findAllTrainingGroupsWithParticipant(cli *mongo.Client, UUID string) ([]documents.TrainingGroupWriteModel, error) {
+	db := cli.Database("insert_training_db")
+	coll := db.Collection("trainings")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	f := bson.M{"participants._id": UUID}
+	cur, err := coll.Find(ctx, f)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var docs []documents.TrainingGroupWriteModel
+	err = cur.All(ctx, &docs)
+	if err != nil {
+		return nil, err
+	}
+	return docs, nil
 }
 
 func findAllTrainingGroups(cli *mongo.Client) ([]documents.TrainingGroupWriteModel, error) {
@@ -93,6 +125,14 @@ func newTestTrainer(UUID, name string) trainings.Trainer {
 		panic(err)
 	}
 	return t
+}
+
+func newTestParticipant(UUID, name string) trainings.Participant {
+	p, err := trainings.NewParticipant(UUID, name)
+	if err != nil {
+		panic(err)
+	}
+	return p
 }
 
 func newTestMongoClient() *mongo.Client {

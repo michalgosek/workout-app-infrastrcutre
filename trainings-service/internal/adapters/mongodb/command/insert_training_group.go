@@ -7,12 +7,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type InsertTrainingHandler struct {
+type InsertTrainerGroupHandler struct {
 	cfg Config
 	cli *mongo.Client
 }
 
-func (i *InsertTrainingHandler) Do(ctx context.Context, g *trainings.TrainingGroup) error {
+func (i *InsertTrainerGroupHandler) Do(ctx context.Context, g *trainings.TrainingGroup) error {
 	ctx, cancel := context.WithTimeout(ctx, i.cfg.CommandTimeout)
 	defer cancel()
 	db := i.cli.Database(i.cfg.Database)
@@ -26,7 +26,8 @@ func (i *InsertTrainingHandler) Do(ctx context.Context, g *trainings.TrainingGro
 			UUID: g.Trainer().UUID(),
 			Name: g.Trainer().Name(),
 		},
-		Limit: g.Limit(),
+		Participants: UnmarshalToWriteModelParticipants(g.Participants()...),
+		Limit:        g.Limit(),
 	}
 	_, err := coll.InsertOne(ctx, doc)
 	if err != nil {
@@ -35,11 +36,11 @@ func (i *InsertTrainingHandler) Do(ctx context.Context, g *trainings.TrainingGro
 	return nil
 }
 
-func NewInsertTrainingHandler(cli *mongo.Client, cfg Config) *InsertTrainingHandler {
+func NewInsertTrainerGroupHandler(cli *mongo.Client, cfg Config) *InsertTrainerGroupHandler {
 	if cli == nil {
 		panic("nil mongo client")
 	}
-	h := InsertTrainingHandler{
+	h := InsertTrainerGroupHandler{
 		cfg: cfg,
 		cli: cli,
 	}

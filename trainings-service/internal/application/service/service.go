@@ -7,10 +7,10 @@ import (
 )
 
 type Command interface {
-	InsertTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
-	UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
-	DeleteTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) error
-	DeleteTrainingGroups(ctx context.Context, trainerUUID string) error
+	InsertTrainerGroup(ctx context.Context, g *trainings.TrainingGroup) error
+	UpdateTrainerGroup(ctx context.Context, g *trainings.TrainingGroup) error
+	DeleteTrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) error
+	DeleteTrainerGroups(ctx context.Context, trainerUUID string) error
 }
 
 type Queries interface {
@@ -32,7 +32,7 @@ func (t *Trainings) CreateTrainingGroup(ctx context.Context, g *trainings.Traini
 	if duplicate {
 		return ErrTrainingDuplicated
 	}
-	err = t.repo.InsertTrainingGroup(ctx, g)
+	err = t.repo.InsertTrainerGroup(ctx, g)
 	if err != nil {
 		return err
 	}
@@ -52,7 +52,7 @@ func (t *Trainings) AssignParticipant(ctx context.Context, trainingUUID, trainer
 		return err
 	}
 
-	err = t.repo.UpdateTrainingGroup(ctx, &training)
+	err = t.repo.UpdateTrainerGroup(ctx, &training)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (t *Trainings) UnassignParticipant(ctx context.Context, trainingUUID, train
 	if err != nil {
 		return err
 	}
-	err = t.repo.UpdateTrainingGroup(ctx, &training)
+	err = t.repo.UpdateTrainerGroup(ctx, &training)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (t *Trainings) CancelTrainingGroup(ctx context.Context, trainingUUID, train
 		return ErrTrainingNotOwnedByTrainer
 	}
 
-	err = t.repo.DeleteTrainingGroup(ctx, trainingUUID, trainerUUID)
+	err = t.repo.DeleteTrainerGroup(ctx, trainingUUID, trainerUUID)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (t *Trainings) CancelTrainingGroup(ctx context.Context, trainingUUID, train
 }
 
 func (t *Trainings) CancelTrainingGroups(ctx context.Context, trainerUUID string) error {
-	err := t.repo.DeleteTrainingGroups(ctx, trainerUUID)
+	err := t.repo.DeleteTrainerGroups(ctx, trainerUUID)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (t *Trainings) CancelTrainingGroups(ctx context.Context, trainerUUID string
 
 func NewTrainingsService(r Repository) *Trainings {
 	if r == nil {
-		panic("nil trainings repository")
+		panic("nil trainer repository")
 	}
 	s := Trainings{repo: r}
 	return &s

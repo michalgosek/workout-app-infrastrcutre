@@ -1,10 +1,11 @@
-import { ParticipantAssignWriteModel, PlanTrainingGroupWriteModel, TrainerGroupReadModel, TrainingGroupReadModel } from './models';
+import { ParticipantAssignWriteModel, ParticipantGroupReadModel, TrainerGroupReadModel, TrainingGroupReadModel, TrainingGroupWriteModel } from './models';
 
 import axios from 'axios';
 
 const ENDPOINTS = {
     TRAININGS: 'http://localhost:8070/api/v1/trainings',
-    TRAINERS: 'http://localhost:8070/api/v1/trainers'
+    TRAINERS: 'http://localhost:8070/api/v1/trainers',
+    PARTICIPANTS: 'http://localhost:8070/api/v1/participants'
 };
 
 
@@ -18,7 +19,7 @@ const signupParticipant = async (props: ParticipantAssignWriteModel) => {
     }
 };
 
-const createTrainingGroup = async (training: PlanTrainingGroupWriteModel) => {
+const createTrainingGroup = async (training: TrainingGroupWriteModel) => {
     try {
         const response = await axios.post(ENDPOINTS.TRAININGS, training)
         return response.status
@@ -38,9 +39,32 @@ const getAllTrainingGroups = async (): Promise<TrainingGroupReadModel[]> => {
     }
 }
 
-const getAllTrainerGroups = async (groupUUID: string): Promise<TrainerGroupReadModel[]> => {
+
+
+const getAllParticipantGroups = async (UUID: string): Promise<ParticipantGroupReadModel[]> => {
     try {
-        const endpoint = `${ENDPOINTS.TRAINERS}/${groupUUID}`
+        const endpoint = `${ENDPOINTS.PARTICIPANTS}/${UUID}`
+        const response = await axios.get<ParticipantGroupReadModel[]>(endpoint)
+        return response.data;
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+};
+
+const cancelParticipantWorkout = async (participantUUID: string, trainerUUID: string, groupUUID: string) => {
+    try {
+        const endpoint = `${ENDPOINTS.TRAINERS}/${trainerUUID}/trainings/${groupUUID}/participants/${participantUUID}`;
+        const response = await axios.delete(endpoint)
+        return response.data;
+    } catch (err) {
+        console.error(err)
+    }
+};
+
+const getAllTrainerGroups = async (UUID: string): Promise<TrainerGroupReadModel[]> => {
+    try {
+        const endpoint = `${ENDPOINTS.TRAINERS}/${UUID}`
         const response = await axios.get<TrainerGroupReadModel[]>(endpoint)
         return response.data;
     } catch (err) {
@@ -65,6 +89,8 @@ const TrainingsService = {
     getAllTrainerGroups: getAllTrainerGroups,
     deleteTrainerGroup: deleteTrainerGroup,
     signupParticipant: signupParticipant,
+    getAllParticipantGroups: getAllParticipantGroups,
+    cancelParticipantWorkout: cancelParticipantWorkout
 };
 
 export {
