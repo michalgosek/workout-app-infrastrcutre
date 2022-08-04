@@ -11,9 +11,14 @@ import (
 	"time"
 )
 
+const (
+	DatabaseName   = "trainings_service_test"
+	CollectionName = "trainings"
+)
+
 func findTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupWriteModel, error) {
-	db := cli.Database("insert_training_db")
-	coll := db.Collection("trainings")
+	db := cli.Database(DatabaseName)
+	coll := db.Collection(CollectionName)
 
 	f := bson.M{"_id": uuid}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

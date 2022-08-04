@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+const (
+	DatabaseName   = "trainings_service_test"
+	CollectionName = "trainings"
+)
+
 func createExpectedParticipantTrainingGroups(cli *mongo.Client, UUID string) ([]rm.ParticipantGroup, error) {
 	writeModels, err := findAllTrainingGroupsWithParticipant(cli, UUID)
 	if err != nil {
@@ -38,8 +43,8 @@ func createExpectedAllTrainingGroups(cli *mongo.Client) ([]rm.TrainingWorkoutGro
 }
 
 func findAllTrainingGroupsWithParticipant(cli *mongo.Client, UUID string) ([]documents.TrainingGroupWriteModel, error) {
-	db := cli.Database("insert_training_db")
-	coll := db.Collection("trainings")
+	db := cli.Database(DatabaseName)
+	coll := db.Collection(CollectionName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -61,8 +66,8 @@ func findAllTrainingGroupsWithParticipant(cli *mongo.Client, UUID string) ([]doc
 }
 
 func findAllTrainingGroups(cli *mongo.Client) ([]documents.TrainingGroupWriteModel, error) {
-	db := cli.Database("insert_training_db")
-	coll := db.Collection("trainings")
+	db := cli.Database(DatabaseName)
+	coll := db.Collection(CollectionName)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -84,8 +89,8 @@ func findAllTrainingGroups(cli *mongo.Client) ([]documents.TrainingGroupWriteMod
 }
 
 func findTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupWriteModel, error) {
-	db := cli.Database("insert_training_db")
-	coll := db.Collection("trainings")
+	db := cli.Database(DatabaseName)
+	coll := db.Collection(CollectionName)
 
 	f := bson.M{"_id": uuid}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

@@ -20,15 +20,15 @@ func TestShouldUpdateTrainerGroupWithSuccess_Integration(t *testing.T) {
 
 	cli := newTestMongoClient()
 	commandCfg := command.Config{
-		Database:       "insert_training_db",
-		Collection:     "trainings",
+		Database:       DatabaseName,
+		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
 	}
 	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, commandCfg)
 	SUT := command.NewUpdateTrainerGroupHandler(cli, commandCfg)
 
 	defer func() {
-		db := cli.Database("insert_training_db")
+		db := cli.Database(DatabaseName)
 		err := db.Drop(ctx)
 		if err != nil {
 			panic(err)

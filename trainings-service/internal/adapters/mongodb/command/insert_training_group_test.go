@@ -19,14 +19,15 @@ func TestShouldInsertTrainerGroupWithSuccess_Integration(t *testing.T) {
 	training := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
 
 	cli := newTestMongoClient()
+
 	SUT := command.NewInsertTrainerGroupHandler(cli, command.Config{
-		Database:       "insert_training_db",
-		Collection:     "trainings",
+		Database:       DatabaseName,
+		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
 	})
 
 	defer func() {
-		db := cli.Database("insert_training_db")
+		db := cli.Database(DatabaseName)
 		err := db.Drop(ctx)
 		if err != nil {
 			panic(err)

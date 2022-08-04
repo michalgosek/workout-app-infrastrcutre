@@ -27,21 +27,21 @@ func TestShouldReturnParticipantGroupsWithSuccess_Integration(t *testing.T) {
 
 	cli := newTestMongoClient()
 	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, command.Config{
-		Database:       "insert_training_db",
-		Collection:     "trainings",
+		Database:       DatabaseName,
+		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
 	})
 	_ = insertTrainingHandler.Do(ctx, &firstTraining)
 	_ = insertTrainingHandler.Do(ctx, &secondTraining)
 
 	SUT := query.NewParticipantGroupsHandler(cli, query.Config{
-		Database:     "insert_training_db",
-		Collection:   "trainings",
+		Database:     DatabaseName,
+		Collection:   CollectionName,
 		QueryTimeout: 5 * time.Second,
 	})
 
 	defer func() {
-		db := cli.Database("insert_training_db")
+		db := cli.Database(DatabaseName)
 		err := db.Drop(ctx)
 		if err != nil {
 			panic(err)
