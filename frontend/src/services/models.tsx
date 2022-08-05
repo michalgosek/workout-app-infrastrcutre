@@ -33,7 +33,7 @@ export type TrainingGroupWriteModel = {
     date: string;
 };
 
-type ParticipantReadModel = {
+export type ParticipantReadModel = {
     uuid: string;
     name: string;
 };

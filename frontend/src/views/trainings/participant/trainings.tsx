@@ -11,21 +11,31 @@ import useGetAllParticipantGroups from './hooks';
 
 type ParticipantTrainingsTableProps = {
     trainings: ParticipantGroupReadModel[];
-    cancelTrainingCallback: (trainerUUID: string, groupUUID: string) => Promise<void>;
 };
 
-const ParticipantTrainingsTable: FC<PropsWithChildren<ParticipantTrainingsTableProps>> = ({ trainings, cancelTrainingCallback }) => {
+const cancelParticipantTraining = async (userUUID: string, trainerUUID: string, groupUUID: string) => {
+    TrainingsService.cancelParticipantWorkout(userUUID, trainerUUID, groupUUID)
+        .then(res => console.log(res))
+        .catch(err => console.error(err))
+
+    window.location.reload();
+};
+
+const ParticipantTrainingsTable: FC<PropsWithChildren<ParticipantTrainingsTableProps>> = ({ trainings }) => {
+    const { user } = useAuth0();
+    if (!user) return null;
+
     return (
         <div className={style.rowtext}>
             <Table striped bordered hover>
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>training group name</th>
-                        <th>description</th>
-                        <th>trainer</th>
-                        <th>date</th>
-                        <th>actions</th>
+                        <th>Group name</th>
+                        <th>Description</th>
+                        <th>Trainer</th>
+                        <th>Date</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,7 +48,7 @@ const ParticipantTrainingsTable: FC<PropsWithChildren<ParticipantTrainingsTableP
                                 <td>{t.trainer_name}</td>
                                 <td>{t.date}</td>
                                 <td>
-                                    <DropButton onClickHandle={() => cancelTrainingCallback(t.trainer_uuid, t.uuid)} />
+                                    <DropButton onClickHandle={() => cancelParticipantTraining(user.sub ?? '', t.trainer_uuid, t.uuid)} />
                                 </td>
                             </tr>
                         ))
@@ -52,19 +62,7 @@ const ParticipantTrainingsTable: FC<PropsWithChildren<ParticipantTrainingsTableP
 
 const ParticipantTrainingGroups: FC = () => {
     const { trainings } = useGetAllParticipantGroups();
-    const { user } = useAuth0();
-
-    const cancelTrainingCallback = async (trainerUUID: string, groupUUID: string) => {
-        if (!user) return;
-        const userUUID = user.sub as string;
-        const cancelParticipantWorkout = async () => {
-            const res = await TrainingsService.cancelParticipantWorkout(userUUID, trainerUUID, groupUUID);
-            console.log(res);
-        }
-        cancelParticipantWorkout();
-    };
-
-    return (trainings.length === 0) ? <NoTrainingsAvailable /> : <ParticipantTrainingsTable trainings={trainings} cancelTrainingCallback={cancelTrainingCallback} />;
+    return (trainings.length === 0) ? <NoTrainingsAvailable /> : <ParticipantTrainingsTable trainings={trainings} />;
 }
 
 export default ParticipantTrainingGroups;

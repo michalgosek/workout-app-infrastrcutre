@@ -51,6 +51,7 @@ const createTrainingGroup = async (data: TrainingGroupData) => {
     window.location.reload();
 };
 
+
 const TrainingPlanningForm: FC = () => {
     const [value, setValue] = useState<Date | null>(new Date());
     const { handleSubmit, register, formState: { errors } } = useForm<PlanTrainingGroupFormValues>();

@@ -1,43 +1,51 @@
-import { FC, PropsWithChildren } from 'react';
+import { FC, PropsWithChildren, useEffect, useState } from 'react';
 
 import DropButton from 'components/buttons/drop-button';
 import NoTrainingsAvailable from 'views/trainings/no-trainings-availabe';
 import { Table } from 'react-bootstrap';
+import TrainerGroupDetailsButton from 'components/buttons/training-group-details-button';
 import { TrainerGroupReadModel } from 'services/models';
 import { TrainingsService } from 'services/trainings-service';
-import { useGetAllTrainerGroups } from 'views/trainings/hooks';
+import style from './trainings.module.scss';
+import { useParams } from 'react-router-dom';
+
+const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string) => {
+    const res = await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
+    console.log(res);
+    window.location.reload();
+};
 
 type TrainingsTableProps = {
     trainings: TrainerGroupReadModel[];
     trainerUUID: string;
-    deleteTrainingCallback: (groupUUID: string, trainerUUID: string) => Promise<void>;
 };
 
-const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings, trainerUUID, deleteTrainingCallback }) => {
+const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings, trainerUUID }) => {
     return (
-        <div className='row'>
+        <div className={style.rowtext}>
             <Table striped bordered hover>
                 <thead>
-                    <tr>
+                    <tr className={style['t-headers']}>
                         <th>#</th>
-                        <th>Training group name</th>
-                        <th>description</th>
-                        <th>date</th>
-                        <th>limit</th>
-                        <th>actions</th>
+                        <th>Group name</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th>Limit</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {
                         trainings.map((t, index) => (
-                            <tr key={t.uuid}>
+                            <tr className={style['t-rows']} key={t.uuid}>
                                 <td>{index + 1}</td>
                                 <td>{t.name}</td>
                                 <td>{t.description}</td>
                                 <td>{t.date}</td>
                                 <td>{t.limit}</td>
-                                <td>
-                                    <DropButton onClickHandle={() => deleteTrainingCallback(t.uuid, trainerUUID)} />
+                                <td className={style['td-buttons-row']}>
+                                    <DropButton onClickHandle={() => deleteTrainerGroupCallback(t.uuid, trainerUUID)} />
+                                    <TrainerGroupDetailsButton trainerUUID={trainerUUID} trainingUUID={t.uuid} />
                                 </td>
                             </tr>
                         ))
@@ -48,16 +56,33 @@ const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings,
     );
 };
 
+const useGetTrainerGroupsData = () => {
+    const { trainerUUID } = useParams();
+    const [trainings, setTrainings] = useState<[] | TrainerGroupReadModel[]>([]);
+    useEffect(() => {
+        if (!trainerUUID) {
+            console.error('missing trainer uuid in trainer groups path');
+            return;
+        }
+        const fetchAllTraininigs = async () => {
+            const trainings = await TrainingsService.getAllTrainerGroups(trainerUUID) ?? [];
+            setTrainings(trainings);
+        }
+        fetchAllTraininigs();
+    }, [trainerUUID]);
 
-// react query 
-const TrainerTrainingGroups: FC = () => {
-    const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string) => {
-        const res = await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
-        console.log(res);
-        window.location.reload();
-    };
-    const { trainerUUID, trainings } = useGetAllTrainerGroups();
-    return (trainings.length === 0) ? <NoTrainingsAvailable /> : <TrainingsTable trainings={trainings} trainerUUID={trainerUUID} deleteTrainingCallback={deleteTrainerGroupCallback} />;
+    return { trainings, trainerUUID }
 }
 
-export default TrainerTrainingGroups;
+const TrainerGroups: FC = () => {
+    const { trainings, trainerUUID } = useGetTrainerGroupsData();
+    if (!trainings || !trainerUUID) {
+        console.error('missing trainer trainings or in trainerUUID in groups path');
+        return null;
+    }
+    return (trainings.length === 0) ? <NoTrainingsAvailable /> : <TrainingsTable trainerUUID={trainerUUID} trainings={trainings} />;
+}
+
+export default TrainerGroups;
+
+

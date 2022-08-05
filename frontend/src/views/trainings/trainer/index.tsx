@@ -1,9 +1,11 @@
 import PlanTraining from './plan-training';
 import Trainer from './trainer';
-import TrainerTrainingGroups from './trainings';
+import TrainerGroup from './training';
+import TrainerGroups from './trainings';
 
 export {
     PlanTraining,
     Trainer,
-    TrainerTrainingGroups
+    TrainerGroups,
+    TrainerGroup
 };

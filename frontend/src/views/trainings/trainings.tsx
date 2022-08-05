@@ -1,11 +1,12 @@
 import React, { FC, PropsWithChildren } from 'react';
+import { useEffect, useState } from 'react';
 
 import NoTrainingsAvailable from './no-trainings-availabe';
 import { Table } from 'react-bootstrap';
 import { TrainingGroupReadModel } from 'services/models';
 import TrainingScheduleButton from 'components/buttons/training-schedule-button';
+import { TrainingsService } from 'services/trainings-service';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useGetAllTrainings } from './hooks';
 
 type TrainingsTableProps = {
     trainings: TrainingGroupReadModel[];
@@ -66,6 +67,19 @@ const TrainingsTable: React.FC<PropsWithChildren<TrainingsTableProps>> = ({ trai
         </div>
     );
 };
+
+
+const useGetAllTrainings = () => {
+    const [trainings, setTrainings] = useState<TrainingGroupReadModel[]>();
+    useEffect(() => {
+        const getAllTrainings = async () => {
+            const res = await TrainingsService.getAllTrainings()
+            setTrainings(res)
+        }
+        getAllTrainings();
+    }, [])
+    return trainings
+}
 
 const TrainingGroups: React.FC = () => {
     const trainings = useGetAllTrainings()
