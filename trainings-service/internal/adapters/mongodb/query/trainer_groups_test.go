@@ -15,10 +15,10 @@ func TestShouldReturnTrainerGroupsWithSuccess_Integration(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("ad35908e-771f-4f89-93d6-4edb749e4c5d", "John Doe")
+	trainer := newTestTrainer("2fb39fe8-4fec-4312-afe6-113de4f3360f", "John Doe")
 	date := newTestStaticTime()
-	firstTraining := newTestTrainingGroup("dd1fb0a1-4fd5-41c6-b79d-2a34f23b8f2c", trainer, date)
-	secondTraining := newTestTrainingGroup("b05dba7d-ffa2-401e-86b3-b40babc0ab21", trainer, date)
+	firstTraining := newTestTrainingGroup("86059f1e-95c8-4666-8440-fbd9572c147c", trainer, date)
+	secondTraining := newTestTrainingGroup("293ea857-1fac-4074-ad95-83f78c2ce112", trainer, date)
 
 	cli := newTestMongoClient()
 	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, command.Config{

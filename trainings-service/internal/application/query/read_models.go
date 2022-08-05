@@ -1,5 +1,7 @@
 package query
 
+const UIFormat = "02/01/2006 15:04"
+
 type Participant struct {
 	Name string `json:"name"`
 	UUID string `json:"uuid"`

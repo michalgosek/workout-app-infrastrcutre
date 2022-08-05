@@ -5,8 +5,6 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 )
 
-const UiFormat = "02/01/2006 15:04"
-
 func UnmarshalToQueryTrainerWorkoutGroup(d documents.TrainingGroupWriteModel) query.TrainerGroup {
 	var pp []query.Participant
 	for _, p := range d.Participants {
@@ -19,7 +17,7 @@ func UnmarshalToQueryTrainerWorkoutGroup(d documents.TrainingGroupWriteModel) qu
 		UUID:         d.UUID,
 		Name:         d.Name,
 		Description:  d.Description,
-		Date:         d.Date.Format(UiFormat),
+		Date:         d.Date.Format(query.UIFormat),
 		Limit:        d.Limit,
 		Participants: pp,
 	}
@@ -44,7 +42,7 @@ func UnmarshalToParticipantGroups(dd ...documents.TrainingGroupWriteModel) []que
 			TrainerName: d.Trainer.Name,
 			Name:        d.Name,
 			Description: d.Description,
-			Date:        d.Date.Format(UiFormat),
+			Date:        d.Date.Format(query.UIFormat),
 		})
 	}
 	return out
@@ -59,7 +57,7 @@ func UnmarshalToQueryTrainingGroups(dd ...documents.TrainingGroupWriteModel) []q
 			TrainerName:  d.Trainer.Name,
 			Name:         d.Name,
 			Description:  d.Description,
-			Date:         d.Date.Format(UiFormat),
+			Date:         d.Date.Format(query.UIFormat),
 			Limit:        d.Limit,
 			Participants: len(d.Participants),
 		})

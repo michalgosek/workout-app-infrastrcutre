@@ -8,6 +8,7 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 	"net/http"
 	"time"
@@ -240,6 +241,6 @@ func NewTrainingsHTTP(app *application.Application, addr string) *Trainings {
 	return &Trainings{
 		app:    app,
 		addr:   addr,
-		format: "02/01/2006 15:04",
+		format: query.UIFormat,
 	}
 }
