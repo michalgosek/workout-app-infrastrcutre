@@ -3,14 +3,14 @@ package query
 import "context"
 
 type TrainerGroupsReadModel interface {
-	TrainerGroups(ctx context.Context, trainerUUID string) ([]TrainerWorkoutGroup, error)
+	TrainerGroups(ctx context.Context, trainerUUID string) ([]TrainerGroup, error)
 }
 
 type TrainerGroupsHandler struct {
 	read TrainerGroupsReadModel
 }
 
-func (t *TrainerGroupsHandler) Do(ctx context.Context, trainerUUID string) ([]TrainerWorkoutGroup, error) {
+func (t *TrainerGroupsHandler) Do(ctx context.Context, trainerUUID string) ([]TrainerGroup, error) {
 	gg, err := t.read.TrainerGroups(ctx, trainerUUID)
 	if err != nil {
 		return nil, err

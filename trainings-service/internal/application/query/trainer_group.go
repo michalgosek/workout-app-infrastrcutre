@@ -5,17 +5,17 @@ import (
 )
 
 type TrainingGroupReadModel interface {
-	TrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) (TrainerWorkoutGroup, error)
+	TrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) (TrainerGroup, error)
 }
 
 type TrainerGroupHandler struct {
 	read TrainingGroupReadModel
 }
 
-func (t *TrainerGroupHandler) Do(ctx context.Context, trainingUUID, trainerUUID string) (TrainerWorkoutGroup, error) {
+func (t *TrainerGroupHandler) Do(ctx context.Context, trainingUUID, trainerUUID string) (TrainerGroup, error) {
 	g, err := t.read.TrainerGroup(ctx, trainingUUID, trainerUUID)
 	if err != nil {
-		return TrainerWorkoutGroup{}, nil
+		return TrainerGroup{}, nil
 	}
 	return g, nil
 }

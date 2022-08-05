@@ -21,7 +21,7 @@ type TrainerGroupHandler struct {
 	cfg Config
 }
 
-func (t *TrainerGroupHandler) Do(ctx context.Context, trainingUUID, trainerUUID string) (query.TrainerWorkoutGroup, error) {
+func (t *TrainerGroupHandler) Do(ctx context.Context, trainingUUID, trainerUUID string) (query.TrainerGroup, error) {
 	f := bson.M{"_id": trainingUUID, "trainer._id": trainerUUID}
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
@@ -30,19 +30,19 @@ func (t *TrainerGroupHandler) Do(ctx context.Context, trainingUUID, trainerUUID 
 
 	res := coll.FindOne(ctx, f)
 	if res.Err() != nil {
-		return query.TrainerWorkoutGroup{}, res.Err()
+		return query.TrainerGroup{}, res.Err()
 	}
 
 	var doc documents.TrainingGroupWriteModel
 	err := res.Decode(&doc)
 	if err != nil {
-		return query.TrainerWorkoutGroup{}, err
+		return query.TrainerGroup{}, err
 	}
 	if errors.Is(err, mongo.ErrNoDocuments) {
-		return query.TrainerWorkoutGroup{}, nil
+		return query.TrainerGroup{}, nil
 	}
 	if err != nil {
-		return query.TrainerWorkoutGroup{}, err
+		return query.TrainerGroup{}, err
 	}
 	m := UnmarshalToQueryTrainerWorkoutGroup(doc)
 	return m, nil

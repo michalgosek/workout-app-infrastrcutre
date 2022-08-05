@@ -72,15 +72,15 @@ func (r *Repository) findTrainingGroupWithFilter(ctx context.Context, f bson.M) 
 	return doc, nil
 }
 
-func (r *Repository) AllTrainingGroups(ctx context.Context) ([]readm.TrainingWorkoutGroup, error) {
+func (r *Repository) AllTrainingGroups(ctx context.Context) ([]readm.TrainingGroup, error) {
 	return r.queries.AllTrainingsHandler.Do(ctx)
 }
 
-func (r *Repository) TrainerGroups(ctx context.Context, trainerUUID string) ([]readm.TrainerWorkoutGroup, error) {
+func (r *Repository) TrainerGroups(ctx context.Context, trainerUUID string) ([]readm.TrainerGroup, error) {
 	return r.queries.TrainerGroupsHandler.Do(ctx, trainerUUID)
 }
 
-func (r *Repository) TrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) (readm.TrainerWorkoutGroup, error) {
+func (r *Repository) TrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) (readm.TrainerGroup, error) {
 	return r.queries.TrainerGroupHandler.Do(ctx, trainingUUID, trainerUUID)
 }
 

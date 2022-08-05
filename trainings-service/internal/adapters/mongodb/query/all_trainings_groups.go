@@ -13,7 +13,7 @@ type AllTrainingsHandler struct {
 	cfg Config
 }
 
-func (t *AllTrainingsHandler) Do(ctx context.Context) ([]query.TrainingWorkoutGroup, error) {
+func (t *AllTrainingsHandler) Do(ctx context.Context) ([]query.TrainingGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	ctx, cancel := context.WithTimeout(ctx, t.cfg.QueryTimeout)

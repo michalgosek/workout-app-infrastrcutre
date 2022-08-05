@@ -43,7 +43,7 @@ func TestShouldReturnTrainerGroupsWithSuccess_Integration(t *testing.T) {
 		}
 	}()
 
-	expectedGroups := []rm.TrainerWorkoutGroup{
+	expectedGroups := []rm.TrainerGroup{
 		createExpectedTrainerGroup(cli, firstTraining.UUID()),
 		createExpectedTrainerGroup(cli, secondTraining.UUID()),
 	}

@@ -27,13 +27,13 @@ func createExpectedParticipantTrainingGroups(cli *mongo.Client, UUID string) ([]
 	return participantTrainingGroups, nil
 }
 
-func createExpectedTrainerGroup(cli *mongo.Client, groupUUID string) rm.TrainerWorkoutGroup {
+func createExpectedTrainerGroup(cli *mongo.Client, groupUUID string) rm.TrainerGroup {
 	writeModel, _ := findTrainingGroup(cli, groupUUID)
 	readModel := query.UnmarshalToQueryTrainerWorkoutGroup(writeModel)
 	return readModel
 }
 
-func createExpectedAllTrainingGroups(cli *mongo.Client) ([]rm.TrainingWorkoutGroup, error) {
+func createExpectedAllTrainingGroups(cli *mongo.Client) ([]rm.TrainingGroup, error) {
 	writeModels, err := findAllTrainingGroups(cli)
 	if err != nil {
 		return nil, err
