@@ -1,6 +1,6 @@
 import './assets/styles/index.css';
 
-import App from './app';
+import App from './App';
 import Auth0ProviderWithConfig from "./authentication/auth0-provider-with-config";
 import { BrowserRouter } from 'react-router-dom';
 import React from 'react';

@@ -36,7 +36,6 @@ const AppRouter = (): JSX.Element => {
               <Route path='' element={<TrainerGroups />} />
               <Route path=':trainingUUID' element={<TrainerGroup />} />
               <Route path='schedule' element={<PlanTraining />} />
-
             </Route>
           </Route>
         </Route>

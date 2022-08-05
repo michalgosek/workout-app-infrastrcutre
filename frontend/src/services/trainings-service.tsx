@@ -29,6 +29,16 @@ const createTrainingGroup = async (training: TrainingGroupWriteModel) => {
     }
 }
 
+const updateTrainingGroup = async (training: TrainingGroupWriteModel) => {
+    try {
+        const response = await axios.post(ENDPOINTS.TRAININGS, training)
+        return response.status
+
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 const getTrainerGroup = async (trainerUUID: string, trainingUUID: string): Promise<TrainerGroupReadModel> => {
     const GET_TRAINER_GROUP_ENDPOINT = `${ENDPOINTS.TRAINERS}/${trainerUUID}/trainings/${trainingUUID}`
     try {
@@ -48,8 +58,6 @@ const getAllTrainingGroups = async (): Promise<TrainingGroupReadModel[]> => {
         return [];
     }
 }
-
-
 
 const getAllParticipantGroups = async (UUID: string): Promise<ParticipantGroupReadModel[]> => {
     try {
@@ -102,6 +110,7 @@ const TrainingsService = {
     getAllParticipantGroups: getAllParticipantGroups,
     cancelParticipantWorkout: cancelParticipantWorkout,
     getTrainerGroup: getTrainerGroup,
+    updateTrainingGroup: updateTrainingGroup,
 };
 
 export {
