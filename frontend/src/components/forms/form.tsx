@@ -1,5 +1,6 @@
 import { FC, PropsWithChildren } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
+import { TrainingGroupWriteModel, UpdateTrainigGroupWriteModel } from 'services/models';
 
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import Button from 'react-bootstrap/Button';
@@ -8,19 +9,20 @@ import Form from 'react-bootstrap/Form';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
-import { TrainingGroupWriteModel } from 'services/models';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 
 export type TrainingFormValues = {
     description: string;
     name: string;
-    appointment: string;
+    appointment?: string;
 }
 
 export type TrainingFormProps = {
     placeholders: TrainingFormValues;
-    callbackAPI: (data: TrainingGroupWriteModel) => void
+    callbackPostAPI?: (data: TrainingGroupWriteModel) => void;
+    callbackPutAPI?: (data: UpdateTrainigGroupWriteModel, trainerUUID: string, trainingUUID: string) => void;
 };
 
 const praseToTimeFormat = (appointment: Date) => {
@@ -31,18 +33,45 @@ const praseToTimeFormat = (appointment: Date) => {
     return format;
 }
 
-const TrainingForm: FC<PropsWithChildren<TrainingFormProps>> = ({ placeholders, callbackAPI }) => {
-    const [appointment, setAppointment] = useState<Date | null>(new Date(placeholders.appointment));
+const parseStringToDate = (appointment: string) => {
+    const datePart = appointment.slice(0, 10);
+    const [hour, min] = appointment.slice(11, appointment.length).split(':');
+    const [month, day, year] = datePart.split('/');
+    const date = new Date(+year, +month - 1, +day);
+    date.setHours(+hour);
+    date.setMinutes(+min)
+    return date;
+}
+
+
+const TrainingForm: FC<PropsWithChildren<TrainingFormProps>> = ({ placeholders, callbackPostAPI, callbackPutAPI }) => {
+    const { trainerUUID, trainingUUID } = useParams();
+    const [appointment, setAppointment] = useState<Date | null>(placeholders.appointment ? parseStringToDate(placeholders.appointment) : new Date());
     const { handleSubmit, register, formState: { errors } } = useForm<TrainingFormValues>();
     const { user } = useAuth0();
     const onHandleAppointmentChange = (update: Date | null) => {
         setAppointment(update);
     };
-
+    debugger
     if (!user) {
         console.error('null user value');
         return null;
     }
+    if (callbackPutAPI && callbackPostAPI) {
+        console.error("only single API must be provided for training group service: POST or PUT")
+        return null;
+    }
+    if (!callbackPutAPI && !callbackPostAPI) {
+        console.error("at least one callback API must be provided for training group service: POST or PUT")
+        return null;
+    }
+
+
+
+
+    const TRAININGS_SERVICE_PUT_API_CALLBACK = callbackPutAPI;
+    const TRAININGS_SERVICE_POST_API_CALLBACK = callbackPostAPI;
+
     const onSubmitHandle: SubmitHandler<TrainingFormValues> = (data) => {
         if (!appointment) {
             console.error('null appointment value');
@@ -50,18 +79,37 @@ const TrainingForm: FC<PropsWithChildren<TrainingFormProps>> = ({ placeholders, 
         }
 
         data.appointment = praseToTimeFormat(appointment);
-        const training: TrainingGroupWriteModel = {
-            user: {
-                role: 'Trainer',
-                uuid: user.sub ?? '',
-                name: user.name ?? '',
-            },
-            group_name: data.name,
-            group_desc: data.description,
-            date: data.appointment,
+        if (TRAININGS_SERVICE_POST_API_CALLBACK) {
+            const training: TrainingGroupWriteModel = {
+                user: {
+                    role: 'Trainer',
+                    uuid: user.sub ?? '',
+                    name: user.name ?? '',
+                },
+                group_name: data.name,
+                group_desc: data.description,
+                date: data.appointment,
+            }
+            TRAININGS_SERVICE_POST_API_CALLBACK(training)
+            return;
         }
-        callbackAPI(training);
-        window.location.reload();
+
+        if (TRAININGS_SERVICE_PUT_API_CALLBACK) {
+            if (!trainerUUID) {
+                console.error('missing trainer UUID for TrainingsServcie PUT API request');
+                return;
+            }
+            if (!trainingUUID) {
+                console.error('missing training UUID for TrainingsServcie PUT API request');
+                return;
+            }
+            const training: UpdateTrainigGroupWriteModel = {
+                group_name: data.name,
+                group_desc: data.description,
+                date: data.appointment,
+            }
+            TRAININGS_SERVICE_PUT_API_CALLBACK(training, trainerUUID, trainingUUID)
+        }
     };
 
     return (

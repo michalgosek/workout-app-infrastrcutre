@@ -1,4 +1,11 @@
-import { ParticipantAssignWriteModel, ParticipantGroupReadModel, TrainerGroupReadModel, TrainingGroupReadModel, TrainingGroupWriteModel } from './models';
+import {
+    ParticipantAssignWriteModel,
+    ParticipantGroupReadModel,
+    TrainerGroupReadModel,
+    TrainingGroupReadModel,
+    TrainingGroupWriteModel,
+    UpdateTrainigGroupWriteModel
+} from './models';
 
 import axios from 'axios';
 
@@ -29,9 +36,10 @@ const createTrainingGroup = async (training: TrainingGroupWriteModel) => {
     }
 }
 
-const updateTrainingGroup = async (training: TrainingGroupWriteModel) => {
+const updateTrainingGroup = async (training: UpdateTrainigGroupWriteModel, trainerUUID: string, trainingUUID: string) => {
     try {
-        const response = await axios.post(ENDPOINTS.TRAININGS, training)
+        const endpoint = `${ENDPOINTS.TRAINERS}/${trainerUUID}/trainings/${trainingUUID}`
+        const response = await axios.put(endpoint, training)
         return response.status
 
     } catch (err) {

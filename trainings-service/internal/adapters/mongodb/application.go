@@ -17,9 +17,9 @@ import (
 
 type Commands struct {
 	*command.InsertTrainerGroupHandler
-	*command.UpdateTrainerGroupHandler
-	*command.DeleteTrainerGroupsHandler
-	*command.DeleteTrainerGroupHandler
+	*command.UpdateTrainingGroupHandler
+	*command.DeleteTrainingGroupHandler
+	*command.DeleteTrainingGroupsHandler
 }
 
 type Queries struct {
@@ -88,16 +88,16 @@ func (r *Repository) InsertTrainerGroup(ctx context.Context, g *trainings.Traini
 	return r.commands.InsertTrainerGroupHandler.Do(ctx, g)
 }
 
-func (r *Repository) UpdateTrainerGroup(ctx context.Context, g *trainings.TrainingGroup) error {
-	return r.commands.UpdateTrainerGroupHandler.Do(ctx, g)
+func (r *Repository) UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
+	return r.commands.UpdateTrainingGroupHandler.Do(ctx, g)
 }
 
 func (r *Repository) DeleteTrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) error {
-	return r.commands.DeleteTrainerGroupHandler.Do(ctx, trainingUUID, trainerUUID)
+	return r.commands.DeleteTrainingGroupHandler.Do(ctx, trainingUUID, trainerUUID)
 }
 
 func (r *Repository) DeleteTrainerGroups(ctx context.Context, trainerUUID string) error {
-	return r.commands.DeleteTrainerGroupsHandler.Do(ctx, trainerUUID)
+	return r.commands.DeleteTrainingGroupsHandler.Do(ctx, trainerUUID)
 }
 
 func (r Repository) QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error) {
@@ -171,10 +171,10 @@ func NewRepository(cfg Config) (*Repository, error) {
 		cfg: cfg,
 		cli: cli,
 		commands: &Commands{
-			InsertTrainerGroupHandler:  command.NewInsertTrainerGroupHandler(cli, commandCfg),
-			DeleteTrainerGroupHandler:  command.NewDeleteTrainerGroupHandler(cli, commandCfg),
-			DeleteTrainerGroupsHandler: command.NewDeleteTrainerGroupsHandler(cli, commandCfg),
-			UpdateTrainerGroupHandler:  command.NewUpdateTrainerGroupHandler(cli, commandCfg),
+			InsertTrainerGroupHandler:   command.NewInsertTrainerGroupHandler(cli, commandCfg),
+			DeleteTrainingGroupHandler:  command.NewDeleteTrainingGroupHandler(cli, commandCfg),
+			DeleteTrainingGroupsHandler: command.NewDeleteTrainingGroupsHandler(cli, commandCfg),
+			UpdateTrainingGroupHandler:  command.NewUpdateTrainingGroupHandler(cli, commandCfg),
 		},
 		queries: &Queries{
 			TrainerGroupHandler:      query.NewTrainerGroupHandler(cli, queryCfg),

@@ -8,12 +8,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type UpdateTrainerGroupHandler struct {
+type UpdateTrainingGroupHandler struct {
 	cfg Config
 	cli *mongo.Client
 }
 
-func (u *UpdateTrainerGroupHandler) Do(ctx context.Context, g *trainings.TrainingGroup) error {
+func (u *UpdateTrainingGroupHandler) Do(ctx context.Context, g *trainings.TrainingGroup) error {
 	db := u.cli.Database(u.cfg.Database)
 	coll := db.Collection(u.cfg.Collection)
 	doc := documents.TrainingGroupWriteModel{
@@ -40,11 +40,11 @@ func (u *UpdateTrainerGroupHandler) Do(ctx context.Context, g *trainings.Trainin
 	return nil
 }
 
-func NewUpdateTrainerGroupHandler(cli *mongo.Client, cfg Config) *UpdateTrainerGroupHandler {
+func NewUpdateTrainingGroupHandler(cli *mongo.Client, cfg Config) *UpdateTrainingGroupHandler {
 	if cli == nil {
 		panic("nil mongo client")
 	}
-	h := UpdateTrainerGroupHandler{
+	h := UpdateTrainingGroupHandler{
 		cfg: cfg,
 		cli: cli,
 	}

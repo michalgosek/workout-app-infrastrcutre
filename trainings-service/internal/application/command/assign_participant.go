@@ -5,12 +5,13 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 )
 
-type AssignParticipantService interface {
-	AssignParticipant(ctx context.Context, trainingUUID, trainerUUID string, p trainings.Participant) error
+type AssignParticipantRepository interface {
+	QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
+	UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
 }
 
 type AssignParticipantHandler struct {
-	service AssignParticipantService
+	repo AssignParticipantRepository
 }
 
 type AssignParticipant struct {
@@ -20,17 +21,29 @@ type AssignParticipant struct {
 }
 
 func (a *AssignParticipantHandler) Do(ctx context.Context, cmd AssignParticipant) error {
-	err := a.service.AssignParticipant(ctx, cmd.TrainingUUID, cmd.TrainerUUID, cmd.Participant)
+	training, err := a.repo.QueryTrainingGroup(ctx, cmd.TrainingUUID)
+	if err != nil {
+		return err
+	}
+	if !training.IsOwnedByTrainer(cmd.TrainerUUID) {
+		return ErrTrainingNotOwnedByTrainer
+	}
+	err = training.AssignParticipant(cmd.Participant)
+	if err != nil {
+		return err
+	}
+
+	err = a.repo.UpdateTrainingGroup(ctx, &training)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewAssignParticipantHandler(s AssignParticipantService) *AssignParticipantHandler {
-	if s == nil {
-		panic("nil assign participant service")
+func NewAssignParticipantHandler(r AssignParticipantRepository) *AssignParticipantHandler {
+	if r == nil {
+		panic("nil assign participant repository")
 	}
-	h := AssignParticipantHandler{service: s}
+	h := AssignParticipantHandler{repo: r}
 	return &h
 }

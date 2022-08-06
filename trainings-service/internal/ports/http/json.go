@@ -12,3 +12,9 @@ type TrainingGroupPost struct {
 	GroupDesc string `json:"group_desc"`
 	Date      string `json:"date"`
 }
+
+type UpdateTrainingGroupPost struct {
+	GroupName string `json:"group_name"`
+	GroupDesc string `json:"group_desc"`
+	Date      string `json:"date"`
+}

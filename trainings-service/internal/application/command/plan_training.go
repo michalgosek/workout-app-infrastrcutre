@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"errors"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 	"time"
 )
@@ -14,12 +15,13 @@ type PlanTrainingGroup struct {
 	Trainer     trainings.Trainer
 }
 
-type CreateTrainingGroupService interface {
-	CreateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
+type CreateTrainingGroupRepository interface {
+	InsertTrainerGroup(ctx context.Context, g *trainings.TrainingGroup) error
+	IsTrainingGroupDuplicated(ctx context.Context, g *trainings.TrainingGroup) (bool, error)
 }
 
 type PlanTrainingGroupHandler struct {
-	service CreateTrainingGroupService
+	repo CreateTrainingGroupRepository
 }
 
 func (p *PlanTrainingGroupHandler) Do(ctx context.Context, cmd PlanTrainingGroup) (string, error) {
@@ -27,18 +29,24 @@ func (p *PlanTrainingGroupHandler) Do(ctx context.Context, cmd PlanTrainingGroup
 	if err != nil {
 		return "", err
 	}
-
-	err = p.service.CreateTrainingGroup(ctx, g)
+	duplicate, err := p.repo.IsTrainingGroupDuplicated(ctx, g)
+	if duplicate {
+		return "", ErrTrainingDuplicated
+	}
+	err = p.repo.InsertTrainerGroup(ctx, g)
 	if err != nil {
 		return "", err
 	}
+
 	return g.UUID(), nil
 }
 
-func NewPlanTrainingGroupHandler(s CreateTrainingGroupService) *PlanTrainingGroupHandler {
-	if s == nil {
-		panic("nil create training group service")
+func NewPlanTrainingGroupHandler(r CreateTrainingGroupRepository) *PlanTrainingGroupHandler {
+	if r == nil {
+		panic("nil create training group repository")
 	}
-	h := PlanTrainingGroupHandler{service: s}
+	h := PlanTrainingGroupHandler{repo: r}
 	return &h
 }
+
+var ErrTrainingDuplicated = errors.New("training group duplicated")

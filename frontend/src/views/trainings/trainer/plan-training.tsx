@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 
-import TrainingForm from './components/form';
+import TrainingForm from '../../../components/forms/form';
 import { TrainingsService } from 'services/trainings-service';
 
 const TrainingPlanningForm: FC = () => {
@@ -9,9 +9,8 @@ const TrainingPlanningForm: FC = () => {
             {
                 description: "this is example description",
                 name: "this is example name",
-                appointment: new Date().toString(),
             }
-        } callbackAPI={TrainingsService.createTrainingGroup} />
+        } callbackPostAPI={TrainingsService.createTrainingGroup} />
     )
 };
 

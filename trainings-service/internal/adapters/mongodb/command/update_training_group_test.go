@@ -3,20 +3,20 @@ package command_test
 import (
 	"context"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/command"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/documents"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/mongo"
 	"testing"
 	"time"
 )
 
-func TestShouldDeleteTrainerGroupWithSuccess_Integration(t *testing.T) {
+func TestShouldUpdateTrainingGroupWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	trainer := newTestTrainer("efa9510c-f3ef-4942-9f6f-c71ecccd4790", "John Doe")
 	date := newTestStaticTime()
-	training := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
+	training := newTestTrainingGroup("cd91677d-5aaa-404c-ab5c-3218f92fa580", trainer, date)
 
 	cli := newTestMongoClient()
 	commandCfg := command.Config{
@@ -25,9 +25,8 @@ func TestShouldDeleteTrainerGroupWithSuccess_Integration(t *testing.T) {
 		CommandTimeout: 5 * time.Second,
 	}
 	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, commandCfg)
-	_ = insertTrainingHandler.Do(ctx, &training)
+	SUT := command.NewUpdateTrainingGroupHandler(cli, commandCfg)
 
-	SUT := command.NewDeleteTrainerGroupHandler(cli, commandCfg)
 	defer func() {
 		db := cli.Database(DatabaseName)
 		err := db.Drop(ctx)
@@ -36,13 +35,19 @@ func TestShouldDeleteTrainerGroupWithSuccess_Integration(t *testing.T) {
 		}
 	}()
 
+	_ = insertTrainingHandler.Do(ctx, &training)
+	_ = training.AssignParticipant(newTestParticipant("4af091ed-fd0f-4fa9-bcc9-e57989e6a458"))
+
 	// when:
-	err := SUT.Do(ctx, training.UUID(), trainer.UUID())
+	err := SUT.Do(ctx, &training)
 
 	// then:
 	assertions.Nil(err)
 
 	writeModel, err := findTrainingGroup(cli, training.UUID())
-	assertions.Equal(err, mongo.ErrNoDocuments)
-	assertions.Empty(writeModel)
+	assertions.Nil(err)
+	assertions.NotEmpty(writeModel)
+
+	expectedGroup := documents.UnmarshalToTrainingGroup(writeModel)
+	assertions.Equal(training, expectedGroup)
 }

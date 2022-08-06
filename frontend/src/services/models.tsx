@@ -33,6 +33,12 @@ export type TrainingGroupWriteModel = {
     date: string;
 };
 
+export type UpdateTrainigGroupWriteModel = {
+    group_name: string;
+    group_desc: string;
+    date: string;
+}
+
 export type ParticipantReadModel = {
     uuid: string;
     name: string;

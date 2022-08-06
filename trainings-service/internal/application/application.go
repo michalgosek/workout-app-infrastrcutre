@@ -7,6 +7,7 @@ import (
 
 type Commands struct {
 	PlanTrainingGroup    *command.PlanTrainingGroupHandler
+	UpdateTrainingGroup  *command.UpdateTrainingGroupHandler
 	AssignParticipant    *command.AssignParticipantHandler
 	UnassignParticipant  *command.UnassignParticipantHandler
 	CancelTrainingGroup  *command.CancelTrainingGroupHandler

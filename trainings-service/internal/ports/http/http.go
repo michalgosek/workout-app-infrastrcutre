@@ -2,7 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
@@ -18,6 +17,55 @@ type Trainings struct {
 	addr   string
 	app    *application.Application
 	format string
+}
+
+func (h *Trainings) UpdateTrainingGroup() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		trainingUUID := chi.URLParam(r, "trainingUUID")
+		if trainingUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing groupUUID in path"}, http.StatusBadRequest)
+			return
+		}
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			rest.SendJSONResponse(w, rest.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+
+		var payload UpdateTrainingGroupPost
+		dec := json.NewDecoder(r.Body)
+		err := dec.Decode(&payload)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		date, err := time.Parse(h.format, payload.Date)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+
+		updateCMD := command.UpdateTrainingGroup{
+			TrainerUUID:  trainerUUID,
+			TrainingUUID: trainingUUID,
+			Name:         payload.GroupName,
+			Description:  payload.GroupDesc,
+			Date:         date,
+		}
+		err = updateCMD.Validate()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		err = h.app.Commands.UpdateTrainingGroup.Do(r.Context(), updateCMD)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
@@ -42,7 +90,7 @@ func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
 			return
 		}
 
-		UUID, err := h.app.Commands.PlanTrainingGroup.Do(r.Context(), command.PlanTrainingGroup{
+		_, err = h.app.Commands.PlanTrainingGroup.Do(r.Context(), command.PlanTrainingGroup{
 			UUID:        uuid.NewString(),
 			Trainer:     t,
 			Name:        payload.GroupName,
@@ -55,7 +103,6 @@ func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
 			return
 		}
 		w.WriteHeader(http.StatusCreated)
-		w.Header().Add("Location:", fmt.Sprintf("%s/v1/trainings/%s", h.addr, UUID))
 	}
 }
 

@@ -49,7 +49,7 @@ func (t *TrainingGroup) Participants() []Participant {
 
 func (t *TrainingGroup) AssignParticipant(p Participant) error {
 	if t.limit == 0 {
-		return errors.New("workout group participants limit exceeded")
+		return errors.New("training group participants limit exceeded")
 	}
 	if len(t.participants) == 0 {
 		t.participants = append(t.participants, p)
@@ -66,9 +66,34 @@ func (t *TrainingGroup) AssignParticipant(p Participant) error {
 	return nil
 }
 
+func (t *TrainingGroup) AssignParticipants(pp ...Participant) error {
+	if t.limit == 0 {
+		return errors.New("training group participants limit exceeded")
+	}
+
+	lookup := make(map[string]Participant)
+	for _, p := range t.participants {
+		lookup[p.uuid] = p
+	}
+
+	for _, p := range pp {
+		_, ok := lookup[p.uuid]
+		if ok {
+			return errors.New("participant with specified uuid already assigned to workout group")
+
+		}
+		if t.limit == 0 {
+			return errors.New("training group participants limit exceeded")
+		}
+		t.participants = append(t.participants, p)
+		t.limit--
+	}
+	return nil
+}
+
 func (t *TrainingGroup) UnassignParticipant(UUID string) error {
 	if len(t.participants) == 0 {
-		return errors.New("workout group participants not found")
+		return errors.New("training group participants not found")
 	}
 	var filtered []Participant
 	for _, c := range t.participants {
@@ -103,7 +128,7 @@ func NewTrainingGroup(uuid, name, desc string, date time.Time, t Trainer) (*Trai
 }
 
 var (
-	ErrEmptyTrainingGroupUUID        = errors.New("empty workout group uuid")
-	ErrEmptyTrainingGroupName        = errors.New("empty workout group name")
-	ErrEmptyTrainingGroupDescription = errors.New("empty workout group description")
+	ErrEmptyTrainingGroupUUID        = errors.New("empty training group uuid")
+	ErrEmptyTrainingGroupName        = errors.New("empty training group name")
+	ErrEmptyTrainingGroupDescription = errors.New("empty training group description")
 )

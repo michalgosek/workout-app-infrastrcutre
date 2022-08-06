@@ -3,7 +3,7 @@ import { FC, PropsWithChildren, useEffect, useState } from 'react';
 import { ParticipantReadModel, TrainerGroupReadModel } from 'services/models';
 
 import DropButton from 'components/buttons/drop-button';
-import TrainingForm from './components/form';
+import TrainingForm from '../../../components/forms/form';
 import { TrainingsService } from 'services/trainings-service';
 import style from './training.module.scss';
 import { useParams } from 'react-router-dom';
@@ -21,7 +21,19 @@ type deleteTrainingData = {
 };
 
 const deleteParticipant = (data: deleteTrainingData) => {
-    console.log(data);
+    const params = [
+        data.particiapntUUID ?? '',
+        data.trainerUUID ?? '',
+        data.trainingUUID ?? ''
+    ];
+    const isMissingValue = params.some(v => v === "");
+    if (isMissingValue) {
+        console.error('missing params value');
+        return
+    }
+    TrainingsService.cancelParticipantWorkout(params[0], params[1], params[2])
+        .then((res) => console.log(res))
+        .catch(err => console.error(err));
 };
 
 const ParticipantsTable: FC<PropsWithChildren<ParticipantsTableProps>> = ({ participants, trainerUUID, trainingUUID }) => {
@@ -89,7 +101,7 @@ const TrainerGroup: FC = () => {
                     description: training.description,
                     appointment: training.date,
                 }}
-                    callbackAPI={TrainingsService.updateTrainingGroup} />
+                    callbackPutAPI={TrainingsService.updateTrainingGroup} />
             </Container>
 
             <Container className='mt-3'>

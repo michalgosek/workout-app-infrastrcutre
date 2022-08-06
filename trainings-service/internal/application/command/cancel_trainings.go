@@ -2,26 +2,26 @@ package command
 
 import "context"
 
-type CancelTrainingGroupsService interface {
-	CancelTrainingGroups(ctx context.Context, trainerUUID string) error
+type CancelTrainingGroupsRepository interface {
+	DeleteTrainerGroups(ctx context.Context, trainerUUID string) error
 }
 
 type CancelTrainingGroupsHandler struct {
-	service CancelTrainingGroupsService
+	repo CancelTrainingGroupsRepository
 }
 
 func (c *CancelTrainingGroupsHandler) Do(ctx context.Context, trainerUUID string) error {
-	err := c.service.CancelTrainingGroups(ctx, trainerUUID)
+	err := c.repo.DeleteTrainerGroups(ctx, trainerUUID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewCancelTrainingGroupsHandler(s CancelTrainingGroupsService) *CancelTrainingGroupsHandler {
-	if s == nil {
-		panic("nil cancel training groups service")
+func NewCancelTrainingGroupsHandler(r CancelTrainingGroupsRepository) *CancelTrainingGroupsHandler {
+	if r == nil {
+		panic("nil cancel training groups repository")
 	}
-	h := CancelTrainingGroupsHandler{service: s}
+	h := CancelTrainingGroupsHandler{repo: r}
 	return &h
 }

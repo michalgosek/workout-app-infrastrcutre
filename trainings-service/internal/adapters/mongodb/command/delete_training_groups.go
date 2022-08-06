@@ -6,12 +6,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type DeleteTrainerGroupsHandler struct {
+type DeleteTrainingGroupsHandler struct {
 	cli *mongo.Client
 	cfg Config
 }
 
-func (d *DeleteTrainerGroupsHandler) Do(ctx context.Context, trainerUUID string) error {
+func (d *DeleteTrainingGroupsHandler) Do(ctx context.Context, trainerUUID string) error {
 	f := bson.M{"trainer._id": trainerUUID}
 	ctx, cancel := context.WithTimeout(ctx, d.cfg.CommandTimeout)
 	defer cancel()
@@ -25,11 +25,11 @@ func (d *DeleteTrainerGroupsHandler) Do(ctx context.Context, trainerUUID string)
 	return nil
 }
 
-func NewDeleteTrainerGroupsHandler(cli *mongo.Client, cfg Config) *DeleteTrainerGroupsHandler {
+func NewDeleteTrainingGroupsHandler(cli *mongo.Client, cfg Config) *DeleteTrainingGroupsHandler {
 	if cli == nil {
 		panic("nil mongo client")
 	}
-	h := DeleteTrainerGroupsHandler{
+	h := DeleteTrainingGroupsHandler{
 		cfg: cfg,
 		cli: cli,
 	}
