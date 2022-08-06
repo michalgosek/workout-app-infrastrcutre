@@ -17,14 +17,14 @@ type TrainerGroup struct {
 }
 
 type TrainingGroup struct {
-	UUID         string `json:"uuid"`
-	TrainerName  string `json:"trainer_name"`
-	TrainerUUID  string `json:"trainer_uuid"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	Date         string `json:"date"`
-	Limit        int    `json:"limit"`
-	Participants int    `json:"participants"`
+	UUID         string        `json:"uuid"`
+	TrainerName  string        `json:"trainer_name"`
+	TrainerUUID  string        `json:"trainer_uuid"`
+	Name         string        `json:"name"`
+	Description  string        `json:"description"`
+	Date         string        `json:"date"`
+	Limit        int           `json:"limit"`
+	Participants []Participant `json:"participants"`
 }
 
 type ParticipantGroup struct {

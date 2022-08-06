@@ -5,7 +5,7 @@ export type TrainingGroupReadModel = {
     description: string;
     limit: number;
     name: string;
-    participants: number;
+    participants: ParticipantReadModel[];
     trainer_name: string;
     trainer_uuid: string;
 };
@@ -41,7 +41,7 @@ export type UpdateTrainigGroupWriteModel = {
 
 export type ParticipantReadModel = {
     uuid: string;
-    name: string;
+    name?: string;
 };
 
 

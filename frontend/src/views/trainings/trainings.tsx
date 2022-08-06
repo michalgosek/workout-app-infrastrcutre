@@ -1,10 +1,11 @@
+import { ParticipantReadModel, TrainingGroupReadModel } from 'services/models';
 import React, { FC, PropsWithChildren } from 'react';
 import { useEffect, useState } from 'react';
 
 import NoTrainingsAvailable from './no-trainings-availabe';
 import { Table } from 'react-bootstrap';
-import { TrainingGroupReadModel } from 'services/models';
 import TrainingScheduleButton from 'components/buttons/training-schedule-button';
+import { Trainings } from 'views';
 import { TrainingsService } from 'services/trainings-service';
 import { useAuth0 } from '@auth0/auth0-react';
 
@@ -16,9 +17,16 @@ type TrainingsTableBodyProps = {
     trainingGroups: TrainingGroupReadModel[];
 };
 
+const TrainingStatusText = (training: TrainingGroupReadModel, userUUID: string) => {
+    const isFull = training.limit === 0;
+    const isParticipant = training.participants ? training.participants.some(p => p.uuid === userUUID) : false;
+    const isOwner = training.trainer_uuid === userUUID;
+    return isFull ? <b>Full</b> : isParticipant ? <b>Attendee</b> : isOwner ? <b>Owner</b> : null;
+}
+
 const TrainingsTableBody: FC<PropsWithChildren<TrainingsTableBodyProps>> = ({ trainingGroups }) => {
     const { user } = useAuth0();
-    const userUUID = user?.sub ?? "";
+    const userUUID = user?.sub ?? '';
     return (
         <>
             {trainingGroups.map((training, index) => (
@@ -29,13 +37,10 @@ const TrainingsTableBody: FC<PropsWithChildren<TrainingsTableBodyProps>> = ({ tr
                     <td>{training.trainer_name}</td>
                     <td>{training.date}</td>
                     <td>{training.limit}</td>
-                    <td>{training.participants}</td>
+                    <td>{training.participants?.length ?? 0}</td>
                     <td>
                         {
-                            training.trainer_uuid === userUUID ?
-                                <p>Training Group Owner</p>
-                                :
-                                training.limit !== 0 ? <TrainingScheduleButton trainerUUID={training.trainer_uuid} trainingUUID={training.uuid} /> : <b>Full</b>
+                            TrainingStatusText(training, userUUID) ?? <TrainingScheduleButton trainerUUID={training.trainer_uuid} trainingUUID={training.uuid} />
                         }
                     </td>
                 </tr>

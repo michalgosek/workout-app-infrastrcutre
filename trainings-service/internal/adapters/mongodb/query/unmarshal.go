@@ -51,6 +51,13 @@ func UnmarshalToParticipantGroups(dd ...documents.TrainingGroupWriteModel) []que
 func UnmarshalToQueryTrainingGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainingGroup {
 	var out []query.TrainingGroup
 	for _, d := range dd {
+		var participants []query.Participant
+		for _, p := range d.Participants {
+			participants = append(participants, query.Participant{
+				Name: p.Name,
+				UUID: p.UUID,
+			})
+		}
 		out = append(out, query.TrainingGroup{
 			UUID:         d.UUID,
 			TrainerUUID:  d.Trainer.UUID,
@@ -59,7 +66,7 @@ func UnmarshalToQueryTrainingGroups(dd ...documents.TrainingGroupWriteModel) []q
 			Description:  d.Description,
 			Date:         d.Date.Format(query.UIFormat),
 			Limit:        d.Limit,
-			Participants: len(d.Participants),
+			Participants: participants,
 		})
 	}
 	return out
