@@ -1,13 +1,11 @@
 package main
 
 import (
-	"github.com/go-chi/chi"
-	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server"
-	"github.com/michalgosek/workout-app-infrastrcutre/service-utility/server/rest"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports/http"
 	"log"
 	"time"
@@ -58,45 +56,8 @@ func execute() error {
 		},
 	}, serverCfg.Addr)
 
-	API := newAPI(HTTP)
+	API := HTTP.NewAPI()
 	srv := server.NewHTTP(API, serverCfg)
 	srv.StartHTTPServer()
 	return nil
-}
-
-func newAPI(HTTP *http.Trainings) chi.Router {
-	API := rest.NewRouter()
-	API.Route("/api/v1", func(r chi.Router) {
-		r.Route("/trainings", func(r chi.Router) {
-			r.Post("/", HTTP.CreateTrainingGroup())
-			r.Get("/", HTTP.GetAllTrainingGroups())
-		})
-		r.Route("/participants", func(r chi.Router) {
-			r.Route("/{participantUUID}", func(r chi.Router) {
-				r.Get("/", HTTP.GetParticipantGroups())
-			})
-		})
-
-		r.Route("/trainers", func(r chi.Router) {
-			r.Route("/{trainerUUID}", func(r chi.Router) {
-				r.Get("/", HTTP.GetTrainerGroups())
-				r.Delete("/", HTTP.DeleteTrainerGroups())
-				r.Route("/trainings", func(r chi.Router) {
-					r.Delete("/", HTTP.DeleteTrainerGroups())
-					r.Route("/{trainingUUID}", func(r chi.Router) {
-						r.Put("/", HTTP.UpdateTrainingGroup())
-						r.Get("/", HTTP.GetTrainerGroup())
-						r.Delete("/", HTTP.DeleteTrainerGroup())
-						r.Route("/participants", func(r chi.Router) {
-							r.Post("/", HTTP.AssignParticipant())
-							r.Route("/{participantUUID}", func(r chi.Router) {
-								r.Delete("/", HTTP.UnassignParticipant())
-							})
-						})
-					})
-				})
-			})
-		})
-	})
-	return API
 }

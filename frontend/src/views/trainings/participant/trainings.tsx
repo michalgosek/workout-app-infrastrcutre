@@ -1,29 +1,30 @@
-import { FC, PropsWithChildren } from 'react';
-
 import DropButton from 'components/buttons/drop-button';
+import { FC } from 'react';
 import NoTrainingsAvailable from '../no-trainings-availabe';
-import { ParticipantGroupReadModel } from 'services/models';
 import { Table } from 'react-bootstrap';
 import { TrainingsService } from 'services/trainings-service';
 import style from './trainings.module.scss';
-import { useAuth0 } from '@auth0/auth0-react';
 import useGetAllParticipantGroups from './hooks';
+import { useGetTrainingsServiceAccessToken } from 'services/hooks';
+import { useParams } from 'react-router-dom';
 
-type ParticipantTrainingsTableProps = {
-    trainings: ParticipantGroupReadModel[];
-};
+const ParticipantTrainingGroups: FC = () => {
+    const token = useGetTrainingsServiceAccessToken();
+    const trainings = useGetAllParticipantGroups(token);
+    const { participantUUID } = useParams();
 
-const cancelParticipantTraining = async (userUUID: string, trainerUUID: string, groupUUID: string) => {
-    TrainingsService.cancelParticipantWorkout(userUUID, trainerUUID, groupUUID)
-        .then(res => console.log(res))
-        .catch(err => console.error(err))
+    if (!trainings.length || !participantUUID || !token) {
+        return <NoTrainingsAvailable />;
+    }
 
-    window.location.reload();
-};
-
-const ParticipantTrainingsTable: FC<PropsWithChildren<ParticipantTrainingsTableProps>> = ({ trainings }) => {
-    const { user } = useAuth0();
-    if (!user) return null;
+    const cancelParticipantTraining = (userUUID: string, trainerUUID: string, groupUUID: string, token: string) => {
+        const cancelation = async (userUUID: string, trainerUUID: string, groupUUID: string, token: string) => {
+            const res = await TrainingsService.cancelParticipantWorkout(userUUID, trainerUUID, groupUUID, token);
+            console.log(res);
+            window.location.reload();
+        };
+        cancelation(userUUID, trainerUUID, groupUUID, token);
+    };
 
     return (
         <div className={style.rowtext}>
@@ -48,7 +49,7 @@ const ParticipantTrainingsTable: FC<PropsWithChildren<ParticipantTrainingsTableP
                                 <td>{t.trainer_name}</td>
                                 <td>{t.date}</td>
                                 <td>
-                                    <DropButton onClickHandle={() => cancelParticipantTraining(user.sub ?? '', t.trainer_uuid, t.uuid)} />
+                                    {<DropButton onClickHandle={() => cancelParticipantTraining(participantUUID, t.trainer_uuid, t.uuid, token)} />}
                                 </td>
                             </tr>
                         ))
@@ -57,12 +58,6 @@ const ParticipantTrainingsTable: FC<PropsWithChildren<ParticipantTrainingsTableP
             </Table>
         </div>
     );
-};
-
-
-const ParticipantTrainingGroups: FC = () => {
-    const { trainings } = useGetAllParticipantGroups();
-    return (trainings.length === 0) ? <NoTrainingsAvailable /> : <ParticipantTrainingsTable trainings={trainings} />;
 }
 
 export default ParticipantTrainingGroups;

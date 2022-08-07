@@ -9,26 +9,41 @@ import {
 
 import axios from 'axios';
 
-const ENDPOINTS = {
-    TRAININGS: 'http://localhost:8070/api/v1/trainings',
-    TRAINERS: 'http://localhost:8070/api/v1/trainers',
-    PARTICIPANTS: 'http://localhost:8070/api/v1/participants'
-};
+const axiosAgent = axios.create({
+    baseURL: 'http://localhost:8070/api/v1',
+    timeout: 1000,
+    responseType: 'json',
+    headers: {
+        'Content-type': 'application/json'
+    },
+    validateStatus: (status) => {
+        return status < 500;
+    }
+});
 
 
-const signupParticipant = async (props: ParticipantAssignWriteModel) => {
+const signupParticipant = async (props: ParticipantAssignWriteModel, token: string) => {
     try {
-        const endpoint = `${ENDPOINTS.TRAINERS}/${props.trainer_uuid}/trainings/${props.trainer_group_uuid}/participants`
-        const response = await axios.post(endpoint, props.participant)
+        const endpoint = `trainers/${props.trainer_uuid}/trainings/${props.trainer_group_uuid}/participants`;
+        const response = await axiosAgent.post(endpoint, props.participant, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (err) {
         console.error(err);
     }
 };
 
-const createTrainingGroup = async (training: TrainingGroupWriteModel) => {
+const createTrainingGroup = async (training: TrainingGroupWriteModel, trainerUUID: string, token: string) => {
     try {
-        const response = await axios.post(ENDPOINTS.TRAININGS, training)
+        const endpoint = `trainers/${trainerUUID}/trainings`;
+        const response = await axiosAgent.post(endpoint, training, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response.status
 
     } catch (err) {
@@ -36,21 +51,43 @@ const createTrainingGroup = async (training: TrainingGroupWriteModel) => {
     }
 }
 
-const updateTrainingGroup = async (training: UpdateTrainigGroupWriteModel, trainerUUID: string, trainingUUID: string) => {
+const getAllTrainerGroups = async (trainerUUID: string, token: string): Promise<TrainerGroupReadModel[]> => {
     try {
-        const endpoint = `${ENDPOINTS.TRAINERS}/${trainerUUID}/trainings/${trainingUUID}`
-        const response = await axios.put(endpoint, training)
-        return response.status
+        const endpoint = `trainers/${trainerUUID}/trainings`;
+        const response = await axiosAgent.get<TrainerGroupReadModel[]>(endpoint, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.data;
+    } catch (err) {
+        console.error(err);
+        return [];
+    }
+}
 
+const updateTrainingGroup = async (training: UpdateTrainigGroupWriteModel, trainerUUID: string, trainingUUID: string, token: string) => {
+    try {
+        const endpoint = `trainers/${trainerUUID}/trainings/${trainingUUID}`;
+        const response = await axiosAgent.put(endpoint, training, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.status
     } catch (err) {
         console.error(err);
     }
 }
 
-const getTrainerGroup = async (trainerUUID: string, trainingUUID: string): Promise<TrainerGroupReadModel> => {
-    const GET_TRAINER_GROUP_ENDPOINT = `${ENDPOINTS.TRAINERS}/${trainerUUID}/trainings/${trainingUUID}`
+const getTrainerGroup = async (trainerUUID: string, trainingUUID: string, token: string): Promise<TrainerGroupReadModel> => {
+    const endpoint = `trainers/${trainerUUID}/trainings/${trainingUUID}`;
     try {
-        const response = await axios.get<TrainerGroupReadModel>(GET_TRAINER_GROUP_ENDPOINT);
+        const response = await axiosAgent.get<TrainerGroupReadModel>(endpoint, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (err) {
         return {} as TrainerGroupReadModel;
@@ -59,7 +96,7 @@ const getTrainerGroup = async (trainerUUID: string, trainingUUID: string): Promi
 
 const getAllTrainingGroups = async (): Promise<TrainingGroupReadModel[]> => {
     try {
-        const response = await axios.get<TrainingGroupReadModel[]>(ENDPOINTS.TRAININGS);
+        const response = await axiosAgent.get<TrainingGroupReadModel[]>('/trainings');
         return response.data;
     } catch (err) {
         console.error(err);
@@ -67,10 +104,14 @@ const getAllTrainingGroups = async (): Promise<TrainingGroupReadModel[]> => {
     }
 }
 
-const getAllParticipantGroups = async (UUID: string): Promise<ParticipantGroupReadModel[]> => {
+const getAllParticipantGroups = async (UUID: string, token: string): Promise<ParticipantGroupReadModel[]> => {
     try {
-        const endpoint = `${ENDPOINTS.PARTICIPANTS}/${UUID}`
-        const response = await axios.get<ParticipantGroupReadModel[]>(endpoint)
+        const endpoint = `participants/${UUID}/trainings`;
+        const response = await axiosAgent.get<ParticipantGroupReadModel[]>(endpoint, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (err) {
         console.error(err);
@@ -78,31 +119,29 @@ const getAllParticipantGroups = async (UUID: string): Promise<ParticipantGroupRe
     }
 };
 
-const cancelParticipantWorkout = async (participantUUID: string, trainerUUID: string, groupUUID: string) => {
+const cancelParticipantWorkout = async (participantUUID: string, trainerUUID: string, groupUUID: string, token: string) => {
     try {
-        const endpoint = `${ENDPOINTS.TRAINERS}/${trainerUUID}/trainings/${groupUUID}/participants/${participantUUID}`;
-        const response = await axios.delete(endpoint)
-        return response.data;
+        const endpoint = `trainers/${trainerUUID}/trainings/${groupUUID}/participants/${participantUUID}`;
+        const response = await axiosAgent.delete(endpoint, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
+        return response.status;
     } catch (err) {
         console.error(err)
     }
 };
 
-const getAllTrainerGroups = async (UUID: string): Promise<TrainerGroupReadModel[]> => {
-    try {
-        const endpoint = `${ENDPOINTS.TRAINERS}/${UUID}`
-        const response = await axios.get<TrainerGroupReadModel[]>(endpoint)
-        return response.data;
-    } catch (err) {
-        console.error(err);
-        return [];
-    }
-}
 
-const deleteTrainerGroup = async (groupUUID: string, trainerUUID: string) => {
+const deleteTrainerGroup = async (groupUUID: string, trainerUUID: string, token: string) => {
     try {
-        const endpoint = `http://localhost:8070/api/v1/trainers/${trainerUUID}/trainings/${groupUUID}`
-        const response = await axios.delete(endpoint)
+        const endpoint = `trainers/${trainerUUID}/trainings/${groupUUID}`;
+        const response = await axiosAgent.delete(endpoint, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response.data;
     } catch (err) {
         console.error(err);

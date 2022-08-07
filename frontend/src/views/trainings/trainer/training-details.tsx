@@ -5,7 +5,8 @@ import { ParticipantReadModel, TrainerGroupReadModel } from 'services/models';
 import DropButton from 'components/buttons/drop-button';
 import TrainingForm from '../../../components/forms/form';
 import { TrainingsService } from 'services/trainings-service';
-import style from './training.module.scss';
+import style from './training-details.module.scss';
+import { useGetTrainingsServiceAccessToken } from 'services/hooks';
 import { useParams } from 'react-router-dom';
 
 type ParticipantsTableProps = {
@@ -20,23 +21,33 @@ type deleteTrainingData = {
     trainingUUID?: string;
 };
 
-const deleteParticipant = (data: deleteTrainingData) => {
+const deleteParticipant = (data: deleteTrainingData, token: string) => {
     const params = [
         data.particiapntUUID ?? '',
         data.trainerUUID ?? '',
-        data.trainingUUID ?? ''
+        data.trainingUUID ?? '',
+        token,
     ];
     const isMissingValue = params.some(v => v === "");
     if (isMissingValue) {
         console.error('missing params value');
         return
     }
-    TrainingsService.cancelParticipantWorkout(params[0], params[1], params[2])
-        .then((res) => console.log(res))
-        .catch(err => console.error(err));
+
+    const cancelWorkout = async () => {
+        try {
+            const res = await TrainingsService.cancelParticipantWorkout(params[0], params[1], params[2], token);
+            console.log(res);
+            window.location.reload();
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    cancelWorkout();
 };
 
 const ParticipantsTable: FC<PropsWithChildren<ParticipantsTableProps>> = ({ participants, trainerUUID, trainingUUID }) => {
+    const token = useGetTrainingsServiceAccessToken();
     return (
         <div className={style.rowtext}>
             <Table striped bordered hover>
@@ -58,7 +69,7 @@ const ParticipantsTable: FC<PropsWithChildren<ParticipantsTableProps>> = ({ part
                                         particiapntUUID: p.uuid,
                                         trainerUUID: trainerUUID,
                                         trainingUUID: trainingUUID,
-                                    })} />
+                                    }, token)} />
                                 </td>
                             </tr>
                         ))
@@ -80,16 +91,22 @@ const NoTrainerGroup: FC = () => {
 const TrainerGroup: FC = () => {
     const { trainingUUID, trainerUUID } = useParams();
     const [training, setTraining] = useState<TrainerGroupReadModel>();
+    const token = useGetTrainingsServiceAccessToken();
 
     useEffect(() => {
         if (!trainerUUID || !trainingUUID) {
             console.error('missing trainerUUID or trainingUUID in URL path');
             return;
         }
-        TrainingsService.getTrainerGroup(trainerUUID, trainingUUID)
-            .then(t => setTraining(t))
-            .catch(err => console.error(err));
-    }, [trainerUUID, trainingUUID]);
+
+        const fetchTrainerGroup = async () => {
+            const res = await TrainingsService.getTrainerGroup(trainerUUID, trainingUUID, token)
+            setTraining(res);
+            console.log(res);
+            return res;
+        }
+        fetchTrainerGroup();
+    }, [token, trainerUUID, trainingUUID]);
 
     if (!training || !trainerUUID || !trainingUUID) return <NoTrainerGroup />;
 

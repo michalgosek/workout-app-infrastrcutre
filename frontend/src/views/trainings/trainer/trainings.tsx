@@ -7,10 +7,11 @@ import TrainerGroupDetailsButton from 'components/buttons/training-group-details
 import { TrainerGroupReadModel } from 'services/models';
 import { TrainingsService } from 'services/trainings-service';
 import style from './trainings.module.scss';
+import { useGetTrainingsServiceAccessToken } from 'services/hooks';
 import { useParams } from 'react-router-dom';
 
-const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string) => {
-    const res = await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID);
+const deleteTrainerGroupCallback = async (groupUUID: string, trainerUUID: string, token: string) => {
+    const res = await TrainingsService.deleteTrainerGroup(groupUUID, trainerUUID, token);
     console.log(res);
     window.location.reload();
 };
@@ -21,6 +22,7 @@ type TrainingsTableProps = {
 };
 
 const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings, trainerUUID }) => {
+    const token = useGetTrainingsServiceAccessToken();
     return (
         <div className={style.rowtext}>
             <Table striped bordered hover>
@@ -44,7 +46,7 @@ const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings,
                                 <td>{t.date}</td>
                                 <td>{t.limit}</td>
                                 <td className={style['td-buttons-row']}>
-                                    <DropButton onClickHandle={() => deleteTrainerGroupCallback(t.uuid, trainerUUID)} />
+                                    <DropButton onClickHandle={() => deleteTrainerGroupCallback(t.uuid, trainerUUID, token)} />
                                     <TrainerGroupDetailsButton trainerUUID={trainerUUID} trainingUUID={t.uuid} />
                                 </td>
                             </tr>
@@ -56,20 +58,28 @@ const TrainingsTable: FC<PropsWithChildren<TrainingsTableProps>> = ({ trainings,
     );
 };
 
+
 const useGetTrainerGroupsData = () => {
     const { trainerUUID } = useParams();
+    const token = useGetTrainingsServiceAccessToken();
     const [trainings, setTrainings] = useState<[] | TrainerGroupReadModel[]>([]);
+
     useEffect(() => {
         if (!trainerUUID) {
             console.error('missing trainer uuid in trainer groups path');
             return;
         }
+        if (!token) {
+            console.error('fetching trainings service token failure');
+            return;
+        }
         const fetchAllTraininigs = async () => {
-            const trainings = await TrainingsService.getAllTrainerGroups(trainerUUID) ?? [];
+            const trainings = await TrainingsService.getAllTrainerGroups(trainerUUID, token) ?? [];
             setTrainings(trainings);
         }
         fetchAllTraininigs();
-    }, [trainerUUID]);
+    }, [token, trainerUUID]);
+
 
     return { trainings, trainerUUID }
 }
@@ -81,6 +91,7 @@ const TrainerGroups: FC = () => {
         return null;
     }
     return (trainings.length === 0) ? <NoTrainingsAvailable /> : <TrainingsTable trainerUUID={trainerUUID} trainings={trainings} />;
+
 }
 
 export default TrainerGroups;

@@ -1,11 +1,10 @@
-import { ParticipantReadModel, TrainingGroupReadModel } from 'services/models';
 import React, { FC, PropsWithChildren } from 'react';
 import { useEffect, useState } from 'react';
 
 import NoTrainingsAvailable from './no-trainings-availabe';
 import { Table } from 'react-bootstrap';
+import { TrainingGroupReadModel } from 'services/models';
 import TrainingScheduleButton from 'components/buttons/training-schedule-button';
-import { Trainings } from 'views';
 import { TrainingsService } from 'services/trainings-service';
 import { useAuth0 } from '@auth0/auth0-react';
 

@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 
-import TrainingForm from '../../../components/forms/form';
+import TrainingForm from 'components/forms/form';
 import { TrainingsService } from 'services/trainings-service';
 
 const TrainingPlanningForm: FC = () => {

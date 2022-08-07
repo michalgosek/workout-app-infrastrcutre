@@ -10,6 +10,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useGetTrainingsServiceAccessToken } from 'services/hooks';
 import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 
@@ -21,8 +22,8 @@ export type TrainingFormValues = {
 
 export type TrainingFormProps = {
     placeholders: TrainingFormValues;
-    callbackPostAPI?: (data: TrainingGroupWriteModel) => void;
-    callbackPutAPI?: (data: UpdateTrainigGroupWriteModel, trainerUUID: string, trainingUUID: string) => void;
+    callbackPostAPI?: (data: TrainingGroupWriteModel, trainerUUID: string, token: string) => void;
+    callbackPutAPI?: (data: UpdateTrainigGroupWriteModel, trainerUUID: string, trainingUUID: string, token: string) => void;
 };
 
 const praseToTimeFormat = (appointment: Date) => {
@@ -43,16 +44,16 @@ const parseStringToDate = (appointment: string) => {
     return date;
 }
 
-
 const TrainingForm: FC<PropsWithChildren<TrainingFormProps>> = ({ placeholders, callbackPostAPI, callbackPutAPI }) => {
     const { trainerUUID, trainingUUID } = useParams();
     const [appointment, setAppointment] = useState<Date | null>(placeholders.appointment ? parseStringToDate(placeholders.appointment) : new Date());
     const { handleSubmit, register, formState: { errors } } = useForm<TrainingFormValues>();
     const { user } = useAuth0();
+    const token = useGetTrainingsServiceAccessToken();
+
     const onHandleAppointmentChange = (update: Date | null) => {
         setAppointment(update);
     };
-    debugger
     if (!user) {
         console.error('null user value');
         return null;
@@ -67,14 +68,16 @@ const TrainingForm: FC<PropsWithChildren<TrainingFormProps>> = ({ placeholders, 
     }
 
 
-
-
     const TRAININGS_SERVICE_PUT_API_CALLBACK = callbackPutAPI;
     const TRAININGS_SERVICE_POST_API_CALLBACK = callbackPostAPI;
 
     const onSubmitHandle: SubmitHandler<TrainingFormValues> = (data) => {
         if (!appointment) {
             console.error('null appointment value');
+            return;
+        }
+        if (!trainerUUID) {
+            console.error('missing trainer UUID for TrainingsServcie PUT/POST API request');
             return;
         }
 
@@ -90,15 +93,12 @@ const TrainingForm: FC<PropsWithChildren<TrainingFormProps>> = ({ placeholders, 
                 group_desc: data.description,
                 date: data.appointment,
             }
-            TRAININGS_SERVICE_POST_API_CALLBACK(training)
+            TRAININGS_SERVICE_POST_API_CALLBACK(training, trainerUUID, token);
+            window.location.reload();
             return;
         }
 
         if (TRAININGS_SERVICE_PUT_API_CALLBACK) {
-            if (!trainerUUID) {
-                console.error('missing trainer UUID for TrainingsServcie PUT API request');
-                return;
-            }
             if (!trainingUUID) {
                 console.error('missing training UUID for TrainingsServcie PUT API request');
                 return;
@@ -108,7 +108,9 @@ const TrainingForm: FC<PropsWithChildren<TrainingFormProps>> = ({ placeholders, 
                 group_desc: data.description,
                 date: data.appointment,
             }
-            TRAININGS_SERVICE_PUT_API_CALLBACK(training, trainerUUID, trainingUUID)
+            TRAININGS_SERVICE_PUT_API_CALLBACK(training, trainerUUID, trainingUUID, token);
+            window.location.reload();
+            return;
         }
     };
 

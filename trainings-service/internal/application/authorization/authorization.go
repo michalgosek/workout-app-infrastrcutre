@@ -1,13 +1,15 @@
-package auth
+package authorization
 
 import (
 	"context"
+	jwtmiddleware "github.com/auth0/go-jwt-middleware/v2"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
-	"github.com/auth0/go-jwt-middleware/v2"
 	"github.com/auth0/go-jwt-middleware/v2/jwks"
 	"github.com/auth0/go-jwt-middleware/v2/validator"
 )
@@ -37,9 +39,14 @@ func (c CustomClaims) HasScope(expectedScope string) bool {
 
 // EnsureValidToken is a middleware that will check the validity of our JWT.
 func EnsureValidToken() func(next http.Handler) http.Handler {
-	issuerURL, err := url.Parse("https://dev-h04lrlyo.us.auth0.com/")
+	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("Failed to parse the issuer url: %v", err)
+		log.Fatalf("failed to load .env auth0 file: %s", err)
+	}
+
+	issuerURL, err := url.Parse(os.Getenv("AUTH0_DOMAIN"))
+	if err != nil {
+		log.Fatalf("failed to parse the issuer url: %s", err)
 	}
 
 	provider := jwks.NewCachingProvider(issuerURL, 5*time.Minute)
@@ -48,7 +55,7 @@ func EnsureValidToken() func(next http.Handler) http.Handler {
 		provider.KeyFunc,
 		validator.RS256,
 		issuerURL.String(),
-		[]string{"https://trainings-service"},
+		[]string{os.Getenv("AUTH0_AUDIENCE")},
 		validator.WithCustomClaims(
 			func() validator.CustomClaims {
 				return &CustomClaims{}
