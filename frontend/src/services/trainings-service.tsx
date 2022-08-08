@@ -16,9 +16,6 @@ const axiosAgent = axios.create({
     headers: {
         'Content-type': 'application/json'
     },
-    validateStatus: (status) => {
-        return status < 500;
-    }
 });
 
 
@@ -45,7 +42,6 @@ const createTrainingGroup = async (training: TrainingGroupWriteModel, trainerUUI
             }
         });
         return response.status
-
     } catch (err) {
         console.error(err);
     }
@@ -57,9 +53,9 @@ const getAllTrainerGroups = async (trainerUUID: string, token: string): Promise<
         const response = await axiosAgent.get<TrainerGroupReadModel[]>(endpoint, {
             headers: {
                 Authorization: `Bearer ${token}`
-            }
+            },
         });
-        return response.data;
+        return (response.status !== 200) ? [] : response.data;
     } catch (err) {
         console.error(err);
         return [];
@@ -88,19 +84,19 @@ const getTrainerGroup = async (trainerUUID: string, trainingUUID: string, token:
                 Authorization: `Bearer ${token}`
             }
         });
-        return response.data;
+        return (response.status !== 200) ? {} as TrainerGroupReadModel : response.data;
     } catch (err) {
-        return {} as TrainerGroupReadModel;
+        return { name: "ACCESS_FORBIDDEN", description: "ACCESS_FORBIDDEN" } as TrainerGroupReadModel;
     }
 }
 
 const getAllTrainingGroups = async (): Promise<TrainingGroupReadModel[]> => {
     try {
         const response = await axiosAgent.get<TrainingGroupReadModel[]>('/trainings');
-        return response.data;
+        return (response.status !== 200) ? [] : response.data;
     } catch (err) {
         console.error(err);
-        return [];
+        return {} as TrainingGroupReadModel[];
     }
 }
 
@@ -112,7 +108,7 @@ const getAllParticipantGroups = async (UUID: string, token: string): Promise<Par
                 Authorization: `Bearer ${token}`
             }
         });
-        return response.data;
+        return (response.status !== 200) ? [] : response.data;
     } catch (err) {
         console.error(err);
         return [];

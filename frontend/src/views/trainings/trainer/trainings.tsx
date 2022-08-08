@@ -74,7 +74,7 @@ const useGetTrainerGroupsData = () => {
             return;
         }
         const fetchAllTraininigs = async () => {
-            const trainings = await TrainingsService.getAllTrainerGroups(trainerUUID, token) ?? [];
+            const trainings = await TrainingsService.getAllTrainerGroups(trainerUUID, token);
             setTrainings(trainings);
         }
         fetchAllTraininigs();
@@ -88,10 +88,9 @@ const TrainerGroups: FC = () => {
     const { trainings, trainerUUID } = useGetTrainerGroupsData();
     if (!trainings || !trainerUUID) {
         console.error('missing trainer trainings or in trainerUUID in groups path');
-        return null;
+        return <NoTrainingsAvailable />;
     }
     return (trainings.length === 0) ? <NoTrainingsAvailable /> : <TrainingsTable trainerUUID={trainerUUID} trainings={trainings} />;
-
 }
 
 export default TrainerGroups;

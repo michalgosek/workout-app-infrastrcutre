@@ -72,8 +72,7 @@ const TrainingsTable: React.FC<PropsWithChildren<TrainingsTableProps>> = ({ trai
     );
 };
 
-
-const useGetAllTrainings = () => {
+const TrainingGroups: React.FC = () => {
     const [trainings, setTrainings] = useState<TrainingGroupReadModel[]>();
     useEffect(() => {
         const getAllTrainings = async () => {
@@ -81,12 +80,8 @@ const useGetAllTrainings = () => {
             setTrainings(res)
         }
         getAllTrainings();
-    }, [])
-    return trainings
-}
+    }, []);
 
-const TrainingGroups: React.FC = () => {
-    const trainings = useGetAllTrainings()
     if (!trainings?.length) return <NoTrainingsAvailable />;
     return <TrainingsTable trainings={trainings} />;
 };

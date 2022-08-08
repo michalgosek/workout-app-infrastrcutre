@@ -1,21 +1,32 @@
+import { useEffect, useState } from 'react';
+
 import DropButton from 'components/buttons/drop-button';
 import { FC } from 'react';
 import NoTrainingsAvailable from '../no-trainings-availabe';
+import { ParticipantGroupReadModel } from 'services/models';
 import { Table } from 'react-bootstrap';
 import { TrainingsService } from 'services/trainings-service';
 import style from './trainings.module.scss';
-import useGetAllParticipantGroups from './hooks';
 import { useGetTrainingsServiceAccessToken } from 'services/hooks';
 import { useParams } from 'react-router-dom';
 
 const ParticipantTrainingGroups: FC = () => {
     const token = useGetTrainingsServiceAccessToken();
-    const trainings = useGetAllParticipantGroups(token);
     const { participantUUID } = useParams();
+    const [trainings, setTrainings] = useState<ParticipantGroupReadModel[]>();
 
-    if (!trainings.length || !participantUUID || !token) {
-        return <NoTrainingsAvailable />;
-    }
+    useEffect(() => {
+        const fetchAllParticipantTraininigs = async () => {
+            if (!participantUUID) {
+                console.error('missing participant UUID');
+                return;
+            }
+            const trainings = await TrainingsService.getAllParticipantGroups(participantUUID, token);
+            setTrainings(trainings);
+        }
+        fetchAllParticipantTraininigs();
+    }, [participantUUID, token])
+
 
     const cancelParticipantTraining = (userUUID: string, trainerUUID: string, groupUUID: string, token: string) => {
         const cancelation = async (userUUID: string, trainerUUID: string, groupUUID: string, token: string) => {
@@ -25,6 +36,8 @@ const ParticipantTrainingGroups: FC = () => {
         };
         cancelation(userUUID, trainerUUID, groupUUID, token);
     };
+
+    if (!trainings || !token || !participantUUID) return <NoTrainingsAvailable />
 
     return (
         <div className={style.rowtext}>
@@ -49,7 +62,7 @@ const ParticipantTrainingGroups: FC = () => {
                                 <td>{t.trainer_name}</td>
                                 <td>{t.date}</td>
                                 <td>
-                                    {<DropButton onClickHandle={() => cancelParticipantTraining(participantUUID, t.trainer_uuid, t.uuid, token)} />}
+                                    {< DropButton onClickHandle={() => cancelParticipantTraining(participantUUID, t.trainer_uuid, t.uuid, token)} />}
                                 </td>
                             </tr>
                         ))
@@ -58,6 +71,7 @@ const ParticipantTrainingGroups: FC = () => {
             </Table>
         </div>
     );
+
 }
 
 export default ParticipantTrainingGroups;
