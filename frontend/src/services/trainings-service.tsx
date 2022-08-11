@@ -11,7 +11,7 @@ import axios from 'axios';
 
 const axiosAgent = axios.create({
     baseURL: 'http://localhost:8070/api/v1',
-    timeout: 1000,
+    timeout: 10000,
     responseType: 'json',
     headers: {
         'Content-type': 'application/json'

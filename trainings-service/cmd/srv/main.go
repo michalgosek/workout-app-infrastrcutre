@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/notifications"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
@@ -38,11 +39,13 @@ func execute() error {
 		}
 	}()
 
+	notificationService := notifications.NewService()
+
 	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
 	HTTP := http.NewTrainingsHTTP(&application.Application{
 		Commands: application.Commands{
 			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(repository),
-			CancelTrainingGroup:  command.NewCancelTrainingGroupHandler(repository),
+			CancelTrainingGroup:  command.NewCancelTrainingGroupHandler(repository, notificationService),
 			CancelTrainingGroups: command.NewCancelTrainingGroupsHandler(repository),
 			UnassignParticipant:  command.NewUnassignParticipantHandler(repository),
 			AssignParticipant:    command.NewAssignParticipantHandler(repository),

@@ -1,0 +1,52 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+!theme plain
+
+autonumber
+
+actor  User as "Użytkownik"
+participant ":Web aplikacja" as SPA
+participant ":Serwer autoryzacji" as AuthServer
+participant ":API Serwisu Treningowego " as TrainingsServiceAPI
+
+User -> SPA: Inicjalizuje logowanie
+activate User
+activate SPA
+
+SPA -> AuthServer: Wysyła żądanie HTTP GET - /authorize
+
+deactivate SPA
+activate AuthServer
+AuthServer --> User: Przekierowuję na stronę logowania Auth0
+deactivate User
+deactivate AuthServer
+
+User -> AuthServer: Dokonuje uwierzytelnienia
+
+activate AuthServer
+activate SPA
+AuthServer --> SPA: Zwraca kod autoryzacji
+deactivate AuthServer
+deactivate SPA
+
+
+SPA -> AuthServer: Wysyła żądanie HTTP POST - /ouath/token
+activate SPA
+activate AuthServer
+AuthServer -> AuthServer: Weryfikuje dane
+AuthServer --> SPA: Zwraca ID wraz z tokenem dostepu
+deactivate AuthServer
+deactivate SPA
+
+
+SPA -> TrainingsServiceAPI:  Wysyła żądanie dostępu do zasobów wraz z tokenem
+activate SPA
+activate TrainingsServiceAPI
+TrainingsServiceAPI --> SPA: Zwraca odpowiedź
+
+
+
+
+
+
+@enduml

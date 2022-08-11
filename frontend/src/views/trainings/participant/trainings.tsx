@@ -37,7 +37,7 @@ const ParticipantTrainingGroups: FC = () => {
         cancelation(userUUID, trainerUUID, groupUUID, token);
     };
 
-    if (!trainings || !token || !participantUUID) return <NoTrainingsAvailable />
+    if (!trainings || trainings.length === 0 || !token || !participantUUID) return <NoTrainingsAvailable />
 
     return (
         <div className={style.rowtext}>

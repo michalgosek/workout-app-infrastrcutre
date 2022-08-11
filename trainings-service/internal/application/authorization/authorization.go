@@ -17,6 +17,10 @@ import (
 
 type Claim string
 
+func (c Claim) String() string {
+	return string(c)
+}
+
 const (
 	ViewParticipantGroups Claim = "participant:view:training-groups"
 	LeaveTrainingGroup    Claim = "participant:leave:training-group"
