@@ -44,7 +44,7 @@ func (t *TrainerGroupHandler) TrainerGroup(ctx context.Context, trainingUUID, tr
 	if err != nil {
 		return query.TrainerGroup{}, err
 	}
-	m := UnmarshalToQueryTrainerWorkoutGroup(doc)
+	m := ConvertToQueryTrainerWorkoutGroup(doc)
 	return m, nil
 }
 

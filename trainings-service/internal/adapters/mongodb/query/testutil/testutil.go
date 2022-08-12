@@ -1,4 +1,4 @@
-package query_test
+package testutil
 
 import (
 	"context"
@@ -18,31 +18,31 @@ const (
 	CollectionName = "trainings"
 )
 
-func createExpectedParticipantTrainingGroups(cli *mongo.Client, UUID string) ([]rm.ParticipantGroup, error) {
-	writeModels, err := findAllTrainingGroupsWithParticipant(cli, UUID)
+func CreateParticipantTrainingGroups(cli *mongo.Client, UUID string) ([]rm.ParticipantGroup, error) {
+	writeModels, err := FindAllTrainingGroupsWithParticipant(cli, UUID)
 	if err != nil {
 		return nil, err
 	}
-	participantTrainingGroups := query.UnmarshalToParticipantGroups(writeModels...)
+	participantTrainingGroups := query.ConvertToParticipantGroups(writeModels...)
 	return participantTrainingGroups, nil
 }
 
-func createExpectedTrainerGroup(cli *mongo.Client, groupUUID string) rm.TrainerGroup {
-	writeModel, _ := findTrainingGroup(cli, groupUUID)
-	readModel := query.UnmarshalToQueryTrainerWorkoutGroup(writeModel)
+func CreateTrainerGroup(cli *mongo.Client, groupUUID string) rm.TrainerGroup {
+	writeModel, _ := FindTrainingGroup(cli, groupUUID)
+	readModel := query.ConvertToQueryTrainerWorkoutGroup(writeModel)
 	return readModel
 }
 
-func createExpectedAllTrainingGroups(cli *mongo.Client) ([]rm.TrainingGroup, error) {
-	writeModels, err := findAllTrainingGroups(cli)
+func CreateAllTrainingGroups(cli *mongo.Client) ([]rm.TrainingGroup, error) {
+	writeModels, err := FindAllTrainingGroups(cli)
 	if err != nil {
 		return nil, err
 	}
-	allTrainingGroups := query.UnmarshalToQueryTrainingGroups(writeModels...)
+	allTrainingGroups := query.ConvertToQueryTrainingGroups(writeModels...)
 	return allTrainingGroups, nil
 }
 
-func findAllTrainingGroupsWithParticipant(cli *mongo.Client, UUID string) ([]documents.TrainingGroupWriteModel, error) {
+func FindAllTrainingGroupsWithParticipant(cli *mongo.Client, UUID string) ([]documents.TrainingGroupWriteModel, error) {
 	db := cli.Database(DatabaseName)
 	coll := db.Collection(CollectionName)
 
@@ -65,7 +65,7 @@ func findAllTrainingGroupsWithParticipant(cli *mongo.Client, UUID string) ([]doc
 	return docs, nil
 }
 
-func findAllTrainingGroups(cli *mongo.Client) ([]documents.TrainingGroupWriteModel, error) {
+func FindAllTrainingGroups(cli *mongo.Client) ([]documents.TrainingGroupWriteModel, error) {
 	db := cli.Database(DatabaseName)
 	coll := db.Collection(CollectionName)
 
@@ -88,7 +88,7 @@ func findAllTrainingGroups(cli *mongo.Client) ([]documents.TrainingGroupWriteMod
 	return docs, nil
 }
 
-func findTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupWriteModel, error) {
+func FindTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupWriteModel, error) {
 	db := cli.Database(DatabaseName)
 	coll := db.Collection(CollectionName)
 
@@ -108,7 +108,7 @@ func findTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupW
 	return doc, nil
 }
 
-func newTestTrainingGroup(UUID string, trainer trainings.Trainer, date time.Time) trainings.TrainingGroup {
+func NewTestTrainingGroup(UUID string, trainer trainings.Trainer, date time.Time) trainings.TrainingGroup {
 	t, err := trainings.NewTrainingGroup(UUID, "dummy name", "dummy desc", date, trainer)
 	if err != nil {
 		panic(err)
@@ -116,7 +116,7 @@ func newTestTrainingGroup(UUID string, trainer trainings.Trainer, date time.Time
 	return *t
 }
 
-func newTestStaticTime() time.Time {
+func NewTestStaticTime() time.Time {
 	ts, err := time.Parse("2006-01-02 15:04", "2099-12-12 23:30")
 	if err != nil {
 		panic(err)
@@ -124,7 +124,7 @@ func newTestStaticTime() time.Time {
 	return ts
 }
 
-func newTestTrainer(UUID, name string) trainings.Trainer {
+func NewTestTrainer(UUID, name string) trainings.Trainer {
 	t, err := trainings.NewTrainer(UUID, name)
 	if err != nil {
 		panic(err)
@@ -132,7 +132,7 @@ func newTestTrainer(UUID, name string) trainings.Trainer {
 	return t
 }
 
-func newTestParticipant(UUID, name string) trainings.Participant {
+func NewTestParticipant(UUID, name string) trainings.Participant {
 	p, err := trainings.NewParticipant(UUID, name)
 	if err != nil {
 		panic(err)
@@ -140,7 +140,7 @@ func newTestParticipant(UUID, name string) trainings.Participant {
 	return p
 }
 
-func newTestMongoClient() *mongo.Client {
+func NewTestMongoClient() *mongo.Client {
 	opts := options.Client()
 	opts.ApplyURI("mongodb://localhost:27017")
 	opts.SetConnectTimeout(5 * time.Second)

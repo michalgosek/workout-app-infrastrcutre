@@ -26,12 +26,12 @@ type TrainingGroupWriteModel struct {
 	Participants []ParticipantWriteModel `bson:"participants"`
 }
 
-func UnmarshalToTrainingGroup(d TrainingGroupWriteModel) trainings.TrainingGroup {
+func ConvertToTrainingGroup(d TrainingGroupWriteModel) trainings.TrainingGroup {
 	var pp []trainings.DatabaseTrainingGroupParticipant
 	for _, p := range d.Participants {
 		pp = append(pp, trainings.DatabaseTrainingGroupParticipant{UUID: p.UUID, Name: p.Name})
 	}
-	g := trainings.UnmarshalTrainingGroupFromDatabase(trainings.DatabaseTrainingGroup{
+	g := trainings.ConvertTrainingGroupFromDatabase(trainings.DatabaseTrainingGroup{
 		UUID:        d.UUID,
 		Name:        d.Name,
 		Description: d.Description,

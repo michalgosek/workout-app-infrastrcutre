@@ -29,7 +29,7 @@ func (t *AllTrainingsHandler) AllTrainingGroups(ctx context.Context) ([]query.Tr
 	if err != nil {
 		return nil, err
 	}
-	gg := UnmarshalToQueryTrainingGroups(dd...)
+	gg := ConvertToQueryTrainingGroups(dd...)
 	return gg, nil
 }
 

@@ -14,7 +14,7 @@ func TestShouldDeleteTrainingGroupsWithSuccess_Integration(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
+	trainer := newTestTrainer("77de3c0e-ec98-45bd-99c3-c6ef0524fb06", "John Doe")
 	date := newTestStaticTime()
 	firstTrainingGroup := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
 	secondTrainingGroup := newTestTrainingGroup("d65ede26-89e7-436e-b9d8-0142844a3905", trainer, date)

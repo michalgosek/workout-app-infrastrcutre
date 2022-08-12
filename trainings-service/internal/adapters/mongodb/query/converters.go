@@ -5,7 +5,7 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 )
 
-func UnmarshalToQueryTrainerWorkoutGroup(d documents.TrainingGroupWriteModel) query.TrainerGroup {
+func ConvertToQueryTrainerWorkoutGroup(d documents.TrainingGroupWriteModel) query.TrainerGroup {
 	var pp []query.Participant
 	for _, p := range d.Participants {
 		pp = append(pp, query.Participant{
@@ -24,16 +24,16 @@ func UnmarshalToQueryTrainerWorkoutGroup(d documents.TrainingGroupWriteModel) qu
 	return g
 }
 
-func UnmarshalToTrainerWorkoutGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainerGroup {
+func ConvertToTrainerWorkoutGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainerGroup {
 	var out []query.TrainerGroup
 	for _, d := range dd {
-		g := UnmarshalToQueryTrainerWorkoutGroup(d)
+		g := ConvertToQueryTrainerWorkoutGroup(d)
 		out = append(out, g)
 	}
 	return out
 }
 
-func UnmarshalToParticipantGroups(dd ...documents.TrainingGroupWriteModel) []query.ParticipantGroup {
+func ConvertToParticipantGroups(dd ...documents.TrainingGroupWriteModel) []query.ParticipantGroup {
 	var out []query.ParticipantGroup
 	for _, d := range dd {
 		out = append(out, query.ParticipantGroup{
@@ -48,7 +48,7 @@ func UnmarshalToParticipantGroups(dd ...documents.TrainingGroupWriteModel) []que
 	return out
 }
 
-func UnmarshalToQueryTrainingGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainingGroup {
+func ConvertToQueryTrainingGroups(dd ...documents.TrainingGroupWriteModel) []query.TrainingGroup {
 	var out []query.TrainingGroup
 	for _, d := range dd {
 		var participants []query.Participant

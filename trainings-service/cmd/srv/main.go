@@ -58,6 +58,7 @@ func execute() error {
 	trainingGroup := dbqry.NewTrainingGroupHandler(mongoCLI, queryCfg)
 	trainerGroup := dbqry.NewTrainerGroupHandler(mongoCLI, queryCfg)
 	trainerGroups := dbqry.NewTrainerGroupsHandler(mongoCLI, queryCfg)
+	trainerParticipants := dbqry.NewTrainerParticipantsHandler(mongoCLI, queryCfg)
 	participantGroups := dbqry.NewParticipantGroupsHandler(mongoCLI, queryCfg)
 	allTrainings := dbqry.NewAllTrainingsHandler(mongoCLI, queryCfg)
 
@@ -68,7 +69,7 @@ func execute() error {
 		Commands: application.Commands{
 			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(insertTrainingGroup, duplicate),
 			CancelTrainingGroup:  command.NewCancelTrainingGroupHandler(trainingGroup, deleteTrainingGroup, notification),
-			CancelTrainingGroups: command.NewCancelTrainingGroupsHandler(deleteTrainingGroups),
+			CancelTrainingGroups: command.NewCancelTrainingGroupsHandler(deleteTrainingGroups, trainerParticipants, notification),
 			UnassignParticipant:  command.NewUnassignParticipantHandler(updateTrainingGroup, trainingGroup),
 			AssignParticipant:    command.NewAssignParticipantHandler(updateTrainingGroup, trainingGroup),
 			UpdateTrainingGroup:  command.NewUpdateTrainingGroupHandler(updateTrainingGroup, trainingGroup),

@@ -22,7 +22,7 @@ type DatabaseTrainingGroupParticipant struct {
 	Name string
 }
 
-func UnmarshalTrainingGroupFromDatabase(d DatabaseTrainingGroup) TrainingGroup {
+func ConvertTrainingGroupFromDatabase(d DatabaseTrainingGroup) TrainingGroup {
 	var pp []Participant
 	for _, p := range d.Participants {
 		pp = append(pp, Participant{

@@ -38,7 +38,7 @@ func (t TrainingGroupHandler) TrainingGroup(ctx context.Context, trainingUUID st
 	for _, p := range doc.Participants {
 		pp = append(pp, trainings.DatabaseTrainingGroupParticipant{UUID: p.UUID, Name: p.Name})
 	}
-	g := trainings.UnmarshalTrainingGroupFromDatabase(trainings.DatabaseTrainingGroup{
+	g := trainings.ConvertTrainingGroupFromDatabase(trainings.DatabaseTrainingGroup{
 		UUID:        doc.UUID,
 		Name:        doc.Name,
 		Description: doc.Description,

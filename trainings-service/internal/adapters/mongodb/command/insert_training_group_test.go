@@ -14,9 +14,9 @@ func TestShouldInsertTrainingGroupWithSuccess_Integration(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("c732d4a5-d3c3-432e-bf2a-221d5a87b531", "John Doe")
+	trainer := newTestTrainer("f9e836f3-d2e3-4d37-9a7e-d7b6d1856e7a", "John Doe")
 	date := newTestStaticTime()
-	training := newTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", trainer, date)
+	training := newTestTrainingGroup("40dbf5d6-e223-4f05-a8a8-531e3c4cb634", trainer, date)
 
 	cli := newTestMongoClient()
 

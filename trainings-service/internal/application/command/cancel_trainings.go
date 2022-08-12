@@ -1,33 +1,74 @@
 package command
 
-import "context"
+import (
+	"context"
+	"fmt"
+	"time"
+)
 
-type CancelTrainingGroupsRepository interface {
+type TrainerParticipant struct {
+	TrainingUUID string
+	TrainingName string
+	Trainer      string
+	UserUUID     string
+	Date         time.Time
+}
+
+type DeleteTrainingGroupsRepository interface {
 	DeleteTrainingGroups(ctx context.Context, trainerUUID string) error
 }
 
-type TrainingGroupParticipantNotification struct {
-	TrainingUUID string
-	TrainerUUID  string
+type TrainerParticipantsRepository interface {
+	TrainerParticipants(ctx context.Context, trainerUUID string) ([]TrainerParticipant, error)
 }
 
 type CancelTrainingGroupsHandler struct {
-	repo    CancelTrainingGroupsRepository
+	command DeleteTrainingGroupsRepository
+	query   TrainerParticipantsRepository
 	service NotificationService
 }
 
 func (c *CancelTrainingGroupsHandler) Do(ctx context.Context, trainerUUID string) error {
-	err := c.repo.DeleteTrainingGroups(ctx, trainerUUID)
+	participants, err := c.query.TrainerParticipants(ctx, trainerUUID)
 	if err != nil {
 		return err
+	}
+
+	err = c.command.DeleteTrainingGroups(ctx, trainerUUID)
+	if err != nil {
+		return err
+	}
+	for _, p := range participants {
+		err = c.service.CreateNotification(Notification{
+			UserUUID:     p.UserUUID,
+			TrainingUUID: p.TrainingUUID,
+			Title:        fmt.Sprintf("Training canceled - %s", p.TrainingName),
+			Content:      fmt.Sprintf("Training session has been canceled"),
+			Trainer:      p.Trainer,
+			Date:         p.Date,
+		})
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
-func NewCancelTrainingGroupsHandler(r CancelTrainingGroupsRepository) *CancelTrainingGroupsHandler {
-	if r == nil {
-		panic("nil cancel training groups repository")
+func NewCancelTrainingGroupsHandler(command DeleteTrainingGroupsRepository, query TrainerParticipantsRepository, n NotificationService) *CancelTrainingGroupsHandler {
+	if command == nil {
+		panic("nil delete training groups repository")
 	}
-	h := CancelTrainingGroupsHandler{repo: r}
+	if query == nil {
+		panic("nil delete trainer participants repository")
+	}
+	if n == nil {
+		panic("nil notification service")
+	}
+	h := CancelTrainingGroupsHandler{
+		command: command,
+		query:   query,
+		service: n,
+	}
+
 	return &h
 }

@@ -29,7 +29,7 @@ func (t *TrainerGroupsHandler) TrainerGroups(ctx context.Context, trainerUUID st
 	if err != nil {
 		return nil, err
 	}
-	gg := UnmarshalToTrainerWorkoutGroups(dd...)
+	gg := ConvertToTrainerWorkoutGroups(dd...)
 	return gg, nil
 }
 

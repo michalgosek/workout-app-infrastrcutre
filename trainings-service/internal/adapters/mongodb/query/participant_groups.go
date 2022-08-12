@@ -29,7 +29,7 @@ func (t *ParticipantGroupsHandler) ParticipantGroups(ctx context.Context, partic
 	if err != nil {
 		return nil, err
 	}
-	gg := UnmarshalToParticipantGroups(dd...)
+	gg := ConvertToParticipantGroups(dd...)
 	return gg, nil
 }
 
