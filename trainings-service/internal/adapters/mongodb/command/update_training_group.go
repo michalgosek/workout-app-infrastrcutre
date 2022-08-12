@@ -28,7 +28,7 @@ func (u *UpdateTrainingGroupHandler) UpdateTrainingGroup(ctx context.Context, g 
 		Limit:        g.Limit(),
 		Participants: UnmarshalToWriteModelParticipants(g.Participants()...),
 	}
-	filter := bson.M{"_id": g.UUID(), "trainer._id": g.Trainer().UUID()}
+	filter := bson.M{"_id": g.UUID()}
 	update := bson.M{"$set": doc}
 	ctx, cancel := context.WithTimeout(ctx, u.cfg.CommandTimeout)
 	defer cancel()

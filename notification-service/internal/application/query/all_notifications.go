@@ -5,7 +5,7 @@ import "context"
 const UIFormat = "02/01/2006 15:04"
 
 type Notification struct {
-	UUID         string `json:"_id"`
+	UUID         string `json:"uuid"`
 	UserUUID     string `json:"user_uuid"`
 	TrainingUUID string `json:"training_uuid"`
 	Title        string `json:"title"`

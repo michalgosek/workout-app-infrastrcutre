@@ -94,7 +94,7 @@ func NewHTTP(app *application.Application) (*HTTP, error) {
 }
 
 func (h *HTTP) NewAPI() chi.Router {
-	r := chi.NewRouter()
+	r := server.NewRouter()
 	r.Route("/api/v1/notifications", func(r chi.Router) {
 		r.Route("/{userUUID}", func(r chi.Router) {
 			r.Get("/", h.GetNotificationsHandler())

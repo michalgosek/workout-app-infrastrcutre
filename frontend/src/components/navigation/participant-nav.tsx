@@ -8,12 +8,17 @@ const ParticipantNav: FC = () => {
     if (!user) return null;
 
     const PARTICIPANTS_SCHEDULES_PATH = `participants/${user.sub}/trainings`;
+    const NOTIFICATIONS_PATH = `participants/${user.sub}/notifications`;
 
     return (
-        <NavLink to={PARTICIPANTS_SCHEDULES_PATH} className={({ isActive }) => GetLinkClassName(isActive)}>
-            Planned Workouts
-        </NavLink>
-
+        <>
+            <NavLink to={PARTICIPANTS_SCHEDULES_PATH} className={({ isActive }) => GetLinkClassName(isActive)}>
+                Planned Workouts
+            </NavLink>
+            <NavLink to={NOTIFICATIONS_PATH} className={({ isActive }) => GetLinkClassName(isActive)}>
+                Notifications
+            </NavLink>
+        </>
     );
 }
 

@@ -44,6 +44,6 @@ func TestShouldInsertTrainingGroupWithSuccess_Integration(t *testing.T) {
 	assertions.Nil(err)
 	assertions.NotEmpty(writeModel)
 
-	expectedGroup := documents.UnmarshalToTrainingGroup(writeModel)
+	expectedGroup := documents.ConvertToTrainingGroup(writeModel)
 	assertions.Equal(training, expectedGroup)
 }

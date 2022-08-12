@@ -55,6 +55,7 @@ func execute() error {
 	if err != nil {
 		return err
 	}
+
 	API := HTTP.NewAPI()
 	serverCfg := server.DefaultHTTPConfig("localhost:8060", "notification-service")
 	srv := server.NewHTTP(API, serverCfg)

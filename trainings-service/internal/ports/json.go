@@ -1,4 +1,4 @@
-package http
+package ports
 
 type User struct {
 	UUID string `json:"uuid"`

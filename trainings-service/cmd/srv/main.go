@@ -10,7 +10,7 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/server"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports/http"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports"
 	"log"
 	"time"
 )
@@ -65,7 +65,7 @@ func execute() error {
 	notification := notifications.NewService()
 
 	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
-	HTTP := http.NewTrainingsHTTP(&application.Application{
+	HTTP := ports.NewTrainingsHTTP(&application.Application{
 		Commands: application.Commands{
 			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(insertTrainingGroup, duplicate),
 			CancelTrainingGroup:  command.NewCancelTrainingGroupHandler(trainingGroup, deleteTrainingGroup, notification),

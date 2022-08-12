@@ -21,8 +21,8 @@ func TestShouldUpdateTrainingGroupWithSuccess_Integration(t *testing.T) {
 	cli := newTestMongoClient()
 	commandCfg := command.Config{
 		Database:       DatabaseName,
-		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
+		Collection:     CollectionName,
 	}
 	handler := command.NewInsertTrainingGroupHandler(cli, commandCfg)
 	SUT := command.NewUpdateTrainingGroupHandler(cli, commandCfg)
@@ -48,6 +48,6 @@ func TestShouldUpdateTrainingGroupWithSuccess_Integration(t *testing.T) {
 	assertions.Nil(err)
 	assertions.NotEmpty(writeModel)
 
-	expectedGroup := documents.UnmarshalToTrainingGroup(writeModel)
+	expectedGroup := documents.ConvertToTrainingGroup(writeModel)
 	assertions.Equal(training, expectedGroup)
 }

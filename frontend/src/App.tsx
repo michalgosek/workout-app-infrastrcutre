@@ -2,7 +2,7 @@ import './assets/styles/app.css';
 
 import { Hero, Loading, } from './components';
 import { NotAuthorized, NotFound } from './views/errors';
-import { PageLayout, Profile, Trainings } from './views';
+import { Notifications, PageLayout, Profile, Trainings } from './views';
 import { PlanTraining, Trainer, TrainerGroup, TrainerGroups } from './views/trainings/trainer';
 import { ProtectedRoute, useGetAuthorization } from './authorization';
 import { Route, Routes } from 'react-router-dom';
@@ -24,14 +24,17 @@ const AppRouter = (): JSX.Element => {
 
         <Route path='participants' element={isParticipant ? <Participant /> : <NotAuthorized />}>
           <Route path=':participantUUID'>
+            <Route path='notifications' element={<Notifications />} />
             <Route path='trainings' >
               <Route path='' element={<ParticipantTrainingGroups />} />
             </Route>
+
           </Route>
         </Route>
 
         <Route path='trainers' element={isTrainer ? <Trainer /> : <NotAuthorized />}>
           <Route path=':trainerUUID'>
+            <Route path='notifications' element={<Notifications />} />
             <Route path='trainings' >
               <Route path='' element={<TrainerGroups />} />
               <Route path=':trainingUUID' element={<TrainerGroup />} />

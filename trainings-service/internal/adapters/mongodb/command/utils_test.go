@@ -16,11 +16,11 @@ const (
 	CollectionName = "trainings"
 )
 
-func findTrainingGroup(cli *mongo.Client, uuid string) (documents.TrainingGroupWriteModel, error) {
+func findTrainingGroup(cli *mongo.Client, trainingUUID string) (documents.TrainingGroupWriteModel, error) {
 	db := cli.Database(DatabaseName)
 	coll := db.Collection(CollectionName)
 
-	f := bson.M{"_id": uuid}
+	f := bson.M{"_id": trainingUUID}
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	res := coll.FindOne(ctx, f)
