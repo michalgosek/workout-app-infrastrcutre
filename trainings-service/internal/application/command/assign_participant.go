@@ -5,13 +5,9 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 )
 
-type AssignParticipantRepository interface {
-	QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
-	UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
-}
-
 type AssignParticipantHandler struct {
-	repo AssignParticipantRepository
+	command UpdateTrainingGroupRepository
+	query   TrainingGroupRepository
 }
 
 type AssignParticipant struct {
@@ -21,7 +17,7 @@ type AssignParticipant struct {
 }
 
 func (a *AssignParticipantHandler) Do(ctx context.Context, cmd AssignParticipant) error {
-	training, err := a.repo.QueryTrainingGroup(ctx, cmd.TrainingUUID)
+	training, err := a.query.TrainingGroup(ctx, cmd.TrainingUUID)
 	if err != nil {
 		return err
 	}
@@ -33,17 +29,23 @@ func (a *AssignParticipantHandler) Do(ctx context.Context, cmd AssignParticipant
 		return err
 	}
 
-	err = a.repo.UpdateTrainingGroup(ctx, &training)
+	err = a.command.UpdateTrainingGroup(ctx, &training)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewAssignParticipantHandler(r AssignParticipantRepository) *AssignParticipantHandler {
-	if r == nil {
-		panic("nil assign participant repository")
+func NewAssignParticipantHandler(command UpdateTrainingGroupRepository, query TrainingGroupRepository) *AssignParticipantHandler {
+	if command == nil {
+		panic("nil update training group repository")
 	}
-	h := AssignParticipantHandler{repo: r}
+	if query == nil {
+		panic("nil query training group repository")
+	}
+	h := AssignParticipantHandler{
+		command: command,
+		query:   query,
+	}
 	return &h
 }

@@ -13,7 +13,7 @@ type TrainerGroupsHandler struct {
 	cfg Config
 }
 
-func (t *TrainerGroupsHandler) Do(ctx context.Context, trainerUUID string) ([]query.TrainerGroup, error) {
+func (t *TrainerGroupsHandler) TrainerGroups(ctx context.Context, trainerUUID string) ([]query.TrainerGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	ctx, cancel := context.WithTimeout(ctx, t.cfg.QueryTimeout)

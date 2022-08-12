@@ -21,7 +21,7 @@ type TrainerGroupHandler struct {
 	cfg Config
 }
 
-func (t *TrainerGroupHandler) Do(ctx context.Context, trainingUUID, trainerUUID string) (query.TrainerGroup, error) {
+func (t *TrainerGroupHandler) TrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) (query.TrainerGroup, error) {
 	f := bson.M{"_id": trainingUUID, "trainer._id": trainerUUID}
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)

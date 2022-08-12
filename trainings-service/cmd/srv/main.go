@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb"
+	dbcmd "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/command"
+	dbqry "github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/mongodb/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/adapters/notifications"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
@@ -19,43 +22,62 @@ func main() {
 }
 
 func execute() error {
-	repository, err := mongodb.NewRepository(mongodb.Config{
-		Addr:       "mongodb://localhost:27017",
-		Database:   "trainings_service_db",
-		Collection: "trainings",
-		Timeouts: mongodb.Timeouts{
-			CommandTimeout:    10 * time.Second,
-			QueryTimeout:      10 * time.Second,
-			ConnectionTimeout: 10 * time.Second,
-		},
-	})
+	mongoCLI, err := mongodb.NewClient("mongodb://localhost:27017", 5*time.Second)
 	if err != nil {
 		return err
 	}
+
 	defer func() {
-		err := repository.Disconnect()
+		ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+		defer cancel()
+
+		err := mongoCLI.Disconnect(ctx)
 		if err != nil {
 			panic(err)
 		}
 	}()
 
-	notificationService := notifications.NewService()
+	cmdConfig := dbcmd.Config{
+		Database:       "trainings_service_db",
+		Collection:     "trainings",
+		CommandTimeout: 10 * time.Second,
+	}
+
+	insertTrainingGroup := dbcmd.NewInsertTrainingGroupHandler(mongoCLI, cmdConfig)
+	updateTrainingGroup := dbcmd.NewUpdateTrainingGroupHandler(mongoCLI, cmdConfig)
+	deleteTrainingGroups := dbcmd.NewDeleteTrainingGroupsHandler(mongoCLI, cmdConfig)
+	deleteTrainingGroup := dbcmd.NewDeleteTrainingGroupHandler(mongoCLI, cmdConfig)
+
+	queryCfg := dbqry.Config{
+		Database:     "trainings_service_db",
+		Collection:   "trainings",
+		QueryTimeout: 10 * time.Second,
+	}
+
+	duplicate := dbqry.NewDuplicateTrainingGroupHandler(mongoCLI, queryCfg)
+	trainingGroup := dbqry.NewTrainingGroupHandler(mongoCLI, queryCfg)
+	trainerGroup := dbqry.NewTrainerGroupHandler(mongoCLI, queryCfg)
+	trainerGroups := dbqry.NewTrainerGroupsHandler(mongoCLI, queryCfg)
+	participantGroups := dbqry.NewParticipantGroupsHandler(mongoCLI, queryCfg)
+	allTrainings := dbqry.NewAllTrainingsHandler(mongoCLI, queryCfg)
+
+	notification := notifications.NewService()
 
 	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
 	HTTP := http.NewTrainingsHTTP(&application.Application{
 		Commands: application.Commands{
-			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(repository),
-			CancelTrainingGroup:  command.NewCancelTrainingGroupHandler(repository, notificationService),
-			CancelTrainingGroups: command.NewCancelTrainingGroupsHandler(repository),
-			UnassignParticipant:  command.NewUnassignParticipantHandler(repository),
-			AssignParticipant:    command.NewAssignParticipantHandler(repository),
-			UpdateTrainingGroup:  command.NewUpdateTrainingGroupHandler(repository),
+			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(insertTrainingGroup, duplicate),
+			CancelTrainingGroup:  command.NewCancelTrainingGroupHandler(trainingGroup, deleteTrainingGroup, notification),
+			CancelTrainingGroups: command.NewCancelTrainingGroupsHandler(deleteTrainingGroups),
+			UnassignParticipant:  command.NewUnassignParticipantHandler(updateTrainingGroup, trainingGroup),
+			AssignParticipant:    command.NewAssignParticipantHandler(updateTrainingGroup, trainingGroup),
+			UpdateTrainingGroup:  command.NewUpdateTrainingGroupHandler(updateTrainingGroup, trainingGroup),
 		},
 		Queries: application.Queries{
-			TrainerGroup:      query.NewTrainerGroupHandler(repository),
-			TrainerGroups:     query.NewTrainerGroupsHandler(repository),
-			AllTrainingGroups: query.NewAllTrainingGroupsHandler(repository),
-			ParticipantGroups: query.NewParticipantGroupsHandler(repository),
+			TrainerGroup:      query.NewTrainerGroupHandler(trainerGroup),
+			TrainerGroups:     query.NewTrainerGroupsHandler(trainerGroups),
+			AllTrainingGroups: query.NewAllTrainingGroupsHandler(allTrainings),
+			ParticipantGroups: query.NewParticipantGroupsHandler(participantGroups),
 		},
 	}, serverCfg.Addr)
 

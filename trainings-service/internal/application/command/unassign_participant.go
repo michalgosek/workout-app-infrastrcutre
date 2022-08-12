@@ -2,16 +2,11 @@ package command
 
 import (
 	"context"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
 )
 
-type UnassignParticipantRepository interface {
-	QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
-	UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
-}
-
 type UnassignParticipantHandler struct {
-	repo UnassignParticipantRepository
+	command UpdateTrainingGroupRepository
+	query   TrainingGroupRepository
 }
 
 type UnassignParticipant struct {
@@ -21,7 +16,7 @@ type UnassignParticipant struct {
 }
 
 func (u *UnassignParticipantHandler) Do(ctx context.Context, cmd UnassignParticipant) error {
-	training, err := u.repo.QueryTrainingGroup(ctx, cmd.TrainingUUID)
+	training, err := u.query.TrainingGroup(ctx, cmd.TrainingUUID)
 	if err != nil {
 		return err
 	}
@@ -33,17 +28,24 @@ func (u *UnassignParticipantHandler) Do(ctx context.Context, cmd UnassignPartici
 	if err != nil {
 		return err
 	}
-	err = u.repo.UpdateTrainingGroup(ctx, &training)
+	err = u.command.UpdateTrainingGroup(ctx, &training)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewUnassignParticipantHandler(r UnassignParticipantRepository) *UnassignParticipantHandler {
-	if r == nil {
-		panic("nil unassign participant repository")
+func NewUnassignParticipantHandler(cmd UpdateTrainingGroupRepository, query TrainingGroupRepository) *UnassignParticipantHandler {
+	if cmd == nil {
+		panic("nil update training group repository")
 	}
-	h := UnassignParticipantHandler{repo: r}
+	if query == nil {
+		panic("nil query training group repository")
+	}
+
+	h := UnassignParticipantHandler{
+		command: cmd,
+		query:   query,
+	}
 	return &h
 }

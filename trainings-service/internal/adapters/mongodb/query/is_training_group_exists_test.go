@@ -9,15 +9,14 @@ import (
 	"time"
 )
 
-func TestShouldReturnAllTrainingGroupsWithSuccess_Integration(t *testing.T) {
+func TestShouldReturnTrueWhenFoundTrainingGroup_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("eb4f831a-3093-424e-a3be-b522369ab8ed", "John Doe")
+	trainer := newTestTrainer("b17d1854-ed44-48cd-b69b-ca7586dede0b", "John Doe")
 	date := newTestStaticTime()
-	firstTraining := newTestTrainingGroup("966ec5be-e82a-41f2-a7fa-0d88f702c6f5", trainer, date)
-	secondTraining := newTestTrainingGroup("bfe123db-42f7-4d97-8f38-0bea73891e09", trainer, date)
+	training := newTestTrainingGroup("966e3b51-f9ed-4637-ab03-ca56d82d5a5e", trainer, date)
 
 	cli := newTestMongoClient()
 	handler := command.NewInsertTrainingGroupHandler(cli, command.Config{
@@ -25,10 +24,9 @@ func TestShouldReturnAllTrainingGroupsWithSuccess_Integration(t *testing.T) {
 		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
 	})
-	_ = handler.InsertTrainingGroup(ctx, &firstTraining)
-	_ = handler.InsertTrainingGroup(ctx, &secondTraining)
+	_ = handler.InsertTrainingGroup(ctx, &training)
 
-	SUT := query.NewAllTrainingsHandler(cli, query.Config{
+	SUT := query.NewDuplicateTrainingGroupHandler(cli, query.Config{
 		Database:     DatabaseName,
 		Collection:   CollectionName,
 		QueryTimeout: 5 * time.Second,
@@ -42,13 +40,10 @@ func TestShouldReturnAllTrainingGroupsWithSuccess_Integration(t *testing.T) {
 		}
 	}()
 
-	expectedGroups, err := createExpectedAllTrainingGroups(cli)
-	assertions.Nil(err)
-
 	// when:
-	trainingGroups, err := SUT.AllTrainingGroups(ctx)
+	exists, err := SUT.IsTrainingGroupExists(ctx, &training)
 
 	// then:
 	assertions.Nil(err)
-	assertions.Equal(expectedGroups, trainingGroups)
+	assertions.True(exists)
 }

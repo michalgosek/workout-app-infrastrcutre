@@ -41,15 +41,15 @@ func (u *UpdateTrainingGroup) Validate() error {
 
 type UpdateTrainingGroupRepository interface {
 	UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
-	QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
 }
 
 type UpdateTrainingGroupHandler struct {
-	repo UpdateTrainingGroupRepository
+	command UpdateTrainingGroupRepository
+	query   TrainingGroupRepository
 }
 
 func (u *UpdateTrainingGroupHandler) Do(ctx context.Context, cmd UpdateTrainingGroup) error {
-	found, err := u.repo.QueryTrainingGroup(ctx, cmd.TrainingUUID)
+	found, err := u.query.TrainingGroup(ctx, cmd.TrainingUUID)
 	if err != nil {
 		return err
 	}
@@ -66,18 +66,24 @@ func (u *UpdateTrainingGroupHandler) Do(ctx context.Context, cmd UpdateTrainingG
 	if err != nil {
 		return err
 	}
-	err = u.repo.UpdateTrainingGroup(ctx, updated)
+	err = u.command.UpdateTrainingGroup(ctx, updated)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func NewUpdateTrainingGroupHandler(r UpdateTrainingGroupRepository) *UpdateTrainingGroupHandler {
-	if r == nil {
+func NewUpdateTrainingGroupHandler(cmd UpdateTrainingGroupRepository, query TrainingGroupRepository) *UpdateTrainingGroupHandler {
+	if cmd == nil {
 		panic("nil update training group repository")
 	}
-	h := UpdateTrainingGroupHandler{repo: r}
+	if query == nil {
+		panic("nil training group repository")
+	}
+	h := UpdateTrainingGroupHandler{
+		command: cmd,
+		query:   query,
+	}
 	return &h
 }
 

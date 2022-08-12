@@ -24,7 +24,7 @@ func TestShouldUpdateTrainingGroupWithSuccess_Integration(t *testing.T) {
 		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
 	}
-	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, commandCfg)
+	handler := command.NewInsertTrainingGroupHandler(cli, commandCfg)
 	SUT := command.NewUpdateTrainingGroupHandler(cli, commandCfg)
 
 	defer func() {
@@ -35,11 +35,11 @@ func TestShouldUpdateTrainingGroupWithSuccess_Integration(t *testing.T) {
 		}
 	}()
 
-	_ = insertTrainingHandler.Do(ctx, &training)
+	_ = handler.InsertTrainingGroup(ctx, &training)
 	_ = training.AssignParticipant(newTestParticipant("4af091ed-fd0f-4fa9-bcc9-e57989e6a458"))
 
 	// when:
-	err := SUT.Do(ctx, &training)
+	err := SUT.UpdateTrainingGroup(ctx, &training)
 
 	// then:
 	assertions.Nil(err)

@@ -11,7 +11,7 @@ type DeleteTrainingGroupsHandler struct {
 	cfg Config
 }
 
-func (d *DeleteTrainingGroupsHandler) Do(ctx context.Context, trainerUUID string) error {
+func (d *DeleteTrainingGroupsHandler) DeleteTrainingGroups(ctx context.Context, trainerUUID string) error {
 	f := bson.M{"trainer._id": trainerUUID}
 	ctx, cancel := context.WithTimeout(ctx, d.cfg.CommandTimeout)
 	defer cancel()

@@ -26,13 +26,13 @@ func TestShouldReturnParticipantGroupsWithSuccess_Integration(t *testing.T) {
 	_ = secondTraining.AssignParticipant(participant)
 
 	cli := newTestMongoClient()
-	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, command.Config{
+	handler := command.NewInsertTrainingGroupHandler(cli, command.Config{
 		Database:       DatabaseName,
 		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
 	})
-	_ = insertTrainingHandler.Do(ctx, &firstTraining)
-	_ = insertTrainingHandler.Do(ctx, &secondTraining)
+	_ = handler.InsertTrainingGroup(ctx, &firstTraining)
+	_ = handler.InsertTrainingGroup(ctx, &secondTraining)
 
 	SUT := query.NewParticipantGroupsHandler(cli, query.Config{
 		Database:     DatabaseName,
@@ -52,7 +52,7 @@ func TestShouldReturnParticipantGroupsWithSuccess_Integration(t *testing.T) {
 	assertions.Nil(err)
 
 	// when:
-	participantGroups, err := SUT.Do(ctx, participant.UUID())
+	participantGroups, err := SUT.ParticipantGroups(ctx, participant.UUID())
 
 	// then:
 	assertions.Nil(err)

@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestShouldInsertTrainerGroupWithSuccess_Integration(t *testing.T) {
+func TestShouldInsertTrainingGroupWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -20,7 +20,7 @@ func TestShouldInsertTrainerGroupWithSuccess_Integration(t *testing.T) {
 
 	cli := newTestMongoClient()
 
-	SUT := command.NewInsertTrainerGroupHandler(cli, command.Config{
+	SUT := command.NewInsertTrainingGroupHandler(cli, command.Config{
 		Database:       DatabaseName,
 		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
@@ -35,7 +35,7 @@ func TestShouldInsertTrainerGroupWithSuccess_Integration(t *testing.T) {
 	}()
 
 	// when:
-	err := SUT.Do(ctx, &training)
+	err := SUT.InsertTrainingGroup(ctx, &training)
 
 	// then:
 	assertions.Nil(err)

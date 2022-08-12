@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func TestShouldDeleteTrainerGroupsWithSuccess_Integration(t *testing.T) {
+func TestShouldDeleteTrainingGroupsWithSuccess_Integration(t *testing.T) {
 	assertions := assert.New(t)
 
 	// given:
@@ -25,9 +25,9 @@ func TestShouldDeleteTrainerGroupsWithSuccess_Integration(t *testing.T) {
 		Collection:     CollectionName,
 		CommandTimeout: 5 * time.Second,
 	}
-	insertTrainingHandler := command.NewInsertTrainerGroupHandler(cli, commandCfg)
-	_ = insertTrainingHandler.Do(ctx, &firstTrainingGroup)
-	_ = insertTrainingHandler.Do(ctx, &secondTrainingGroup)
+	handler := command.NewInsertTrainingGroupHandler(cli, commandCfg)
+	_ = handler.InsertTrainingGroup(ctx, &firstTrainingGroup)
+	_ = handler.InsertTrainingGroup(ctx, &secondTrainingGroup)
 
 	SUT := command.NewDeleteTrainingGroupsHandler(cli, commandCfg)
 	defer func() {
@@ -39,7 +39,7 @@ func TestShouldDeleteTrainerGroupsWithSuccess_Integration(t *testing.T) {
 	}()
 
 	// when:
-	err := SUT.Do(ctx, trainer.UUID())
+	err := SUT.DeleteTrainingGroups(ctx, trainer.UUID())
 
 	// then:
 	assertions.Nil(err)

@@ -15,13 +15,17 @@ type PlanTrainingGroup struct {
 	Trainer     trainings.Trainer
 }
 
-type CreateTrainingGroupRepository interface {
-	InsertTrainerGroup(ctx context.Context, g *trainings.TrainingGroup) error
-	IsTrainingGroupDuplicated(ctx context.Context, g *trainings.TrainingGroup) (bool, error)
+type InsertTrainingGroupRepository interface {
+	InsertTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
+}
+
+type IsTrainingGroupExistsRepository interface {
+	IsTrainingGroupExists(ctx context.Context, g *trainings.TrainingGroup) (bool, error)
 }
 
 type PlanTrainingGroupHandler struct {
-	repo CreateTrainingGroupRepository
+	command InsertTrainingGroupRepository
+	query   IsTrainingGroupExistsRepository
 }
 
 func (p *PlanTrainingGroupHandler) Do(ctx context.Context, cmd PlanTrainingGroup) (string, error) {
@@ -29,11 +33,11 @@ func (p *PlanTrainingGroupHandler) Do(ctx context.Context, cmd PlanTrainingGroup
 	if err != nil {
 		return "", err
 	}
-	duplicate, err := p.repo.IsTrainingGroupDuplicated(ctx, g)
+	duplicate, err := p.query.IsTrainingGroupExists(ctx, g)
 	if duplicate {
 		return "", ErrTrainingDuplicated
 	}
-	err = p.repo.InsertTrainerGroup(ctx, g)
+	err = p.command.InsertTrainingGroup(ctx, g)
 	if err != nil {
 		return "", err
 	}
@@ -41,11 +45,14 @@ func (p *PlanTrainingGroupHandler) Do(ctx context.Context, cmd PlanTrainingGroup
 	return g.UUID(), nil
 }
 
-func NewPlanTrainingGroupHandler(r CreateTrainingGroupRepository) *PlanTrainingGroupHandler {
-	if r == nil {
-		panic("nil create training group repository")
+func NewPlanTrainingGroupHandler(cmd InsertTrainingGroupRepository, query IsTrainingGroupExistsRepository) *PlanTrainingGroupHandler {
+	if cmd == nil {
+		panic("nil insert training group repository")
 	}
-	h := PlanTrainingGroupHandler{repo: r}
+	if query == nil {
+		panic("nil query training group repository")
+	}
+	h := PlanTrainingGroupHandler{command: cmd, query: query}
 	return &h
 }
 

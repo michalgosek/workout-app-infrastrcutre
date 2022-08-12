@@ -13,7 +13,7 @@ type ParticipantGroupsHandler struct {
 	cfg Config
 }
 
-func (t *ParticipantGroupsHandler) Do(ctx context.Context, participantUUID string) ([]query.ParticipantGroup, error) {
+func (t *ParticipantGroupsHandler) ParticipantGroups(ctx context.Context, participantUUID string) ([]query.ParticipantGroup, error) {
 	db := t.cli.Database(t.cfg.Database)
 	coll := db.Collection(t.cfg.Collection)
 	ctx, cancel := context.WithTimeout(ctx, t.cfg.QueryTimeout)

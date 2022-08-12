@@ -17,9 +17,12 @@ type Notification struct {
 	Date         time.Time `json:"date"`
 }
 
-type CancelTrainingGroupRepository interface {
-	QueryTrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
-	DeleteTrainerGroup(ctx context.Context, trainingUUID, trainerUUID string) error
+type TrainingGroupRepository interface {
+	TrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
+}
+
+type DeleteTrainingGroupRepository interface {
+	DeleteTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) error
 }
 
 type NotificationService interface {
@@ -27,7 +30,8 @@ type NotificationService interface {
 }
 
 type CancelTrainingGroupHandler struct {
-	repo    CancelTrainingGroupRepository
+	query   TrainingGroupRepository
+	command DeleteTrainingGroupRepository
 	service NotificationService
 }
 
@@ -37,7 +41,7 @@ type CancelWorkoutGroup struct {
 }
 
 func (c *CancelTrainingGroupHandler) Do(ctx context.Context, cmd CancelWorkoutGroup) error {
-	training, err := c.repo.QueryTrainingGroup(ctx, cmd.TrainingUUID)
+	training, err := c.query.TrainingGroup(ctx, cmd.TrainingUUID)
 	if err != nil {
 		return err
 	}
@@ -45,11 +49,11 @@ func (c *CancelTrainingGroupHandler) Do(ctx context.Context, cmd CancelWorkoutGr
 		return ErrTrainingNotOwnedByTrainer
 	}
 
-	err = c.repo.DeleteTrainerGroup(ctx, cmd.TrainingUUID, cmd.TrainerUUID)
+	err = c.command.DeleteTrainingGroup(ctx, cmd.TrainingUUID, cmd.TrainerUUID)
 	if err != nil {
 		return err
 	}
-	for _, p := range training.Participants() {
+	for _, p := range training.Participants() { // send single batch as array instead of loop!!
 		err := c.service.CreateNotification(Notification{
 			UserUUID:     p.UUID(),
 			TrainingUUID: training.UUID(),
@@ -65,15 +69,19 @@ func (c *CancelTrainingGroupHandler) Do(ctx context.Context, cmd CancelWorkoutGr
 	return nil
 }
 
-func NewCancelTrainingGroupHandler(r CancelTrainingGroupRepository, s NotificationService) *CancelTrainingGroupHandler {
-	if r == nil {
-		panic("nil cancel training group repository")
+func NewCancelTrainingGroupHandler(query TrainingGroupRepository, cmd DeleteTrainingGroupRepository, s NotificationService) *CancelTrainingGroupHandler {
+	if query == nil {
+		panic("nil query training group repository")
+	}
+	if cmd == nil {
+		panic("nil delete training group repository")
 	}
 	if s == nil {
 		panic("nil notification service")
 	}
 	h := CancelTrainingGroupHandler{
-		repo:    r,
+		command: cmd,
+		query:   query,
 		service: s,
 	}
 	return &h

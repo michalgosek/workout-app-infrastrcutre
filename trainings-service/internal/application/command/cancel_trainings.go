@@ -3,15 +3,21 @@ package command
 import "context"
 
 type CancelTrainingGroupsRepository interface {
-	DeleteTrainerGroups(ctx context.Context, trainerUUID string) error
+	DeleteTrainingGroups(ctx context.Context, trainerUUID string) error
+}
+
+type TrainingGroupParticipantNotification struct {
+	TrainingUUID string
+	TrainerUUID  string
 }
 
 type CancelTrainingGroupsHandler struct {
-	repo CancelTrainingGroupsRepository
+	repo    CancelTrainingGroupsRepository
+	service NotificationService
 }
 
 func (c *CancelTrainingGroupsHandler) Do(ctx context.Context, trainerUUID string) error {
-	err := c.repo.DeleteTrainerGroups(ctx, trainerUUID)
+	err := c.repo.DeleteTrainingGroups(ctx, trainerUUID)
 	if err != nil {
 		return err
 	}

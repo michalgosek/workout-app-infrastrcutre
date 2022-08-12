@@ -13,7 +13,7 @@ type UpdateTrainingGroupHandler struct {
 	cli *mongo.Client
 }
 
-func (u *UpdateTrainingGroupHandler) Do(ctx context.Context, g *trainings.TrainingGroup) error {
+func (u *UpdateTrainingGroupHandler) UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error {
 	db := u.cli.Database(u.cfg.Database)
 	coll := db.Collection(u.cfg.Collection)
 	doc := documents.TrainingGroupWriteModel{
