@@ -94,7 +94,7 @@ func (h *HTTP) ClearParticipantNotificationsHandler() http.HandlerFunc {
 			server.SendJSONResponse(w, server.JSONResponse{Message: http.StatusText(http.StatusUnauthorized)}, http.StatusUnauthorized)
 			return
 		}
-		if !claims.HasScope(authorization.ClearParticipantNotifications) {
+		if !claims.HasScope(authorization.DeleteParticipantNotifications) {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "Insufficient scope."}, http.StatusUnauthorized)
 			return
 		}

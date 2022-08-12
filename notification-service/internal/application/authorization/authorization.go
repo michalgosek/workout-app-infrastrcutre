@@ -22,9 +22,9 @@ func (c Claim) String() string {
 }
 
 const (
-	NotifyParticipants            Claim = "trainer:create:notifications"
-	ViewParticipantNotifications  Claim = "participant:read:notifications"
-	ClearParticipantNotifications Claim = "participant:clear:notifications"
+	NotifyParticipants             Claim = "trainer:create:notifications"
+	ViewParticipantNotifications   Claim = "participant:read:notifications"
+	DeleteParticipantNotifications Claim = "participant:delete:notifications"
 )
 
 type CustomClaims struct {

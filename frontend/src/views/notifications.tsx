@@ -20,7 +20,6 @@ const Notifications = () => {
     const [notifications, setNotifications] = useState<NotificationReadModel[]>();
     const { getAccessTokenSilently } = useAuth0();
     const [token, setToken] = useState('');
-
     const { participantUUID } = useParams();
 
     useEffect(() => {
@@ -62,7 +61,7 @@ const Notifications = () => {
                 }
             </Container>
             {
-                (notifications?.length !== 0) ?
+                (notifications && notifications.length !== 0) ?
                     <Container className={style["vertical-center"]}>
                         <DropButton onClickHandle={() => dropAllNotifications(participantUUID, token)} />
                     </Container>
