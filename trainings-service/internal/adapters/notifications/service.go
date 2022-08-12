@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/authorization"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/command"
 	"net/http"
 	"time"
@@ -25,14 +26,14 @@ type Service struct {
 	cfg config
 }
 
-func (s *Service) CreateNotification(n command.Notification) error {
+func (s *Service) CreateNotification(ctx context.Context, n command.Notification) error {
 	bb, err := json.Marshal(n)
 	if err != nil {
 		return err
 	}
 	buff := bytes.NewBuffer(bb)
 
-	ctx, cancel := context.WithTimeout(context.TODO(), s.cfg.commandTimeout)
+	ctx, cancel := context.WithTimeout(ctx, s.cfg.commandTimeout)
 	defer cancel()
 
 	endpoint := fmt.Sprintf("%s/%s", url, n.UserUUID)
@@ -40,6 +41,16 @@ func (s *Service) CreateNotification(n command.Notification) error {
 	if err != nil {
 		return err
 	}
+
+	v := ctx.Value(authorization.Token)
+	if v == nil {
+		return errors.New("missing bearer token")
+	}
+	token, ok := v.(string)
+	if !ok {
+		return errors.New("bearer token type invalid")
+	}
+	req.Header.Add(authorization.AuthorizationHeaderKey, token)
 
 	res, err := s.cli.Do(req)
 	if err != nil {

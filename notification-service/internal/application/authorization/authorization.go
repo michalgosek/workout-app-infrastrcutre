@@ -22,20 +22,9 @@ func (c Claim) String() string {
 }
 
 const (
-	AuthorizationHeaderKey = "Authorization"
-	Token                  = "Token"
-)
-
-const (
-	ViewParticipantGroups Claim = "participant:view:training-groups"
-	LeaveTrainingGroup    Claim = "participant:leave:training-group"
-	JoinTrainingGroup     Claim = "participant:join:training-group"
-	DeleteTrainerGroups   Claim = "trainer:delete:training-groups"
-	DeleteTrainerGroup    Claim = "trainer:delete:training-group"
-	ViewTrainerGroup      Claim = "trainer:view:training-group"
-	ViewTrainerGroups     Claim = "trainer:view:training-groups"
-	CreateTrainerGroup    Claim = "trainer:create:training-group"
-	UpdateTrainerGroup    Claim = "trainer:update:training-group"
+	NotifyParticipants            Claim = "trainer:create:notifications"
+	ViewParticipantNotifications  Claim = "participant:read:notifications"
+	ClearParticipantNotifications Claim = "participant:clear:notifications"
 )
 
 type CustomClaims struct {

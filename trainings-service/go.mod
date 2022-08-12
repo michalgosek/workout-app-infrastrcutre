@@ -11,6 +11,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.2
 	go.mongodb.org/mongo-driver v1.9.1
+	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
 )
 
 require (

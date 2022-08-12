@@ -26,7 +26,7 @@ type DeleteTrainingGroupRepository interface {
 }
 
 type NotificationService interface {
-	CreateNotification(n Notification) error
+	CreateNotification(ctx context.Context, n Notification) error
 }
 
 type CancelTrainingGroupHandler struct {
@@ -54,7 +54,7 @@ func (c *CancelTrainingGroupHandler) Do(ctx context.Context, cmd CancelWorkoutGr
 		return err
 	}
 	for _, p := range training.Participants() { // send single batch as array instead of loop!!
-		err := c.service.CreateNotification(Notification{
+		err := c.service.CreateNotification(ctx, Notification{
 			UserUUID:     p.UUID(),
 			TrainingUUID: training.UUID(),
 			Title:        fmt.Sprintf("Training canceled - %s ", training.Name()),

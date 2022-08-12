@@ -1,14 +1,15 @@
-import { Alert, ButtonGroup, Container } from 'react-bootstrap';
+import { Alert, Container } from 'react-bootstrap';
 import notificationService, { NotificationReadModel } from '../services/notification-service';
 import { useEffect, useState } from "react";
 
 import DropButton from 'components/buttons/drop-button';
 import style from './notifications.module.scss';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useParams } from 'react-router-dom';
 
-const dropAllNotifications = (userUUID: string) => {
+const dropAllNotifications = (userUUID: string, token: string) => {
     const deleteAll = async () => {
-        const res = await notificationService.deleteNotifications(userUUID)
+        const res = await notificationService.deleteNotifications(userUUID, token)
         console.log(res);
         window.location.reload();
     }
@@ -17,18 +18,31 @@ const dropAllNotifications = (userUUID: string) => {
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState<NotificationReadModel[]>();
-    const { user } = useAuth0();
+    const { getAccessTokenSilently } = useAuth0();
+    const [token, setToken] = useState('');
+
+    const { participantUUID } = useParams();
 
     useEffect(() => {
-        if (!user || !user.sub) {
-            return
+        if (!participantUUID) {
+            console.error('missing participantUUID in URL path');
+            return;
         }
-        const fetchAllNotifications = async () => {
-            const res = await notificationService.getAllNotifications(user.sub as string)
-            setNotifications(res)
-        }
-        fetchAllNotifications()
-    }, [user])
+        getAccessTokenSilently().then(token => {
+            setToken(token)
+            notificationService
+                .getAllNotifications(participantUUID, token)
+                .then((notifications) => setNotifications(notifications))
+                .catch(err => console.error(err))
+        }).catch(err => console.error(err));
+    }, [getAccessTokenSilently, participantUUID]);
+
+
+    if (!participantUUID) {
+        console.error('missing participantUUID in URL path');
+        return null;
+    }
+
 
     return (
         <>
@@ -50,7 +64,7 @@ const Notifications = () => {
             {
                 (notifications?.length !== 0) ?
                     <Container className={style["vertical-center"]}>
-                        <DropButton onClickHandle={() => dropAllNotifications(user?.sub as string)} />
+                        <DropButton onClickHandle={() => dropAllNotifications(participantUUID, token)} />
                     </Container>
                     : <h1>There is no notifications!  </h1>
             }

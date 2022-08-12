@@ -19,10 +19,14 @@ export type NotificationReadModel = {
     date: string;
 }
 
-const getAllNotifications = async (userUUID: string) => {
+const getAllNotifications = async (userUUID: string, token: string) => {
     try {
         const endpoint = `notifications/${userUUID}`;
-        const response = await axiosAgent.get<NotificationReadModel[]>(endpoint);
+        const response = await axiosAgent.get<NotificationReadModel[]>(endpoint, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return (response.status !== 200) ? [] : response.data;
     } catch (err) {
         console.error(err);
@@ -30,10 +34,14 @@ const getAllNotifications = async (userUUID: string) => {
     }
 }
 
-const deleteNotifications = async (userUUID: string) => {
+const deleteNotifications = async (userUUID: string, token: string) => {
     try {
         const endpoint = `notifications/${userUUID}`;
-        const response = await axiosAgent.delete(endpoint);
+        const response = await axiosAgent.delete(endpoint, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
         return response.status
 
     } catch (err) {

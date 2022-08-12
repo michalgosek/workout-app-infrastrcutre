@@ -3,9 +3,11 @@ module notification-service
 go 1.18
 
 require (
+	github.com/auth0/go-jwt-middleware/v2 v2.0.1
 	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/cors v1.2.1
 	github.com/google/uuid v1.3.0
+	github.com/joho/godotenv v1.4.0
 	github.com/michalgosek/workout-app-infrastrcutre/trainings-service v0.0.0-20220808210610-156176d3d4cb
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.7.2
@@ -27,5 +29,6 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8 // indirect
 	golang.org/x/text v0.3.7 // indirect
+	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

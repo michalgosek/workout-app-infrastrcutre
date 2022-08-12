@@ -10,6 +10,7 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/query"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/domain/trainings"
+	"golang.org/x/net/context"
 	"net/http"
 	"time"
 )
@@ -316,6 +317,11 @@ func (h *Trainings) DeleteTrainingGroup() http.HandlerFunc {
 			return
 		}
 
+		token := r.Header.Get(authorization.AuthorizationHeaderKey)
+		if token == "" {
+			server.SendJSONResponse(w, server.JSONResponse{Message: "Missing bearer token."}, http.StatusUnauthorized)
+			return
+		}
 		trainingUUID := chi.URLParam(r, "trainingUUID")
 		if trainingUUID == "" {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "missing trainingUUID in path"}, http.StatusBadRequest)
@@ -326,7 +332,9 @@ func (h *Trainings) DeleteTrainingGroup() http.HandlerFunc {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		err = h.app.Commands.CancelTrainingGroup.Do(r.Context(), command.CancelWorkoutGroup{
+
+		ctx := context.WithValue(r.Context(), authorization.Token, token)
+		err = h.app.Commands.CancelTrainingGroup.Do(ctx, command.CancelWorkoutGroup{
 			TrainingUUID: trainingUUID,
 			TrainerUUID:  trainerUUID,
 		})
@@ -355,7 +363,13 @@ func (h *Trainings) DeleteTrainingGroups() http.HandlerFunc {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		err = h.app.Commands.CancelTrainingGroups.Do(r.Context(), trainerUUID)
+		token := r.Header.Get(authorization.Token)
+		if token == "" {
+			server.SendJSONResponse(w, server.JSONResponse{Message: "Missing bearer token."}, http.StatusUnauthorized)
+			return
+		}
+		ctx := context.WithValue(r.Context(), authorization.AuthorizationHeaderKey, token)
+		err = h.app.Commands.CancelTrainingGroups.Do(ctx, trainerUUID)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/go-chi/cors"
 	"net/http"
+	"notification-service/internal/application/authorization"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -30,6 +31,7 @@ func NewRouter() chi.Router {
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
+	r.Use(authorization.ValidateJWT())
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)

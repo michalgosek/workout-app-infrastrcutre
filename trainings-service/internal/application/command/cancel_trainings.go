@@ -39,7 +39,7 @@ func (c *CancelTrainingGroupsHandler) Do(ctx context.Context, trainerUUID string
 		return err
 	}
 	for _, p := range participants {
-		err = c.service.CreateNotification(Notification{
+		err = c.service.CreateNotification(ctx, Notification{
 			UserUUID:     p.UserUUID,
 			TrainingUUID: p.TrainingUUID,
 			Title:        fmt.Sprintf("Training canceled - %s", p.TrainingName),

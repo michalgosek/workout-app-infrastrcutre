@@ -6,6 +6,7 @@ import (
 	"github.com/go-chi/chi"
 	"net/http"
 	"notification-service/internal/application"
+	"notification-service/internal/application/authorization"
 	"notification-service/internal/application/command"
 	"notification-service/internal/application/server"
 )
@@ -25,9 +26,19 @@ type HTTP struct {
 
 func (h *HTTP) CreateNotificationHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		claims, err := authorization.CreateUserClaimsFromToken(r.Context())
+		if err != nil {
+			server.SendJSONResponse(w, server.JSONResponse{Message: http.StatusText(http.StatusUnauthorized)}, http.StatusUnauthorized)
+			return
+		}
+		if !claims.HasScope(authorization.NotifyParticipants) {
+			server.SendJSONResponse(w, server.JSONResponse{Message: "Insufficient scope."}, http.StatusUnauthorized)
+			return
+		}
+
 		var payload POST
 		dec := json.NewDecoder(r.Body)
-		err := dec.Decode(&payload)
+		err = dec.Decode(&payload)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -49,8 +60,18 @@ func (h *HTTP) CreateNotificationHandler() http.HandlerFunc {
 	}
 }
 
-func (h *HTTP) GetNotificationsHandler() http.HandlerFunc {
+func (h *HTTP) GetParticipantNotificationsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		claims, err := authorization.CreateUserClaimsFromToken(r.Context())
+		if err != nil {
+			server.SendJSONResponse(w, server.JSONResponse{Message: http.StatusText(http.StatusUnauthorized)}, http.StatusUnauthorized)
+			return
+		}
+		if !claims.HasScope(authorization.ViewParticipantNotifications) {
+			server.SendJSONResponse(w, server.JSONResponse{Message: "Insufficient scope."}, http.StatusUnauthorized)
+			return
+		}
+
 		userUUID := chi.URLParam(r, "userUUID")
 		if userUUID == "" {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "missing userUUID in path"}, http.StatusBadRequest)
@@ -66,15 +87,24 @@ func (h *HTTP) GetNotificationsHandler() http.HandlerFunc {
 	}
 }
 
-func (h *HTTP) ClearNotificationsHandler() http.HandlerFunc {
+func (h *HTTP) ClearParticipantNotificationsHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		claims, err := authorization.CreateUserClaimsFromToken(r.Context())
+		if err != nil {
+			server.SendJSONResponse(w, server.JSONResponse{Message: http.StatusText(http.StatusUnauthorized)}, http.StatusUnauthorized)
+			return
+		}
+		if !claims.HasScope(authorization.ClearParticipantNotifications) {
+			server.SendJSONResponse(w, server.JSONResponse{Message: "Insufficient scope."}, http.StatusUnauthorized)
+			return
+		}
 		userUUID := chi.URLParam(r, "userUUID")
 		if userUUID == "" {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "missing userUUID in path"}, http.StatusBadRequest)
 			return
 		}
 
-		err := h.app.ClearNotificationsHandler.Do(r.Context(), userUUID)
+		err = h.app.ClearNotificationsHandler.Do(r.Context(), userUUID)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -97,9 +127,9 @@ func (h *HTTP) NewAPI() chi.Router {
 	r := server.NewRouter()
 	r.Route("/api/v1/notifications", func(r chi.Router) {
 		r.Route("/{userUUID}", func(r chi.Router) {
-			r.Get("/", h.GetNotificationsHandler())
+			r.Get("/", h.GetParticipantNotificationsHandler())
 			r.Post("/", h.CreateNotificationHandler())
-			r.Delete("/", h.ClearNotificationsHandler())
+			r.Delete("/", h.ClearParticipantNotificationsHandler())
 		})
 	})
 	return r
