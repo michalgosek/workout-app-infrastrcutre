@@ -17,14 +17,17 @@ type Notification struct {
 	Date         time.Time `json:"date"`
 }
 
+//go:generate mockery --name=TrainingGroupRepository --case underscore --with-expecter
 type TrainingGroupRepository interface {
 	TrainingGroup(ctx context.Context, trainingUUID string) (trainings.TrainingGroup, error)
 }
 
+//go:generate mockery --name=DeleteTrainingGroupRepository --case underscore --with-expecter
 type DeleteTrainingGroupRepository interface {
 	DeleteTrainingGroup(ctx context.Context, trainingUUID, trainerUUID string) error
 }
 
+//go:generate mockery --name=NotificationService --case underscore --with-expecter
 type NotificationService interface {
 	CreateNotification(ctx context.Context, n Notification) error
 }

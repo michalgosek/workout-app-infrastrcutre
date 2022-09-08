@@ -26,7 +26,7 @@ func (u *UpdateTrainingGroupHandler) UpdateTrainingGroup(ctx context.Context, g 
 			Name: g.Trainer().Name(),
 		},
 		Limit:        g.Limit(),
-		Participants: UnmarshalToWriteModelParticipants(g.Participants()...),
+		Participants: ConvertToWriteModelParticipants(g.Participants()...),
 	}
 	filter := bson.M{"_id": g.UUID()}
 	update := bson.M{"$set": doc}

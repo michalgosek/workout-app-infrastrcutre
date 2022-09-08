@@ -15,10 +15,12 @@ type PlanTrainingGroup struct {
 	Trainer     trainings.Trainer
 }
 
+//go:generate mockery --name=InsertTrainingGroupRepository --case underscore --with-expect
 type InsertTrainingGroupRepository interface {
 	InsertTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
 }
 
+//go:generate mockery --name=IsTrainingGroupExistsRepository --case underscore --with-expect
 type IsTrainingGroupExistsRepository interface {
 	IsTrainingGroupExists(ctx context.Context, g *trainings.TrainingGroup) (bool, error)
 }

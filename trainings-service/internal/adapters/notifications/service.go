@@ -13,16 +13,20 @@ import (
 )
 
 const (
-	url = "http://localhost:8060/api/v1/notifications"
+	NotificationServiceEndpoint = "http://notifications-service:8060/api/v1/notifications"
 )
 
+//go:generate mockery --name=HTTPClient --case underscore --with-expecter
+type HTTPClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
 type config struct {
-	queryTimeout   time.Duration
 	commandTimeout time.Duration
 }
 
 type Service struct {
-	cli *http.Client
+	cli HTTPClient
 	cfg config
 }
 
@@ -36,7 +40,7 @@ func (s *Service) CreateNotification(ctx context.Context, n command.Notification
 	ctx, cancel := context.WithTimeout(ctx, s.cfg.commandTimeout)
 	defer cancel()
 
-	endpoint := fmt.Sprintf("%s/%s", url, n.UserUUID)
+	endpoint := fmt.Sprintf("%s/%s", NotificationServiceEndpoint, n.UserUUID)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, buff)
 	if err != nil {
 		return err
@@ -56,15 +60,15 @@ func (s *Service) CreateNotification(ctx context.Context, n command.Notification
 	if err != nil {
 		return err
 	}
-	if res.StatusCode != http.StatusOK {
+	if res.StatusCode != http.StatusCreated {
 		return errors.New(http.StatusText(res.StatusCode))
 	}
 	return nil
 }
 
-func NewService() *Service {
+func NewService(c HTTPClient) *Service {
 	s := Service{
-		cli: http.DefaultClient,
+		cli: c,
 		cfg: config{commandTimeout: 10 * time.Second},
 	}
 	return &s

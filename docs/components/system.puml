@@ -1,0 +1,10 @@
+@startuml
+'https://plantuml.com/component-diagram
+
+
+[TrainingsService] as TrainingsService
+
+
+
+
+@enduml

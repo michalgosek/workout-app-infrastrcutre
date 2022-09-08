@@ -14,10 +14,12 @@ type TrainerParticipant struct {
 	Date         time.Time
 }
 
+//go:generate mockery --name=DeleteTrainingGroupsRepository --case underscore --with-expect
 type DeleteTrainingGroupsRepository interface {
 	DeleteTrainingGroups(ctx context.Context, trainerUUID string) error
 }
 
+//go:generate mockery --name=TrainerParticipantsRepository --case underscore --with-expect
 type TrainerParticipantsRepository interface {
 	TrainerParticipants(ctx context.Context, trainerUUID string) ([]TrainerParticipant, error)
 }

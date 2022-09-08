@@ -1,0 +1,27 @@
+version: '3.1'
+
+services:
+  mongo:
+    image: mongo:4.2.2
+    container_name: workout-app-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+  trainings-service:
+    image: trainings_service
+    container_name: workout-app-trainings-service
+    restart: always
+    ports:
+        - "8070:8070"
+    depends_on:
+      - mongo
+    entrypoint: ./trainings-service
+  notifications-service:
+    image: notifications_service
+    container_name: workout-app-notifications-service
+    restart: always
+    entrypoint: ./notification-service
+    ports:
+      - "8060:8060"
+    depends_on:
+      - mongo

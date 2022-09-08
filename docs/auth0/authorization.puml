@@ -8,6 +8,7 @@ actor  User as "Użytkownik"
 participant ":Web aplikacja" as SPA
 participant ":Serwer autoryzacji" as AuthServer
 participant ":API Serwisu Treningowego " as TrainingsServiceAPI
+participant ":API Serwisu Notyfikacji" as NotificationServiceAPI
 
 User -> SPA: Inicjalizuje logowanie
 activate User
@@ -43,7 +44,13 @@ SPA -> TrainingsServiceAPI:  Wysyła żądanie dostępu do zasobów wraz z token
 activate SPA
 activate TrainingsServiceAPI
 TrainingsServiceAPI --> SPA: Zwraca odpowiedź
+deactivate TrainingsServiceAPI
+deactivate SPA
 
+SPA -> NotificationServiceAPI: Wysyła żądanie dostępu do zasobów wraz z tokenem
+activate SPA
+activate NotificationServiceAPI
+NotificationServiceAPI --> SPA: Zwraca odpowiedź
 
 
 

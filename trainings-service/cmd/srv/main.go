@@ -12,6 +12,7 @@ import (
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/server"
 	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/ports"
 	"log"
+	"net/http"
 	"time"
 )
 
@@ -22,7 +23,7 @@ func main() {
 }
 
 func execute() error {
-	mongoCLI, err := mongodb.NewClient("mongodb://localhost:27017", 5*time.Second)
+	mongoCLI, err := mongodb.NewClient("mongodb://mongo:27017", 5*time.Second)
 	if err != nil {
 		return err
 	}
@@ -47,7 +48,6 @@ func execute() error {
 	updateTrainingGroup := dbcmd.NewUpdateTrainingGroupHandler(mongoCLI, cmdConfig)
 	deleteTrainingGroups := dbcmd.NewDeleteTrainingGroupsHandler(mongoCLI, cmdConfig)
 	deleteTrainingGroup := dbcmd.NewDeleteTrainingGroupHandler(mongoCLI, cmdConfig)
-
 	queryCfg := dbqry.Config{
 		Database:     "trainings_service_db",
 		Collection:   "trainings",
@@ -61,10 +61,9 @@ func execute() error {
 	trainerParticipants := dbqry.NewTrainerParticipantsHandler(mongoCLI, queryCfg)
 	participantGroups := dbqry.NewParticipantGroupsHandler(mongoCLI, queryCfg)
 	allTrainings := dbqry.NewAllTrainingsHandler(mongoCLI, queryCfg)
+	notification := notifications.NewService(http.DefaultClient)
 
-	notification := notifications.NewService()
-
-	serverCfg := server.DefaultHTTPConfig("localhost:8070", "trainings-service")
+	serverCfg := server.DefaultHTTPConfig(":8070", "trainings-service")
 	HTTP := ports.NewTrainingsHTTP(&application.Application{
 		Commands: application.Commands{
 			PlanTrainingGroup:    command.NewPlanTrainingGroupHandler(insertTrainingGroup, duplicate),

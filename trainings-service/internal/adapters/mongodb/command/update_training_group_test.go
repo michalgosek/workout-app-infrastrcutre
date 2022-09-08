@@ -14,14 +14,14 @@ func TestShouldUpdateTrainingGroupWithSuccess_Integration(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	trainer := newTestTrainer("29de02f6-6398-4a5a-b450-4600fff3e271", "John Doe")
+	trainer := newTestTrainer("6fd96ff0-6ad7-4e8e-a1a9-dd270cc8278e", "John Doe")
 	date := newTestStaticTime()
-	training := newTestTrainingGroup("c5d78199-79af-4f95-957b-f6806a3edb2b", trainer, date)
+	training := newTestTrainingGroup("ba86a74e-bce8-4ac1-a430-a81d70862827", trainer, date)
 
 	cli := newTestMongoClient()
 	commandCfg := command.Config{
 		Database:       DatabaseName,
-		CommandTimeout: 5 * time.Second,
+		CommandTimeout: 10 * time.Second,
 		Collection:     CollectionName,
 	}
 	handler := command.NewInsertTrainingGroupHandler(cli, commandCfg)
@@ -36,7 +36,7 @@ func TestShouldUpdateTrainingGroupWithSuccess_Integration(t *testing.T) {
 	}()
 
 	_ = handler.InsertTrainingGroup(ctx, &training)
-	_ = training.AssignParticipant(newTestParticipant("4af091ed-fd0f-4fa9-bcc9-e57989e6a458"))
+	_ = training.AssignParticipant(newTestParticipant("7137c664-2767-4591-88b7-ef2ca4c2354a"))
 
 	// when:
 	err := SUT.UpdateTrainingGroup(ctx, &training)

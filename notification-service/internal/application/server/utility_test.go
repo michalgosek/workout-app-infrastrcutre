@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/server"
 	"net/http"
 	"net/http/httptest"
+	"notification-service/internal/application/server"
 	"testing"
 
 	"github.com/stretchr/testify/assert"

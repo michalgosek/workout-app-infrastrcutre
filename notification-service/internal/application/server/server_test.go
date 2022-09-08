@@ -1,7 +1,7 @@
 package server_test
 
 import (
-	"github.com/michalgosek/workout-app-infrastrcutre/trainings-service/internal/application/server"
+	"notification-service/internal/application/server"
 	"testing"
 	"time"
 

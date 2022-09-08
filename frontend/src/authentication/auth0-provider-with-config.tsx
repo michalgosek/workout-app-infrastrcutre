@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from "react";
 
 import { Auth0Provider } from "@auth0/auth0-react";
-import StartupFailed from "views/startup-failed";
+import StartupFailed from "views/errors/startup-failed";
 
 interface Auth0ProviderWithRedirectCallbackProps {
     children: React.ReactNode;
@@ -31,7 +31,7 @@ const Auth0ProviderWithConfig = ({ children }: PropsWithChildren<Auth0ProviderWi
             clientId={AUTH0_CLIENT_ID}
             redirectUri={AUTH0_CALLBACK_URL}
             audience={AUTH0_AUDIENCE}
-            scope={"read:current_user update:current_user_metadata"} 
+            scope={"read:current_user update:current_user_metadata"}
         >
             {children}
         </Auth0Provider>

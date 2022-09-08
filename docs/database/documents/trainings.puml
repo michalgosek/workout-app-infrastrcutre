@@ -1,0 +1,36 @@
+@startuml
+'https://plantuml.com/class-diagram
+left to right direction
+
+class TrainingGroupWriteModel <<Document>>  {
+    UUID: String
+    Name: String
+    Description: String
+    Date: Date
+    Limit: Int
+}
+
+class TrainerWriteModel <<Document>>  {
+    UUID: String
+    Name: String
+}
+class ParticipantWriteModel <<Document>>  {
+    UUID: String
+    Name: String
+}
+TrainingGroupWriteModel "0..*" *-- "1" TrainerWriteModel
+TrainingGroupWriteModel "0..*" *--up- "0..*"  ParticipantWriteModel
+
+
+
+'class NotificationWriteModel {
+'    UUID: String
+'     UserUUID: String
+'     TrainingUUID: String
+'     Title: String
+'     Trainer: String
+'     Content: String
+'     Date: Date
+' }
+
+@enduml

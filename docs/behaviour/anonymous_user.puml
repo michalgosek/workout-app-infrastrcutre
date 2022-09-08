@@ -1,0 +1,27 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+skinparam actorStyle awesome
+left to right direction
+
+actor "Niezarejestrowany Użytkownik" as User
+actor "Auth0" as Auth0
+actor "Serwis Treningowy" as TrainingsServiceAPI
+
+rectangle "Aplikacja do zarządzania klubem fintess oraz siłownią" as GymManagementApp <<System>> {
+    usecase "Przegląda listę dostępnych zajęć" as ViewTrainings
+    usecase "Logowanie" as Login
+    usecase "Rejestracja konta" as RegisterAccount
+}
+
+
+User -- ViewTrainings
+User -- RegisterAccount
+User -- Login
+
+RegisterAccount -- Auth0
+Login -- Auth0
+
+ViewTrainings -- TrainingsServiceAPI
+
+@enduml

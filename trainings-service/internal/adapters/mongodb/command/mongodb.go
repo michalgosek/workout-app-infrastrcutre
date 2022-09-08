@@ -12,7 +12,7 @@ type Config struct {
 	CommandTimeout time.Duration
 }
 
-func UnmarshalToWriteModelParticipants(pp ...trainings.Participant) []documents.ParticipantWriteModel {
+func ConvertToWriteModelParticipants(pp ...trainings.Participant) []documents.ParticipantWriteModel {
 	var out []documents.ParticipantWriteModel
 	for _, p := range pp {
 		out = append(out, documents.ParticipantWriteModel{

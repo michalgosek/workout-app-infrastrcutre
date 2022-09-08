@@ -15,22 +15,22 @@ func TestShouldReturnParticipantGroupsWithSuccess_Integration(t *testing.T) {
 
 	// given:
 	ctx := context.Background()
-	firstTrainer := testutil.NewTestTrainer("a6ae7d84-2938-4291-ae28-cb92ceba4f59", "John Doe")
-	secondTrainer := testutil.NewTestTrainer("f6d61286-e4fd-4922-9f53-1c96164c4920", "Jerry Smith")
-	participant := testutil.NewTestParticipant("f5e13337-0842-4af0-917b-fe2a14c4325b", "Chris Barker")
+	firstTrainer := testutil.NewTestTrainer("7b4ebc81-7b88-42d1-825e-7af6c8251e55", "John Doe1")
+	secondTrainer := testutil.NewTestTrainer("5d639d22-b1d8-4c2e-9140-ec43f6fe4395", "Jerry Smith2")
+	participant := testutil.NewTestParticipant("1d48af67-38f0-4832-83f5-a090368534e9", "Chris Barker")
 
 	date := testutil.NewTestStaticTime()
-	firstTraining := testutil.NewTestTrainingGroup("76740131-ff8c-477b-895e-c9b80b08858c", firstTrainer, date)
+	firstTraining := testutil.NewTestTrainingGroup("3d599126-f202-48d5-a860-7c58f9832e3f", firstTrainer, date)
 	_ = firstTraining.AssignParticipant(participant)
 
-	secondTraining := testutil.NewTestTrainingGroup("619a0b4d-5509-40bf-b7ff-704f15adc406", secondTrainer, date)
+	secondTraining := testutil.NewTestTrainingGroup("44eefe17-aac2-43a3-9fc8-5e17032867e8", secondTrainer, date)
 	_ = secondTraining.AssignParticipant(participant)
 
 	cli := testutil.NewTestMongoClient()
 	handler := command.NewInsertTrainingGroupHandler(cli, command.Config{
 		Database:       testutil.DatabaseName,
 		Collection:     testutil.CollectionName,
-		CommandTimeout: 5 * time.Second,
+		CommandTimeout: 10 * time.Second,
 	})
 	_ = handler.InsertTrainingGroup(ctx, &firstTraining)
 	_ = handler.InsertTrainingGroup(ctx, &secondTraining)
@@ -38,7 +38,7 @@ func TestShouldReturnParticipantGroupsWithSuccess_Integration(t *testing.T) {
 	SUT := query.NewParticipantGroupsHandler(cli, query.Config{
 		Database:     testutil.DatabaseName,
 		Collection:   testutil.CollectionName,
-		QueryTimeout: 5 * time.Second,
+		QueryTimeout: 10 * time.Second,
 	})
 
 	defer func() {

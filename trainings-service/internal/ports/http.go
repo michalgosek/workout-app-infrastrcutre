@@ -83,6 +83,12 @@ func (h *Trainings) UpdateTrainingGroup() http.HandlerFunc {
 
 func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		trainerUUID := chi.URLParam(r, "trainerUUID")
+		if trainerUUID == "" {
+			server.SendJSONResponse(w, server.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
+			return
+		}
+
 		claims, err := authorization.CreateUserClaimsFromToken(r.Context())
 		if err != nil {
 			server.SendJSONResponse(w, server.JSONResponse{Message: http.StatusText(http.StatusUnauthorized)}, http.StatusUnauthorized)
@@ -101,7 +107,7 @@ func (h *Trainings) CreateTrainingGroup() http.HandlerFunc {
 			return
 		}
 
-		t, err := trainings.NewTrainer(payload.User.UUID, payload.User.Name)
+		t, err := trainings.NewTrainer(trainerUUID, payload.User.Name)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
@@ -363,12 +369,12 @@ func (h *Trainings) DeleteTrainingGroups() http.HandlerFunc {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "missing trainerUUID in path"}, http.StatusBadRequest)
 			return
 		}
-		token := r.Header.Get(authorization.Token)
+		token := r.Header.Get(authorization.AuthorizationHeaderKey)
 		if token == "" {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "Missing bearer token."}, http.StatusUnauthorized)
 			return
 		}
-		ctx := context.WithValue(r.Context(), authorization.AuthorizationHeaderKey, token)
+		ctx := context.WithValue(r.Context(), authorization.Token, token)
 		err = h.app.Commands.CancelTrainingGroups.Do(ctx, trainerUUID)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)

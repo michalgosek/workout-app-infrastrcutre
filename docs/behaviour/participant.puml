@@ -1,0 +1,35 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+skinparam actorStyle awesome
+left to right direction
+
+actor "Uczestnik" as User
+actor "Serwis Treningowy" as TrainingsServiceAPI
+actor "Serwis Notyfikacji" as NotificationServiceAPI
+
+rectangle "Aplikacja do zarządzania klubem fintess oraz siłownią" as GymManagementApp <<System>> {
+    usecase "Planuje treningi" as TrainingScheduling
+    usecase "Anuluje udziału w treningach" as TrainingsCancellation
+    usecase "Przegląda zaplanowane treningi" as ScheduledTrainings
+    usecase "Przegląda dostępne treningi" as TrainingsList
+    usecase "Przegląda notyfikacje\n na temat treningów" as TrainingsNotifications
+    usecase "Usuwa odczytane notyfikacje" as NotificationsCleanup
+}
+
+User -- ScheduledTrainings
+User -- TrainingsCancellation
+User -- TrainingScheduling
+User -- TrainingsList
+User -- TrainingsNotifications
+User -- NotificationsCleanup
+
+ScheduledTrainings -- TrainingsServiceAPI
+TrainingsCancellation -- TrainingsServiceAPI
+TrainingScheduling -- TrainingsServiceAPI
+TrainingsList -- TrainingsServiceAPI
+
+NotificationsCleanup -- NotificationServiceAPI
+TrainingsNotifications -- NotificationServiceAPI
+
+@enduml

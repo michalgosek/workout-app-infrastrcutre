@@ -21,7 +21,7 @@ func main() {
 }
 
 func execute() error {
-	mongoCLI, err := client.New("mongodb://localhost:27017", 5*time.Second)
+	mongoCLI, err := client.New("mongodb://mongo:27017", 5*time.Second)
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func execute() error {
 	}
 
 	API := HTTP.NewAPI()
-	serverCfg := server.DefaultHTTPConfig("localhost:8060", "notification-service")
+	serverCfg := server.DefaultHTTPConfig(":8060", "notification-service")
 	srv := server.NewHTTP(API, serverCfg)
 	srv.StartHTTPServer()
 

@@ -39,6 +39,7 @@ func (u *UpdateTrainingGroup) Validate() error {
 	return nil
 }
 
+//go:generate mockery --name=UpdateTrainingGroupRepository --case underscore --with-expecter
 type UpdateTrainingGroupRepository interface {
 	UpdateTrainingGroup(ctx context.Context, g *trainings.TrainingGroup) error
 }

@@ -11,9 +11,8 @@ type ParticipantWriteModel struct {
 }
 
 type TrainerWriteModel struct {
-	UUID           string                    `bson:"_id"`
-	Name           string                    `bson:"name"`
-	TrainingGroups []TrainingGroupWriteModel `bson:"training_groups,omitempty"`
+	UUID string `bson:"_id"`
+	Name string `bson:"name"`
 }
 
 type TrainingGroupWriteModel struct {

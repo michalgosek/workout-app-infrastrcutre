@@ -1,0 +1,36 @@
+@startuml
+'https://plantuml.com/object-diagram
+
+skinparam linetype ortho
+left to right direction
+
+entity Notification {
+   	+UUID: String
+   	+UserUUID: String
+   	+TrainingUUID: String
+   	+Title: String
+    +Trainer: String
+    +Title: String
+    +Content: String
+    +Date: Date
+}
+
+entity TrainingGroup{
+   	+UUID: String
+   	+Name: String
+   	+Description: String
+   	+Date: Date
+    +Limit: Int
+}
+
+entity Participant {
+    +UUID: String
+	+Name: String
+}
+
+
+
+Participant }|--o{ Notification
+Notification |o--|| TrainingGroup
+
+@enduml

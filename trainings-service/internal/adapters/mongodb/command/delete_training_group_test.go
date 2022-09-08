@@ -34,6 +34,10 @@ func TestShouldDeleteTrainingGroupWithSuccess_Integration(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
+		err = cli.Disconnect(ctx)
+		if err != nil {
+			panic(err)
+		}
 	}()
 
 	// when:

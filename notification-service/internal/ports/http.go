@@ -3,6 +3,7 @@ package ports
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/go-chi/chi"
 	"net/http"
 	"notification-service/internal/application"
@@ -77,12 +78,12 @@ func (h *HTTP) GetParticipantNotificationsHandler() http.HandlerFunc {
 			server.SendJSONResponse(w, server.JSONResponse{Message: "missing userUUID in path"}, http.StatusBadRequest)
 			return
 		}
-
 		notifications, err := h.app.AllNotificationsHandler.Do(r.Context(), userUUID)
 		if err != nil {
 			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 			return
 		}
+		fmt.Println(notifications, userUUID)
 		server.SendJSONResponse(w, notifications, http.StatusOK)
 	}
 }
@@ -126,6 +127,7 @@ func NewHTTP(app *application.Application) (*HTTP, error) {
 func (h *HTTP) NewAPI() chi.Router {
 	r := server.NewRouter()
 	r.Route("/api/v1/notifications", func(r chi.Router) {
+		r.Use(authorization.ValidateJWT())
 		r.Route("/{userUUID}", func(r chi.Router) {
 			r.Get("/", h.GetParticipantNotificationsHandler())
 			r.Post("/", h.CreateNotificationHandler())

@@ -26,7 +26,7 @@ func (i *InsertTrainingGroupHandler) InsertTrainingGroup(ctx context.Context, g 
 			UUID: g.Trainer().UUID(),
 			Name: g.Trainer().Name(),
 		},
-		Participants: UnmarshalToWriteModelParticipants(g.Participants()...),
+		Participants: ConvertToWriteModelParticipants(g.Participants()...),
 		Limit:        g.Limit(),
 	}
 	_, err := coll.InsertOne(ctx, doc)

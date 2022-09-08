@@ -1,0 +1,14 @@
+@startuml
+'https://plantuml.com/use-case-diagram
+
+skinparam actorStyle awesome
+
+actor "Trener" as Trainer
+actor "Uczestnik" as Participant
+actor "Zarejestrowany Użytkownik" as RegisteredUser
+
+
+Trainer -up-|> RegisteredUser
+Participant -up-|> RegisteredUser
+
+@enduml

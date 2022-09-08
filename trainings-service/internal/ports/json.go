@@ -1,9 +1,7 @@
 package ports
 
 type User struct {
-	UUID string `json:"uuid"`
 	Name string `json:"name"`
-	Role string `json:"role"`
 }
 
 type TrainingGroupPost struct {
